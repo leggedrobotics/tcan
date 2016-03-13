@@ -8,11 +8,8 @@
  *
  */
 
-#include "libcanplusplus/BusManager.hpp"
 
-#include <stdexcept>
-#include <boost/lexical_cast.hpp>
-#include <iostream>
+#include "yalc/BusManager.hpp"
 
 BusManager::BusManager()
 {
@@ -21,31 +18,17 @@ BusManager::BusManager()
 
 BusManager::~BusManager()
 {
-	buses_.clear();
 }
 
-void BusManager::addBus(Bus* bus)
+bool BusManager::addBus(const std::string& device)
 {
-	buses_.push_back(bus);
+	buses_.emplace_back(new Bus());
+
+	return initializeBus(device);
 }
 
-int BusManager::getSize()
+
+int BusManager::getSize() const
 {
 	return buses_.size();
-}
-
-Bus*  BusManager::getBus(unsigned int index)
-{
-	try {
-		if (index >= buses_.size()) {
-			std::string error = "BusManager: Could not get bus with index "
-								+ boost::lexical_cast<std::string>(index) + "!";
-			throw std::out_of_range(error);
-		}
-		return &(buses_[index]);
-
-	} catch (std::exception& e) {
-		std::cout << e.what() << std::endl;
-	}
-	return NULL;
 }

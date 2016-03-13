@@ -8,9 +8,12 @@
  *
  */
 
-#include "libcanplusplus/Bus.hpp"
+#include "yalc/Bus.hpp"
 
-Bus::Bus(int iBus):iBus_(iBus)
+Bus::Bus():
+	isOperational_(false),
+	syncInterval_(0),
+	mapNodeIdToDevice_()
 {
 }
 
@@ -18,27 +21,48 @@ Bus::~Bus()
 {
 }
 
-PDOManager* Bus::getRxPDOManager()
-{
-	return rxPDOManager_;
+bool Bus::addDevice(DevicePtr device) {
+	mapNodeIdToDevice_.emplace(device->getNodeId(), std::move(device));
+	return true;
 }
 
-PDOManager* Bus::getTxPDOManager()
-{
-	return txPDOManager_;
-}
+void Bus::handleCanMessage(const CANMsg& cmsg) {
 
-SDOManager* Bus::getSDOManager()
-{
-	return SDOManager_;
-}
+	if(cmsg.getCOBId() == 0x80) { /* sync message */
 
-DeviceManager* Bus::getDeviceManager()
-{
-	return deviceManager_;
-}
 
-int Bus::iBus()
-{
-	return iBus_;
+	}else if(cmsg.getCOBId() == 0x0) { /* NMT message */
+
+		MapNodeIdToDevice::iterator it = mapNodeIdToDevice_.find( cmsg.getValue()[1] );
+		if (it != mapNodeIdToDevice_.end() && cmsg.getValue()[0] == 0x01) {
+			it->second->setNMTState( Device::NMTStates::operational );
+		}
+
+	}else{
+
+		// extract node id, which is stored in the lower 7 bits of the cob id
+		const uint16_t nodeId = static_cast<uint16_t>(cmsg.getCOBId() & 0x7f);
+
+		// Check if CAN message is handled.
+		MapNodeIdToDevice::iterator it = mapNodeIdToDevice_.find(nodeId);
+		if (it != mapNodeIdToDevice_.end()) {
+
+			it->second->processMsg(cmsg);
+		} else {
+			auto value = cmsg.getValue();
+			printf("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+					cmsg.getCOBId(),
+					value[1],
+					value[0],
+					value[0],
+					value[1],
+					value[2],
+					value[3],
+					value[4],
+					value[5],
+					value[6],
+					value[7]
+			);
+		}
+	}
 }

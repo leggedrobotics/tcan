@@ -30,14 +30,9 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/Bus.cpp
   src/BusManager.cpp
-  src/CANOpenMsg.cpp
-  src/PDOManager.cpp
-  src/SDOManager.cpp
+  src/SocketBusManager.cpp
   src/SDOMsg.cpp
-  src/SDOReadMsg.cpp
-  src/SDOWriteMsg.cpp
   src/Device.cpp
-  src/DeviceManager.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

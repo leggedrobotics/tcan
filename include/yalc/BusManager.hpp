@@ -10,9 +10,10 @@
 #ifndef BUSMANAGER_HPP_
 #define BUSMANAGER_HPP_
 
-#include <unordered_map>
+#include <memory>
+#include <vector>
 
-#include "libcanplusplus/Bus.hpp"
+#include "yalc/Bus.hpp"
 
 //! Container of all CAN buses
 /*! Manager to facilitate the handling of various CAN buses.
@@ -20,32 +21,32 @@
  */
 class BusManager {
 public:
-	//! Constructor
+
+	typedef std::unique_ptr<Bus> BusPtr;
+
 	BusManager();
 
-	//! Destructor
 	virtual ~BusManager();
 
-	/*! Add a new bus by addBus(new Bus(..)).
-	 * The deallocation is handled by boost shared pointers.
-	 * @param	bus	reference to bus
-	 */
-	void addBus(Bus* bus);
+    bool addBus(const std::string& device);
+
+    virtual bool initializeBus(const std::string& device) = 0;
+    virtual bool readMessages() = 0;
 
 	/*! Gets the number of buses
 	 * @return	number of buses
 	 */
-	int getSize();
+	int getSize() const;
 
 	/*! Gets a reference to a bus by index
 	 * @param	index of bus
 	 * @return	reference to bus
 	 */
-	Bus*  getBus(unsigned int index);
+    Bus* getBus(const int socketId);
 
 
-private:
-    std::map<int, Bus> mapSocketIdToBus_;
+protected:
+    std::vector<BusPtr> buses_;
 };
 
 #endif /* BUSMANAGER_HPP_ */

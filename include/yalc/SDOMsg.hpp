@@ -10,8 +10,9 @@
 #ifndef SDOMSG_HPP_
 #define SDOMSG_HPP_
 
-#include "libcanplusplus/CANOpenMsg.hpp"
-#include <boost/shared_ptr.hpp>
+#include <stdint.h>
+
+#include "yalc/PDOMsg.hpp"
 
 
 //! Service Data Object Message Container
@@ -26,151 +27,58 @@
  *
  * @ingroup robotCAN
  */
-class SDOMsg {
+class SDOMsg : public PDOMsg {
 public:
+
+    enum class Command : uint8_t {
+        READ=0x40,
+        WRITE_1_BYTE=0x2f,
+        WRITE_2_BYTE=0x2b,
+        WRITE_4_BYTE=0x23
+    };
+
 	/*! Constructor
 	 *
-	 * @param inSMID	index of shared memory of input message
-	 * @param outSMID   index of shared memory of output message
 	 * @param nodeId	ID of the CAN node
+     * @param index     index to be read/write
+     * @param subIndex  subindex to be read/write
+     * @param command   SDO command (read or write)
 	 */
-	SDOMsg(int inSMID, int outSMID, int nodeId, int index = 0, int subIndex = 0);
+    SDOMsg(const uint16_t nodeId, const uint16_t index, const uint8_t subIndex, const Command command, const uint32_t data);
 
 	//! Destructor
-	virtual ~SDOMsg();
+    virtual ~SDOMsg();
 
-	/*! Gets the reference to the output message
-	 * @return	 output message
-	 */
-	CANOpenMsg* getOutputMsg();
+    virtual void receiveMsg();
 
-	/*! Gets the reference to the input message
-	 * @return	 input message
-	 */
-	CANOpenMsg* getInputMsg();
-
-	/*! Gets flag
+    /*! Gets timeout status
 	 * @return true if input message was not received in a certain time
 	 */
-	bool hasTimeOut();
+    bool hasTimedOut();
 
-	/*! Gets flag
+    /*! Gets sent status
 	 * @return true if output message was sent to the node
 	 */
-	bool getIsSent();
+    bool getIsSent() const { return isSent_; }
 
-	/*! Gets flag
+    /*! Gets receive status
 	 * @return	true if input message was received from node
 	 */
-	bool getIsReceived();
+    bool getIsReceived() const { return isReceived_; }
 
-	/*! Gets flag
-	 * @return true if SDO is pending for receiving an answer from the node
-	 */
-	bool getIsWaiting();
-
-	/*! Gets flag
-	 * @return true if SDO is queuing to be processed by the SDO manager, i.e. the
-	 * 	message neither was sent nor is waiting for an input message
-	 */
-	bool getIsQueuing();
-
-	/*! The SDO manager sets the isWaiting flag to true as soon as it has sent
-	 * the output message
-	 * @param isWaiting
-	 */
-	virtual void setIsWaiting(bool isWaiting);
-
-	/*! Sets the flag that the SDO was added to the SDOManager
-	 * @param isQueuing
-	 */
-	virtual void setIsQueuing(bool isQueuing);
-
-	/*! Gets the output CAN message that needs to be sent to the CAN node
-	 * @param[out] canDataDes	output CAN message
-	 */
-	void sendMsg(CANMsg *canDataDes);
-
-	/*! Sets the input CAN message that was received from the CAN node
-	 * @param[in] canDataMeas	input CAN message
-	 */
-	void receiveMsg(CANMsg *canDataMeas);
-
-	inline uint8_t readuint8() const
-	{
-	  uint8_t value;
-	  value  = ((uint8_t)inputMsg_->getValue()[4]);
-	  return value;
-	}
-
-  inline uint16_t readuint16() const
-  {
-      uint16_t value;
-      value  = ((uint16_t)inputMsg_->getValue()[5] << 8);
-      value |= ((uint16_t)inputMsg_->getValue()[4]);
-      return value;
-  }
-
-  inline int16_t readint16() const
-  {
-      int16_t value;
-      value  = ((int16_t)inputMsg_->getValue()[5] << 8);
-      value |= ((int16_t)inputMsg_->getValue()[4]);
-      return value;
-  }
-
-  inline int32_t readint32() const
-  {
-      int32_t value;
-      value  = ((int32_t)inputMsg_->getValue()[7] << 24);
-      value |= ((int32_t)inputMsg_->getValue()[6] << 16);
-      value |= ((int32_t)inputMsg_->getValue()[5] << 8);
-      value |= ((int32_t)inputMsg_->getValue()[4]);
-      return value;
-  }
-
-  //! getters for index and subindex for message verfication
-  int getIndex() {return index_;}
-  int getSubIndex() {return subIndex_;}
-
-
+    //! getters for index and subindex for message verfication
+    uint16_t getIndex() const { return readuint16(1); }
+    uint8_t getSubIndex() const { return readuint8(3); }
+\
 protected:
-	//! Hook function that is invoked when a message is received
-	virtual void processReceivedMsg();
-
-	//! CAN node ID
-	int nodeId_;
-
-	//! timeout counter
-	int timeout_;
-
-	//! Index
-	int index_;
-
-	//! SubIndex
-	int subIndex_;
-
-	//! if true, SDO manager has sent SDO through CAN network
+    //! if true, SDO request was sent through CAN network
 	bool isSent_;
 
 	//! if true, response from node is received
 	bool isReceived_;
 
-	//! if true, SDO was sent and SDO manager is waiting for a response of the node
-	bool isWaiting_;
-
-	//! if true, SDO was added to the SDO manager, but not yet sent
-	bool isQueuing_;
-
-	//! input CAN message that is received from the CAN node
-	CANOpenMsg* inputMsg_;
-
-	//! output CAN message that will be sent to the CAN node
-	CANOpenMsg* outputMsg_;
-
+private:
+    SDOMsg(); // declared as private to prevent construction with default constructor
 };
-
-//! Boost shared point of an SDO message
-typedef boost::shared_ptr<SDOMsg> SDOMsgPtr;
 
 #endif /* SDOMSG_HPP_ */

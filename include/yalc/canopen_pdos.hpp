@@ -7,71 +7,66 @@
 
 #pragma once
 
-#include <chrono>
-
-#include "CANOpenMsg.hpp"
+#include "PDOMsg.hpp"
 
 namespace canopen {
 
 //////////////////////////////////////////////////////////////////////////////
-class RxPDOSync: public CANOpenMsg {
+class RxPDOSync: public PDOMsg {
 public:
-  RxPDOSync(int SMId):CANOpenMsg(0x80, SMId) {
-    flag_ = 1;
-  };
-  virtual ~RxPDOSync() {};
+    RxPDOSync():PDOMsg(RxPDOSyncId) {
+        flag_ = 1;
+    }
+
+    virtual ~RxPDOSync() {}
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class TxPDONMT: public CANOpenMsg {
+class TxPDONMT: public PDOMsg {
 public:
-  TxPDONMT(int nodeId):CANOpenMsg(TxNMT+nodeId, 0),
-  state_(-1),
-  timeReceived_()
-  {
-    //0x00 - Bootup; 0x04 - Stopped; 0x05 - Operational; 0x7F - Pre-Operational.
-  };
+    TxPDONMT(int nodeId):
+        PDOMsg(TxNMT+nodeId),
+        state_(-1)
+    {
 
-  virtual ~TxPDONMT()
-  {
-  };
+    }
 
-  virtual void processMsg()
-  {
-    timeReceived_ = std::chrono::steady_clock::now();
-    state_ = (uint8_t)(value_[0]);
-  };
+    virtual ~TxPDONMT()
+    {
+    }
 
-  bool isBootup() const
-  {
-    return (state_ == 0x00);
-  };
+    virtual void processMsg()
+    {
+        state_ = (uint8_t)(value_[0]);
+    }
 
-  bool isStopped() const
-  {
-    return (state_ == 0x04);
-  };
+    bool isBootup() const
+    {
+        return (state_ == 0x00);
+    }
 
-  bool isOperational() const
-  {
-    return (state_ == 0x05);
-  };
+    bool isStopped() const
+    {
+        return (state_ == 0x04);
+    }
 
-  bool isPreOperational() const
-  {
-    return (state_ ==  0x7F);
-  };
+    bool isOperational() const
+    {
+        return (state_ == 0x05);
+    }
 
-  uint8_t getState() const {
-	  return state_;
-  }
+    bool isPreOperational() const
+    {
+        return (state_ ==  0x7F);
+    }
 
-  const std::chrono::time_point<std::chrono::steady_clock>& getTime() const {
-    return timeReceived_;
-  }
+    uint8_t getState() const {
+        return state_;
+    }
 private:
-  uint8_t state_;
-  std::chrono::time_point<std::chrono::steady_clock> timeReceived_;
+    //0x00 - Bootup; 0x04 - Stopped; 0x05 - Operational; 0x7F - Pre-Operational.
+    uint8_t state_;
 
 };
+
 } // namespace canopen

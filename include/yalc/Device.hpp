@@ -12,7 +12,13 @@
 #define DEVICE_HPP_
 
 #include <string>
-#include "Bus.hpp"
+#include <memory>
+#include <vector>
+#include <queue>
+#include <stdint.h>
+
+#include "yalc/PDOMsg.hpp"
+#include "yalc/SDOMsg.hpp"
 #include "canopen_pdos.hpp"
 class Bus;
 
@@ -26,7 +32,9 @@ class Bus;
 class Device {
 public:
 
-	enum class CANStates : uint8_t {
+    typedef std::unique_ptr<SDOMsg> SDOMsgPtr;
+
+    enum class NMTStates : uint8_t {
 		initializing = 0,
 		stopped = 1,
 		preOperational = 2,
@@ -37,9 +45,8 @@ public:
 	/*! Constructor
 	 * @param nodeId	ID of CAN node
 	 */
-	Device(int nodeId);
-
-	Device(int nodeId, const std::string& name);
+	Device(const uint16_t nodeId);
+	Device(const uint16_t nodeId, const std::string& name);
 
 	//! Destructor
 	virtual ~Device();
@@ -52,12 +59,12 @@ public:
 	/*! Adds PDOs to the RxPDO manager
 	 *  This function is invoked by the device manager when this device is added.
 	 */
-	virtual void addRxPDOs() = 0;
+    virtual void addRxPDOs();
 
 	/*! Adds PDOs to the TxPDO manager
 	 * This function is invoked by the device manager when this device is added.
 	 */
-	virtual void addTxPDOs() = 0;
+    virtual void addTxPDOs();
 
 	/*! Initialize the device (send SDOs to initialize it)
 	 * This function is automatically called after receiving the bootup message
@@ -65,18 +72,7 @@ public:
 	 */
 	virtual bool initDevice() = 0;
 
-	/*! Initialize the heartbeat reception.
-	 * This does NOT configure the heartbeat generation on the device. Do that manually in the initDevice function.
-	 * It only sets the expected heartbeat time
-	 * @param heartBeatTime time in ms at which the producer sends heartbeat messages
-	 * @return true if successfully initialized
-	 */
-	bool initHeartbeat(const unsigned int heartBeatTime);
-
-	/*! Checks if the last heartbeat message has arrived recently and save the CAN-state of the device
-	 * @return true if within time window
-	 */
-	bool checkHeartbeat();
+	virtual void processMsg(const CANMsg& cmsg);
 
 	/* NMT state requests
 	 * setNMTRestartNode() is automatically called after initialization of the can busses in the CanManager
@@ -88,34 +84,38 @@ public:
 	/*! CANState accessor
 	 * @return the state the device is in
 	 */
-	CANStates getCANState() const;
+    NMTStates getNMTState() const { return nmtState_; }
+    void setNMTState(const NMTStates state) { nmtState_ = state; }
 
-	const std::string& getName() const;
-	void setName(const std::string& name);
+    uint16_t getNodeId() const { return nodeId_; }
+
+	const std::string& getName() const { return name_; }
+	void setName(const std::string& name) { name_ = name; }
 
 protected:
-	void sendSDO(SDOMsg* sdoMsg);
-	bool checkSDOResponses(bool& success);
+    void sendSDO(SDOMsgPtr sdoMsg);
 
 protected:
 
 	//!  reference to the CAN bus the device is connected to
 	Bus* bus_;
 	//! CAN node ID of device
-	int nodeId_;
+	uint16_t nodeId_;
 
 	std::string name_;
 
-	//! List of SDO messages
-	std::vector<SDOMsgPtr> sdos_;
-
 	//! the can state the device is in
-	CANStates canState_;
+    NMTStates nmtState_;
 
 	//! Heartbeat time interval [ms]. Set to 0 to disable heartbeat message reception checking.
 	uint16_t producerHeartBeatTime_;
 
-	canopen::TxPDONMT* txPDONMT_;
+    std::vector<PDOMsg> receivePdos_;
+    std::vector<PDOMsg> transmitPdos_;
+    std::queue<SDOMsgPtr> sdoMsgs_;
+
+private:
+    Device(); // declared as private to prevent construction with default constructor
 };
 
 #endif /* DEVICE_HPP_ */
