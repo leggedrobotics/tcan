@@ -32,7 +32,7 @@ SocketBusManager::~SocketBusManager()
 	closeBuses();
 }
 
-bool SocketBusManager::initializeBus(const std::string& device)
+bool SocketBusManager::initializeBus(const std::string& interface)
 {
 	/* **************************
 	 * CAN DRIVER SETUP
@@ -40,13 +40,13 @@ bool SocketBusManager::initializeBus(const std::string& device)
 	/* open channel */
 	int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 	if(fd < 0) {
-		printf("Opening CAN channel %s failed: %d\n", device.c_str(), fd);
+		printf("Opening CAN channel %s failed: %d\n", interface.c_str(), fd);
 		return false;
 	}
 
 	//Configure the socket:
 	struct ifreq ifr;
-	strcpy(ifr.ifr_name, device.c_str());
+	strcpy(ifr.ifr_name, interface.c_str());
 	ioctl(fd, SIOCGIFINDEX, &ifr);
 
 	int loopback = 0; /* 0 = disabled, 1 = enabled (default) */
@@ -65,7 +65,7 @@ bool SocketBusManager::initializeBus(const std::string& device)
 	addr.can_ifindex = ifr.ifr_ifindex;
 	//printf("%s at index %d\n", channelname, ifr.ifr_ifindex);
 	if(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		printf("Error in socket %s bind.\n", device.c_str());
+		printf("Error in socket %s bind.\n", interface.c_str());
 		return false;
 	}
 
@@ -129,5 +129,10 @@ bool SocketBusManager::readMessages() {
 	}
 
 
+	return true;
+}
+
+
+bool SocketBusManager::writeMessages() {
 	return true;
 }

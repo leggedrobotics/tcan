@@ -24,9 +24,10 @@ public:
 
 	virtual ~SocketBusManager();
 
-	virtual bool initializeBus(const std::string& device);
+	virtual bool initializeBus(const std::string& interface);
 	bool closeBuses();
 	virtual bool readMessages();
+	virtual bool writeMessages();
 
 protected:
 	std::vector<pollfd> sockets_;

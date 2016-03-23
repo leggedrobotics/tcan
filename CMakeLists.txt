@@ -31,8 +31,7 @@ add_library(${PROJECT_NAME}
   src/Bus.cpp
   src/BusManager.cpp
   src/SocketBusManager.cpp
-  src/SDOMsg.cpp
-  src/Device.cpp
+  src/DeviceCanOpen.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

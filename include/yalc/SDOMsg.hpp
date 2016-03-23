@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-#include "yalc/PDOMsg.hpp"
+#include "yalc/CANMsg.hpp"
 
 
 //! Service Data Object Message Container
@@ -27,7 +27,7 @@
  *
  * @ingroup robotCAN
  */
-class SDOMsg : public PDOMsg {
+class SDOMsg : public CANMsg {
 public:
 
     enum class Command : uint8_t {
@@ -44,41 +44,43 @@ public:
      * @param subIndex  subindex to be read/write
      * @param command   SDO command (read or write)
 	 */
-    SDOMsg(const uint16_t nodeId, const uint16_t index, const uint8_t subIndex, const Command command, const uint32_t data);
+    SDOMsg() = delete;
+    SDOMsg(const uint32_t nodeId, const uint16_t index, const uint8_t subIndex, const Command command, const uint32_t data):
+        CANMsg(nodeId, 8, {
+    			static_cast<uint8_t>(command),
+    			static_cast<uint8_t>(index & 0xff),
+    			static_cast<uint8_t>((index >> 8) & 0xff),
+    			subIndex,
+    			static_cast<uint8_t>((data >> 0) & 0xff),
+    			static_cast<uint8_t>((data >> 8) & 0xff),
+    			static_cast<uint8_t>((data >> 16) & 0xff),
+    			static_cast<uint8_t>((data >> 24) & 0xff)
+    	}),
+        isSent_(false)
+    {
+
+    }
 
 	//! Destructor
-    virtual ~SDOMsg();
+    virtual ~SDOMsg()
+    {
 
-    virtual void receiveMsg();
-
-    /*! Gets timeout status
-	 * @return true if input message was not received in a certain time
-	 */
-    bool hasTimedOut();
+    }
 
     /*! Gets sent status
 	 * @return true if output message was sent to the node
 	 */
     bool getIsSent() const { return isSent_; }
+    void setIsSent(const bool sent) { isSent_ = sent; }
 
-    /*! Gets receive status
-	 * @return	true if input message was received from node
-	 */
-    bool getIsReceived() const { return isReceived_; }
 
-    //! getters for index and subindex for message verfication
-    uint16_t getIndex() const { return readuint16(1); }
-    uint8_t getSubIndex() const { return readuint8(3); }
-\
-protected:
-    //! if true, SDO request was sent through CAN network
-	bool isSent_;
-
-	//! if true, response from node is received
-	bool isReceived_;
+    //! getters for index and subindex for answer verfication
+    inline uint16_t getIndex() const { return readuint16(1); }
+    inline uint8_t getSubIndex() const { return readuint8(3); }
 
 private:
-    SDOMsg(); // declared as private to prevent construction with default constructor
+    //! if true, SDO request was sent through CAN network
+	bool isSent_;
 };
 
 #endif /* SDOMSG_HPP_ */

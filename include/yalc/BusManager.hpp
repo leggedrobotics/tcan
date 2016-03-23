@@ -11,6 +11,7 @@
 #define BUSMANAGER_HPP_
 
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "yalc/Bus.hpp"
@@ -28,25 +29,41 @@ public:
 
 	virtual ~BusManager();
 
-    bool addBus(const std::string& device);
+    bool addBus(const std::string& interface);
 
-    virtual bool initializeBus(const std::string& device) = 0;
+    virtual bool initializeBus(const std::string& interface) = 0;
     virtual bool readMessages() = 0;
+    virtual bool writeMessages() = 0;
 
 	/*! Gets the number of buses
 	 * @return	number of buses
 	 */
-	int getSize() const;
+	unsigned int getSize() const { return buses_.size(); }
 
 	/*! Gets a reference to a bus by index
 	 * @param	index of bus
 	 * @return	reference to bus
 	 */
-    Bus* getBus(const int socketId);
+//    Bus* getBus(const unsigned int index) { return buses_.at(index); }
+
+    void receiveWorker();
+    void transmitWorker();
 
 
 protected:
     std::vector<BusPtr> buses_;
+
+    // sync interval to simultaneously publish a SYNC message on all buses
+    unsigned int globalSyncInterval_;
+
+    // wheter the busmanager should wait until the Output message queues of all buses are empty before sendign the global SYNC.
+    // ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
+    bool syncWaitForEmptyQueue_;
+
+    // threads for message reception and transmission
+    std::thread receiveThread_;
+    std::thread transmitThread_;
+    bool running_;
 };
 
 #endif /* BUSMANAGER_HPP_ */

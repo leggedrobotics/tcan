@@ -11,24 +11,41 @@
 
 #include "yalc/BusManager.hpp"
 
-BusManager::BusManager()
+BusManager::BusManager():
+	buses_(),
+	globalSyncInterval_(0),
+	syncWaitForEmptyQueue_(false),
+	receiveThread_(&BusManager::receiveWorker, this),
+	transmitThread_(&BusManager::transmitWorker, this),
+	running_(true)
 {
+	// todo: set thread priorities?
 
 }
 
 BusManager::~BusManager()
 {
+	running_ = false;
+	receiveThread_.join();
+	transmitThread_.join();
 }
 
-bool BusManager::addBus(const std::string& device)
+bool BusManager::addBus(const std::string& interface)
 {
 	buses_.emplace_back(new Bus());
 
-	return initializeBus(device);
+	return initializeBus(interface);
 }
 
 
-int BusManager::getSize() const
-{
-	return buses_.size();
+void BusManager::receiveWorker() {
+	while(running_) {
+		readMessages();
+	}
+}
+
+void BusManager::transmitWorker() {
+	while(running_) {
+		writeMessages();
+	}
 }
