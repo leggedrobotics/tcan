@@ -94,7 +94,7 @@ bool SocketBusManager::readMessages() {
 	const int ret = poll( &sockets_[0], numSockets, 1000 );
 
 	if ( ret == -1 ) {
-	    printf("poll failed");
+		printf("poll failed");
 		perror("poll()");
 		return false;
 	}else if ( ret == 0 ) {
@@ -134,5 +134,6 @@ bool SocketBusManager::readMessages() {
 
 
 bool SocketBusManager::writeMessages() {
+
 	return true;
 }

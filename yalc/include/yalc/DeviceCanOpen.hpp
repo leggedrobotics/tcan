@@ -11,10 +11,12 @@
 #ifndef DEVICECANOPEN_HPP_
 #define DEVICECANOPEN_HPP_
 
+#include <stdint.h>
 #include <string>
 #include <memory>
 #include <queue>
-#include <stdint.h>
+#include <mutex>
+#include <atomic>
 
 #include "yalc/Device.hpp"
 #include "yalc/SDOMsg.hpp"
@@ -30,23 +32,23 @@
 class DeviceCanOpen : public Device {
 public:
 
-    typedef std::unique_ptr<SDOMsg> SDOMsgPtr;
+	typedef std::unique_ptr<SDOMsg> SDOMsgPtr;
 
-    enum class NMTStates : uint8_t {
+	enum class NMTStates : uint8_t {
 		initializing = 0,
-		stopped = 1,
-		preOperational = 2,
-		operational = 3,
-		missing = 4 // state to enter if no life sign from the node after a certain time
+				stopped = 1,
+				preOperational = 2,
+				operational = 3,
+				missing = 4 // state to enter if no life sign from the node after a certain time
 	};
 
 	/*! Constructors
 	 * @param nodeId	ID of CAN node
 	 * @param name		name of the device
 	 */
-    DeviceCanOpen() = delete;
-    DeviceCanOpen(const uint32_t nodeId);
-    DeviceCanOpen(const uint32_t nodeId, const std::string& name);
+	DeviceCanOpen() = delete;
+	DeviceCanOpen(const uint32_t nodeId);
+	DeviceCanOpen(const uint32_t nodeId, const std::string& name);
 
 	//! Destructor
 	virtual ~DeviceCanOpen();
@@ -92,23 +94,24 @@ public:
 
 	/*! CANState accessors
 	 */
-    bool isInitializing()	const { return (nmtState_ == NMTStates::initializing); }
-    bool isStopped()		const { return (nmtState_ == NMTStates::stopped); }
-    bool isPreOperational()	const { return (nmtState_ == NMTStates::preOperational); }
-    bool isOperational()	const { return (nmtState_ == NMTStates::operational); }
-    bool isMissing()		const { return (nmtState_ == NMTStates::missing); }
+	bool isInitializing()	const { return (nmtState_ == NMTStates::initializing); }
+	bool isStopped()		const { return (nmtState_ == NMTStates::stopped); }
+	bool isPreOperational()	const { return (nmtState_ == NMTStates::preOperational); }
+	bool isOperational()	const { return (nmtState_ == NMTStates::operational); }
+	bool isMissing()		const { return (nmtState_ == NMTStates::missing); }
 
 protected:
-    void sendSDO(SDOMsgPtr sdoMsg);
+	void sendSDO(SDOMsgPtr sdoMsg);
 
 protected:
 	//! the can state the device is in
-    NMTStates nmtState_;
+	std::atomic<NMTStates> nmtState_;
 
 	//! Heartbeat time interval [ms]. Set to 0 to disable heartbeat message reception checking.
 	uint16_t producerHeartBeatTime_;
 
-    std::queue<SDOMsgPtr> sdoMsgs_;
+	std::mutex sdoMsgsMutex_;
+	std::queue<SDOMsgPtr> sdoMsgs_;
 };
 
 #endif /* DEVICECANOPEN_HPP_ */

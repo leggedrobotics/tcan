@@ -8,12 +8,15 @@
  *
  */
 
+#include "yalc/BusManager.hpp"
 #include "yalc/Bus.hpp"
 
-Bus::Bus():
+Bus::Bus(BusManager* bus_manager):
+	busManager_(bus_manager),
 	isOperational_(false),
 	syncInterval_(0),
 	cobIdToFunctionMap_(),
+	outgointMsgsMutex_(),
 	outgoingMsgs_()
 {
 }
@@ -30,6 +33,12 @@ bool Bus::addDevice(DevicePtr device) {
 bool Bus::addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>&& parseFunction) {
 	cobIdToFunctionMap_.emplace(cobId, std::move(parseFunction));
 	return true;
+}
+
+void Bus::sendCanMessage(const CANMsg& cmsg) {
+	std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
+	outgoingMsgs_.emplace(std::move(cmsg));
+	busManager_->notifyTransmitWorker();
 }
 
 void Bus::handleCanMessage(const CANMsg& cmsg) {
@@ -57,6 +66,14 @@ void Bus::handleCanMessage(const CANMsg& cmsg) {
 	}
 }
 
-void Bus::sendCanMessage(const CANMsg& cmsg) {
-	outgoingMsgs_.emplace(std::move(cmsg));
+
+bool Bus::popNextCanMessage(CANMsg* msg) {
+	if(outgoingMsgs_.size() == 0) {
+		return false;
+	}
+
+	std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
+	*msg = std::move(outgoingMsgs_.front());
+	outgoingMsgs_.pop();
+	return true;
 }

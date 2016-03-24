@@ -9,20 +9,22 @@
  */
 
 #include <stdio.h>
+
 #include "yalc/DeviceCanOpen.hpp"
 #include "yalc/canopen_sdos.hpp"
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
-    Device(nodeId, name),
+	Device(nodeId, name),
 	nmtState_(NMTStates::initializing),
 	producerHeartBeatTime_(0),
-    sdoMsgs_()
+	sdoMsgsMutex_(),
+	sdoMsgs_()
 {
 
 }
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId):
-	DeviceCanOpen(nodeId, std::string())
+			DeviceCanOpen(nodeId, std::string())
 {
 }
 
@@ -33,6 +35,7 @@ DeviceCanOpen::~DeviceCanOpen()
 
 bool DeviceCanOpen::getNextSDO(SDOMsg* msg) {
 
+	std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
 	if(sdoMsgs_.empty()) {
 		return false;
 	}
@@ -74,49 +77,55 @@ bool DeviceCanOpen::parseHeartBeat(const CANMsg& cmsg) {
 bool DeviceCanOpen::parseSDOAnswer(const CANMsg& cmsg) {
 	const uint8_t responseMode = cmsg.readuint8(0);
 	const uint16_t index = cmsg.readuint16(1);
-    const uint8_t subindex = cmsg.readuint8(3);
-    SDOMsgPtr& sdo = sdoMsgs_.front();
+	const uint8_t subindex = cmsg.readuint8(3);
+	SDOMsgPtr& sdo = sdoMsgs_.front();
 
-    if(sdo->getIndex() == index && sdo->getSubIndex() == subindex) {
+	if(sdo->getIndex() == index && sdo->getSubIndex() == subindex) {
 
-    	if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
-    		handleReadSDOAnswer( index, subindex, &(cmsg.getData()[4]) );
-    	}else if(responseMode == 0x80) { // error response
-    		printf("Received SDO error. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
-    	}
+		if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
+			handleReadSDOAnswer( index, subindex, &(cmsg.getData()[4]) );
+		}else if(responseMode == 0x80) { // error response
+			printf("Received SDO error. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
+		}
 
-    	{
-    		sdoMsgs_.pop();
-    	}
-    }else{
-    	printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
-    	return false;
-    }
+		{
+			std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+			sdoMsgs_.pop();
+		}
+	}else{
+		printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 
 void DeviceCanOpen::sendSDO(SDOMsgPtr sdoMsg) {
-    sdoMsgs_.emplace(std::move(sdoMsg));
+	std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+	sdoMsgs_.emplace(std::move(sdoMsg));
 }
 
 void DeviceCanOpen::sendNMTEnterPreOperational() {
-    // swap with an empty queue to clear it
-    std::queue<SDOMsgPtr>().swap(sdoMsgs_);
-//    sendSDO(new canopen::SDONMTEnterPreOperational(0, 0, nodeId_));
+	{
+		std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+		// swap with an empty queue to clear it
+		std::queue<SDOMsgPtr>().swap(sdoMsgs_);
+	}
+	//    sendSDO(new canopen::SDONMTEnterPreOperational(0, 0, nodeId_));
 }
 
 void DeviceCanOpen::sendNMTStartRemoteNode() {
-    // swap with an empty queue to clear it
-    std::queue<SDOMsgPtr>().swap(sdoMsgs_);
-//    sendSDO(new canopen::SDONMTStartRemoteNode(0, 0, nodeId_));
+	//    sendSDO(new canopen::SDONMTStartRemoteNode(0, 0, nodeId_));
 }
 
 void DeviceCanOpen::setNMTRestartNode() {
-    // swap with an empty queue to clear it
-    std::queue<SDOMsgPtr>().swap(sdoMsgs_);
-//    sendSDO(new canopen::SDONMTResetNode(0, 0, nodeId_));
-    nmtState_ = NMTStates::initializing;
+	{
+		std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+		// swap with an empty queue to clear it
+		std::queue<SDOMsgPtr>().swap(sdoMsgs_);
+	}
+	//    sendSDO(new canopen::SDONMTResetNode(0, 0, nodeId_));
+	nmtState_ = NMTStates::initializing;
 }
 

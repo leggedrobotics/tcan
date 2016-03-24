@@ -32,9 +32,9 @@ public:
 	}
 
 	Device(const uint32_t nodeId, const std::string& name):
-	    bus_(nullptr),
-	    nodeId_(nodeId),
-	    name_(name),
+		bus_(nullptr),
+		nodeId_(nodeId),
+		name_(name),
 		msgReceiveTime_()
 	{
 	}
@@ -60,7 +60,7 @@ public:
 	virtual bool configureDevice() = 0;
 
 
-    uint32_t getNodeId() const { return nodeId_; }
+	uint32_t getNodeId() const { return nodeId_; }
 	const std::string& getName() const { return name_; }
 
 protected:
