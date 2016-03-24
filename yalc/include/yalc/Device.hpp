@@ -14,6 +14,9 @@
 #include <string>
 #include <stdint.h>
 #include <chrono>
+#include <vector>
+
+#include "yalc/CANMsg.hpp"
 
 class Bus;
 
@@ -29,13 +32,15 @@ public:
 	Device(const uint32_t nodeId):
 		Device(nodeId, std::string())
 	{
+
 	}
 
 	Device(const uint32_t nodeId, const std::string& name):
 		bus_(nullptr),
 		nodeId_(nodeId),
 		name_(name),
-		msgReceiveTime_()
+		msgReceiveTime_(),
+		transmitMessages_()
 	{
 	}
 
@@ -43,6 +48,12 @@ public:
 	virtual ~Device()
 	{
 	}
+
+	/*! Configure the device (send SDOs to initialize it)
+	 * This function is automatically called when adding a device to a bus with the addDevice(..) function
+	 * @return true if successfully configured
+	 */
+	virtual bool configureDevice() = 0;
 
 	/*! Initialize the device
 	 * @return true if successfully initialized
@@ -52,12 +63,6 @@ public:
 		bus_ = bus;
 		return configureDevice();
 	}
-
-	/*! Configure the device (send SDOs to initialize it)
-	 * This function is automatically called by initDevice(..)
-	 * @return true if successfully configured
-	 */
-	virtual bool configureDevice() = 0;
 
 
 	uint32_t getNodeId() const { return nodeId_; }
@@ -75,6 +80,8 @@ protected:
 
 	// time of the last message reception
 	std::chrono::time_point<std::chrono::steady_clock> msgReceiveTime_;
+
+	std::vector<CANMsg> transmitMessages_;
 
 };
 

@@ -11,10 +11,7 @@
 #define BUSMANAGER_HPP_
 
 #include <memory>
-#include <thread>
 #include <vector>
-#include <atomic>
-#include <condition_variable>
 
 #include "yalc/Bus.hpp"
 
@@ -24,18 +21,13 @@
  */
 class BusManager {
 public:
-
 	typedef std::unique_ptr<Bus> BusPtr;
 
 	BusManager();
 
 	virtual ~BusManager();
 
-	bool addBus(const std::string& interface);
-
-	virtual bool initializeBus(const std::string& interface) = 0;
-	virtual bool readMessages() = 0;
-	virtual bool writeMessages() = 0;
+	bool addBus(BusPtr bus);
 
 	/*! Gets the number of buses
 	 * @return	number of buses
@@ -48,32 +40,14 @@ public:
 	 */
 //    Bus* getBus(const unsigned int index) { return buses_.at(index); }
 
-	void notifyTransmitWorker();
-
-	void receiveWorker();
-	void transmitWorker();
-
-
+	void sendSyncOnAllBuses();
 
 protected:
 	std::vector<BusPtr> buses_;
 
-	// sync interval to simultaneously publish a SYNC message on all buses
-	unsigned int globalSyncInterval_;
-
 	// wheter the busmanager should wait until the Output message queues of all buses are empty before sendign the global SYNC.
 	// ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
 	bool syncWaitForEmptyQueue_;
-
-	// threads for message reception and transmission
-	std::thread receiveThread_;
-	std::thread transmitThread_;
-	std::atomic<bool> running_;
-
-	// variables to wake the transmitThread after inserting something to the message output queue
-	std::atomic<bool> sendingMessages_;
-	std::condition_variable condTransmitThread_;
-	std::mutex mutexTransmitThread_;
 };
 
 #endif /* BUSMANAGER_HPP_ */

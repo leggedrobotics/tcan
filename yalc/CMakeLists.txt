@@ -30,7 +30,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/Bus.cpp
   src/BusManager.cpp
-  src/SocketBusManager.cpp
+  src/SocketBus.cpp
   src/DeviceCanOpen.cpp
 )
 target_link_libraries(${PROJECT_NAME}

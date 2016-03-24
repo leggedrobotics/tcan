@@ -8,21 +8,30 @@
  *
  */
 
-#include "yalc/BusManager.hpp"
+
 #include "yalc/Bus.hpp"
 
-Bus::Bus(BusManager* bus_manager):
-	busManager_(bus_manager),
+Bus::Bus():
 	isOperational_(false),
-	syncInterval_(0),
 	cobIdToFunctionMap_(),
 	outgointMsgsMutex_(),
-	outgoingMsgs_()
+	outgoingMsgs_(),
+	receiveThread_(&Bus::receiveWorker, this),
+	transmitThread_(&Bus::transmitWorker, this),
+	running_(true),
+	numMessagesToSend_(0),
+	condTransmitThread_(),
+	mutexTransmitThread_()
 {
 }
 
 Bus::~Bus()
 {
+	running_ = false;
+	condTransmitThread_.notify_all();
+
+	receiveThread_.join();
+	transmitThread_.join();
 }
 
 bool Bus::addDevice(DevicePtr device) {
@@ -35,19 +44,24 @@ bool Bus::addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>
 	return true;
 }
 
-void Bus::sendCanMessage(const CANMsg& cmsg) {
-	std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-	outgoingMsgs_.emplace(std::move(cmsg));
-	busManager_->notifyTransmitWorker();
+void Bus::sendMessage(CANMsg&& cmsg) {
+
+	{
+		std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
+		outgoingMsgs_.emplace(cmsg);
+	}
+
+	numMessagesToSend_++;
+	condTransmitThread_.notify_all();
 }
 
-void Bus::handleCanMessage(const CANMsg& cmsg) {
+void Bus::handleMessage(const CANMsg& cmsg) {
 
 	// Check if CAN message is handled.
 	CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(cmsg.getCOBId());
 	if (it != cobIdToFunctionMap_.end()) {
 
-		it->second(cmsg);
+		it->second(cmsg); // call function pointer
 	} else {
 		auto value = cmsg.getData();
 		printf("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
@@ -67,13 +81,28 @@ void Bus::handleCanMessage(const CANMsg& cmsg) {
 }
 
 
-bool Bus::popNextCanMessage(CANMsg* msg) {
-	if(outgoingMsgs_.size() == 0) {
-		return false;
+void Bus::receiveWorker() {
+	while(running_) {
+		readCanMessage();
 	}
+}
 
-	std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-	*msg = std::move(outgoingMsgs_.front());
-	outgoingMsgs_.pop();
-	return true;
+void Bus::transmitWorker() {
+	std::unique_lock<std::mutex> lock(mutexTransmitThread_);
+
+	while(running_) {
+		condTransmitThread_.wait(lock, [this](){return numMessagesToSend_ > 0 || !running_;});
+		if(running_) {
+			while(numMessagesToSend_ > 0) {
+				const CANMsg& cmsg = outgoingMsgs_.front();
+				writeCanMessage( cmsg );
+
+				numMessagesToSend_--;
+				{
+					std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
+					outgoingMsgs_.pop();
+				}
+			}
+		}
+	}
 }

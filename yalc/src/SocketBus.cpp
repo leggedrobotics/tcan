@@ -1,5 +1,5 @@
 /*!
- * @file 	BusManager.cpp
+ * @file 	Bus.cpp
  * @brief	Type definitions
  * @author 	Christian Gehring
  * @date 	Jan, 2012
@@ -8,7 +8,6 @@
  *
  */
 
-// socket includes
 #include <sys/socket.h>
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -18,21 +17,22 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "yalc/SocketBusManager.hpp"
-#include "yalc/CANMsg.hpp"
+#include "yalc/SocketBus.hpp"
 
-SocketBusManager::SocketBusManager():
-	sockets_()
+SocketBus::SocketBus(const std::string& interface):
+	Bus(),
+	interface_(interface),
+	socket_(),
+	baudRate_(125)
 {
-
 }
 
-SocketBusManager::~SocketBusManager()
+SocketBus::~SocketBus()
 {
-	closeBuses();
+	closeBus();
 }
 
-bool SocketBusManager::initializeBus(const std::string& interface)
+bool SocketBus::initializeBus()
 {
 	/* **************************
 	 * CAN DRIVER SETUP
@@ -40,13 +40,13 @@ bool SocketBusManager::initializeBus(const std::string& interface)
 	/* open channel */
 	int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 	if(fd < 0) {
-		printf("Opening CAN channel %s failed: %d\n", interface.c_str(), fd);
+		printf("Opening CAN channel %s failed: %d\n", interface_.c_str(), fd);
 		return false;
 	}
 
 	//Configure the socket:
 	struct ifreq ifr;
-	strcpy(ifr.ifr_name, interface.c_str());
+	strcpy(ifr.ifr_name, interface_.c_str());
 	ioctl(fd, SIOCGIFINDEX, &ifr);
 
 	int loopback = 0; /* 0 = disabled, 1 = enabled (default) */
@@ -65,7 +65,7 @@ bool SocketBusManager::initializeBus(const std::string& interface)
 	addr.can_ifindex = ifr.ifr_ifindex;
 	//printf("%s at index %d\n", channelname, ifr.ifr_ifindex);
 	if(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		printf("Error in socket %s bind.\n", interface.c_str());
+		printf("Error in socket %s bind.\n", interface_.c_str());
 		return false;
 	}
 
@@ -74,30 +74,26 @@ bool SocketBusManager::initializeBus(const std::string& interface)
 	if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
 	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
-	sockets_.emplace_back(pollfd{fd, POLLIN, 0});
+	socket_ = {fd, POLLIN, 0};
 
 	return true;
 }
 
-bool SocketBusManager::closeBuses() {
-	for (unsigned int i=0; i<sockets_.size(); i++) {
-		close(sockets_[i].fd);
-	}
+bool SocketBus::closeBus() {
+	close(socket_.fd);
 	return true;
 }
 
 
-bool SocketBusManager::readMessages() {
+bool SocketBus::readCanMessage() {
 
-	const unsigned int numSockets = sockets_.size();
-
-	const int ret = poll( &sockets_[0], numSockets, 1000 );
+	const int ret = poll( &socket_, 1, 1000 );
 
 	if ( ret == -1 ) {
 		printf("poll failed");
 		perror("poll()");
 		return false;
-	}else if ( ret == 0 ) {
+	}else if ( ret == 0 || !(socket_.revents & POLLIN) ) {
 		/*******************************************************
 		 * no data received
 		 *******************************************************/
@@ -106,26 +102,23 @@ bool SocketBusManager::readMessages() {
 		 * READ INCOMING CAN MESSAGES
 		 *******************************************************/
 		struct can_frame frame;
-		for (unsigned int iBus=0; iBus<numSockets; iBus++) {
-			if( sockets_[iBus].revents & POLLIN ) {
-				sockets_[iBus].revents = 0;
-				bool dataAvailable=true;
-				do {
-					int bytes_read = read( sockets_[iBus].fd, &frame, sizeof(struct can_frame));
-					// printf("CanManager_ bytes read: %i\n", bytes_read);
+		socket_.revents = 0;
+		bool dataAvailable=true;
+		do {
+			int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
+			// printf("CanManager_ bytes read: %i\n", bytes_read);
 
-					if(bytes_read<=0) {
-						//  printf("CanManager:bus_routine: Data buffer empty or error\n");
-						dataAvailable=false;
-					} else {
-						// printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+			if(bytes_read<=0) {
+				//  printf("CanManager:bus_routine: Data buffer empty or error\n");
+				dataAvailable=false;
+			} else {
+				// printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-						CANMsg cmsg(frame.can_id, frame.can_dlc, frame.data);
-						buses_[iBus]->handleCanMessage(cmsg);
-					}
-				} while(dataAvailable);
+				CANMsg cmsg(frame.can_id, frame.can_dlc, frame.data);
+				handleMessage(cmsg);
 			}
-		}
+		} while(dataAvailable);
+
 	}
 
 
@@ -133,7 +126,8 @@ bool SocketBusManager::readMessages() {
 }
 
 
-bool SocketBusManager::writeMessages() {
+bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
+	usleep((cmsg.getLength()*8+44)/baudRate_*1000); // sleep the amount of time the message needs to be transmitted
 	return true;
 }

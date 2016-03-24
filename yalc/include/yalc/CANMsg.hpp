@@ -30,7 +30,6 @@ public:
 
 	CANMsg(const uint32_t COBId):
 		COBId_(COBId),
-		flag_(false),
 		length_{0},
 		data_{0, 0, 0, 0, 0, 0, 0, 0}
 	{
@@ -39,7 +38,6 @@ public:
 
 	CANMsg(const uint32_t COBId, const uint8_t length, const uint8_t* data):
 		COBId_(COBId),
-		flag_(false),
 		length_(length),
 		data_{0, 0, 0, 0, 0, 0, 0, 0}
 	{
@@ -48,7 +46,6 @@ public:
 
 	CANMsg(const uint32_t COBId, const uint8_t length, const std::initializer_list<uint8_t> data):
 		COBId_(COBId),
-		flag_(false),
 		length_(length),
 		data_{0, 0, 0, 0, 0, 0, 0, 0}
 	{
@@ -64,10 +61,6 @@ public:
 	 */
 	inline uint32_t getCOBId() const { return COBId_; }
 
-	/*! Gets flag whether the message will be sent or the message is received
-	 * @return
-	 */
-	inline bool getFlag() const { return flag_; }
 
 	/*! Gets the stack of values
 	 *
@@ -80,15 +73,11 @@ public:
 	 */
 	inline uint8_t getLength() const { return length_; }
 
-	/*! Sets the flag if the message needs to be sent
-	 * @param flag	if true message is sent
-	 */
-	inline void setFlag(const bool flag) { flag_ = flag; }
 
 	/*! Sets the stack of values
 	 * @param value	 array of length 8
 	 */
-	void setData(const uint8_t length, const uint8_t* data) {
+	inline void setData(const uint8_t length, const uint8_t* data) {
 		length_ = length;
 		std::copy(&data[0], &data[length], data_);
 	}
@@ -172,9 +161,6 @@ public:
 private:
 	//! Communication Object Identifier
 	uint32_t COBId_;
-
-	//! if true, the message will be sent or the message is received
-	bool flag_;
 
 	//! the message data length
 	uint8_t length_;
