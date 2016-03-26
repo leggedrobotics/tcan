@@ -27,7 +27,7 @@
 class Bus {
 public:
 	typedef std::shared_ptr<Device> DevicePtr;
-	typedef std::unordered_map<uint32_t, std::function<bool(CANMsg)> > CobIdToFunctionMap;
+	typedef std::unordered_map<uint32_t, std::function<bool(const CANMsg&)> > CobIdToFunctionMap;
 
 	Bus();
 
@@ -49,7 +49,7 @@ public:
 	/*! Add a can message to be sent
 	 * @param cmsg	reference to the can message
 	 */
-	void sendMessage(CANMsg&& cmsg);
+	void sendMessage(const CANMsg& cmsg);
 
 
 	void handleMessage(const CANMsg& cmsg);

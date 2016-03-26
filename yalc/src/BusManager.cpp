@@ -25,9 +25,9 @@ BusManager::~BusManager()
 
 }
 
-bool BusManager::addBus(BusPtr bus)
+bool BusManager::addBus(Bus* bus)
 {
-	buses_.emplace_back( std::move(bus) );
+	buses_.emplace_back( bus );
 	bus->initializeBus();
 
 	return true;

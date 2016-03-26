@@ -8,6 +8,7 @@
  *
  */
 
+#include <utility>
 
 #include "yalc/Bus.hpp"
 
@@ -36,7 +37,7 @@ Bus::~Bus()
 
 bool Bus::addDevice(DevicePtr device) {
 	devices_.emplace_back(std::move(device));
-	return devices_[devices_.size()-1]->initDevice(this);
+	return devices_[devices_.size()-1]->initDeviceInternal(this);
 }
 
 bool Bus::addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>&& parseFunction) {
@@ -44,11 +45,13 @@ bool Bus::addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>
 	return true;
 }
 
-void Bus::sendMessage(CANMsg&& cmsg) {
+void Bus::sendMessage(const CANMsg& cmsg) {
 
 	{
 		std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-		outgoingMsgs_.emplace(cmsg);
+		outgoingMsgs_.push( cmsg ); // do not use emplace here. We need a copy of the message in some situations
+									// (SDO queue processing). Declaring another sendMessage(..) which uses move
+									// semantics does not increase performance as CANMsg has only POD members
 	}
 
 	numMessagesToSend_++;
@@ -94,11 +97,9 @@ void Bus::transmitWorker() {
 		condTransmitThread_.wait(lock, [this](){return numMessagesToSend_ > 0 || !running_;});
 		if(running_) {
 			while(numMessagesToSend_ > 0) {
-				const CANMsg& cmsg = outgoingMsgs_.front();
-				writeCanMessage( cmsg );
-
-				numMessagesToSend_--;
-				{
+				if(writeCanMessage( outgoingMsgs_.front() )) {
+					// only pop the message from the queue if sending was successful
+					numMessagesToSend_--;
 					std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
 					outgoingMsgs_.pop();
 				}

@@ -20,6 +20,8 @@ catkin_package(
 ## Build ##
 ###########
 
+add_definitions(--std=c++11)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -27,7 +29,10 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(yalc_example_node src/yalc_example_node.cpp)
+add_executable(yalc_example_node
+  src/DeviceExample.cpp
+  src/yalc_example_node.cpp
+)
 
 target_link_libraries(yalc_example_node
   ${catkin_LIBRARIES}

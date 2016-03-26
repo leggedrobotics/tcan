@@ -22,11 +22,11 @@ public:
 	/*! Constructor
 	 * @param	COBId	Communication Object Identifier
 	 */
-	CANMsg():
-		CANMsg(0)
-	{
-
-	}
+	CANMsg() = delete;//:
+//		CANMsg(0)
+//	{
+//
+//	}
 
 	CANMsg(const uint32_t COBId):
 		COBId_(COBId),
@@ -82,42 +82,54 @@ public:
 		std::copy(&data[0], &data[length], data_);
 	}
 
-	inline void write(int32_t value, uint8_t pos)
+	inline void write(const int32_t value, const uint8_t pos)
 	{
 		data_[3 + pos] = static_cast<uint8_t>((value >> 24) & 0xFF);
 		data_[2 + pos] = static_cast<uint8_t>((value >> 16) & 0xFF);
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ = pos+4;
 	}
 
-	inline void write(uint32_t value, uint8_t pos)
+	inline void write(const uint32_t value, const uint8_t pos)
 	{
 		data_[3 + pos] = static_cast<uint8_t>((value >> 24) & 0xFF);
 		data_[2 + pos] = static_cast<uint8_t>((value >> 16) & 0xFF);
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ = pos+4;
 	}
 
-	inline void write(int16_t value, uint8_t pos)
+	inline void write(const int16_t value, const uint8_t pos)
 	{
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ = pos+2;
 	}
 
-	inline void write(uint16_t value, uint8_t pos)
+	inline void write(const uint16_t value, const uint8_t pos)
 	{
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ = pos+2;
 	}
 
-	inline void write(int8_t value, uint8_t pos)
+	inline void write(const int8_t value, const uint8_t pos)
 	{
 		data_[0 + pos] = static_cast<uint8_t>(value);
+
+		length_ = pos+1;
 	}
 
-	inline void write(uint8_t value, uint8_t pos)
+	inline void write(const uint8_t value, const uint8_t pos)
 	{
 		data_[0 + pos] = value;
+
+		length_ = pos+1;
 	}
 
 	inline int32_t readint32(uint8_t pos) const

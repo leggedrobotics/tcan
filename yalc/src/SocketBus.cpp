@@ -114,8 +114,7 @@ bool SocketBus::readCanMessage() {
 			} else {
 				// printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-				CANMsg cmsg(frame.can_id, frame.can_dlc, frame.data);
-				handleMessage(cmsg);
+				handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
 			}
 		} while(dataAvailable);
 

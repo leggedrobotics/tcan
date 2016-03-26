@@ -21,13 +21,11 @@
  */
 class BusManager {
 public:
-	typedef std::unique_ptr<Bus> BusPtr;
-
 	BusManager();
 
 	virtual ~BusManager();
 
-	bool addBus(BusPtr bus);
+	bool addBus(Bus* bus);
 
 	/*! Gets the number of buses
 	 * @return	number of buses
@@ -43,7 +41,7 @@ public:
 	void sendSyncOnAllBuses();
 
 protected:
-	std::vector<BusPtr> buses_;
+	std::vector<std::unique_ptr<Bus>> buses_;
 
 	// wheter the busmanager should wait until the Output message queues of all buses are empty before sendign the global SYNC.
 	// ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
