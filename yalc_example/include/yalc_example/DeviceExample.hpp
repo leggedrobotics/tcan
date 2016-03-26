@@ -12,6 +12,7 @@
 #define DEVICEEXAMPLE_HPP_
 
 #include <stdint.h>
+#include <atomic>
 
 #include "yalc/DeviceCanOpen.hpp"
 
@@ -38,6 +39,8 @@ public:
 
 	void setCommand(const float value);
 
+	bool parsePDO1(const CANMsg& cmsg);
+
 	/*! Handle a SDO answer
 	 * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests
 	 * @param index		index of the SDO
@@ -47,7 +50,7 @@ public:
 	virtual void handleReadSDOAnswer(const uint16_t index, const uint8_t subIndex, const uint8_t *data);
 
 protected:
-
+	std::atomic<float> myMeasurement_;
 };
 
 #endif /* DEVICEEXAMPLE_HPP_ */

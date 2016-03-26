@@ -46,6 +46,7 @@ public:
 	 * @param command   SDO command (read or write)
 	 */
 	SDOMsg() = delete;
+
 	SDOMsg(const uint32_t nodeId, const Command command, const uint16_t index, const uint8_t subIndex, const uint32_t data):
 		CANMsg(nodeId, 8, {
 				static_cast<uint8_t>(command),
@@ -57,7 +58,15 @@ public:
 				static_cast<uint8_t>((data >> 16) & 0xff),
 				static_cast<uint8_t>((data >> 24) & 0xff)
 		}),
-		isSent_(false)
+		requiresAnswer_(true)
+	{
+
+	}
+
+	// special constructor for NMT messages
+	SDOMsg(const uint8_t nodeId, const uint8_t nmtState):
+		CANMsg(0x0, 2, {nmtState, nodeId}),
+		requiresAnswer_(false)
 	{
 
 	}
@@ -68,16 +77,11 @@ public:
 
 	}
 
-	/*! Gets sent status
-	 * @return true if output message was sent to the node
-	 */
-	bool getIsSent() const { return isSent_; }
-	void setIsSent(const bool sent) { isSent_ = sent; }
-
-
 	//! getters for index and subindex for answer verfication
 	inline uint16_t getIndex() const { return readuint16(1); }
 	inline uint8_t getSubIndex() const { return readuint8(3); }
+
+	inline bool getRequiresAnswer() const { return requiresAnswer_; }
 
 	static std::string getErrorName(const int32_t error) {
 		std::string name;
@@ -168,8 +172,8 @@ public:
 	}
 
 private:
-	//! if true, SDO request was sent through CAN network
-	bool isSent_;
+	//! if true, message will stay in the SDO queue until answer was received or timed out.
+	const bool requiresAnswer_;
 };
 
 #endif /* SDOMSG_HPP_ */

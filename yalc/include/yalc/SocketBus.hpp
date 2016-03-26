@@ -26,12 +26,13 @@ public:
 
 	virtual ~SocketBus();
 
-	virtual bool initializeBus();
 	bool closeBus();
+
+	virtual bool initializeBus();
 
 protected:
 	virtual bool readCanMessage();
-	virtual bool writeCanMessage(const CANMsg& cmsg);
+	virtual bool writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg);
 
 protected:
 	std::string interface_;

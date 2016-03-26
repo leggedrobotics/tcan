@@ -93,9 +93,9 @@ bool DeviceCanOpen::parseSDOAnswer(const CANMsg& cmsg) {
 			std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
 			sdoMsgs_.pop();
 
-			// put next SDO message into the bus output queue
-			if(sdoMsgs_.size() > 0) {
-				bus_->sendMessage(sdoMsgs_.front());
+			// put next SDO message(s) into the bus output queue
+			while(sdoMsgs_.size() > 0 && !sdoMsgs_.front().getRequiresAnswer()) {
+				bus_->sendMessage( sdoMsgs_.front() );
 			}
 		}
 	}else{
@@ -115,6 +115,10 @@ void DeviceCanOpen::sendSDO(const SDOMsg& sdoMsg) {
 	if(sdoMsgs_.size() == 1) {
 		// sdo queue was empty before, so put the new message in the bus output queue
 		bus_->sendMessage(sdoMsgs_.front());
+
+		if(!sdoMsg.getRequiresAnswer()) {
+			sdoMsgs_.pop();
+		}
 	}
 
 }
@@ -125,7 +129,7 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 		// swap with an empty queue to clear it
 		std::queue<SDOMsg>().swap(sdoMsgs_);
 	}
-	bus_->sendMessage( CANMsg(0, 2, {0x80, static_cast<uint8_t>(nodeId_)}) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x80) );
 	// todo: wait some time?
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
@@ -136,7 +140,7 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 }
 
 void DeviceCanOpen::setNmtStartRemoteDevice() {
-	bus_->sendMessage( CANMsg(0, 2, {0x1, static_cast<uint8_t>(nodeId_)}) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x1) );
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
@@ -146,7 +150,7 @@ void DeviceCanOpen::setNmtStartRemoteDevice() {
 }
 
 void DeviceCanOpen::setNmtStopRemoteDevice() {
-	bus_->sendMessage( CANMsg(0, 2, {0x2, static_cast<uint8_t>(nodeId_)}) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x2) );
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
@@ -161,7 +165,7 @@ void DeviceCanOpen::setNmtResetRemoteCommunication() {
 		// swap with an empty queue to clear it
 		std::queue<SDOMsg>().swap(sdoMsgs_);
 	}
-	bus_->sendMessage( CANMsg(0, 2, {0x82, static_cast<uint8_t>(nodeId_)}) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x82) );
 
 	nmtState_ = NMTStates::initializing;
 }
@@ -172,7 +176,7 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
 		// swap with an empty queue to clear it
 		std::queue<SDOMsg>().swap(sdoMsgs_);
 	}
-	bus_->sendMessage( CANMsg(0, 2, {0x81, static_cast<uint8_t>(nodeId_)}) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x81) );
 
 	nmtState_ = NMTStates::initializing;
 }

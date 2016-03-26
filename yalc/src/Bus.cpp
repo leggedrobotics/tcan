@@ -20,10 +20,10 @@ Bus::Bus():
 	receiveThread_(&Bus::receiveWorker, this),
 	transmitThread_(&Bus::transmitWorker, this),
 	running_(true),
-	numMessagesToSend_(0),
 	condTransmitThread_(),
-	mutexTransmitThread_()
+	condOutputQueueEmpty_()
 {
+	// todo: set thread priorities?
 }
 
 Bus::~Bus()
@@ -33,29 +33,6 @@ Bus::~Bus()
 
 	receiveThread_.join();
 	transmitThread_.join();
-}
-
-bool Bus::addDevice(DevicePtr device) {
-	devices_.push_back(device);
-	return device->initDeviceInternal(this);
-}
-
-bool Bus::addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>&& parseFunction) {
-	cobIdToFunctionMap_.emplace(cobId, std::move(parseFunction));
-	return true;
-}
-
-void Bus::sendMessage(const CANMsg& cmsg) {
-
-	{
-		std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-		outgoingMsgs_.push( cmsg ); // do not use emplace here. We need a copy of the message in some situations
-									// (SDO queue processing). Declaring another sendMessage(..) which uses move
-									// semantics does not increase performance as CANMsg has only POD members
-	}
-
-	numMessagesToSend_++;
-	condTransmitThread_.notify_all();
 }
 
 void Bus::handleMessage(const CANMsg& cmsg) {
@@ -91,19 +68,29 @@ void Bus::receiveWorker() {
 }
 
 void Bus::transmitWorker() {
-	std::unique_lock<std::mutex> lock(mutexTransmitThread_);
+	bool writeSuccess = false;
+	std::unique_lock<std::mutex> lock(outgointMsgsMutex_);
 
 	while(running_) {
-		condTransmitThread_.wait(lock, [this](){return numMessagesToSend_ > 0 || !running_;});
-		if(running_) {
-			while(numMessagesToSend_ > 0) {
-				if(writeCanMessage( outgoingMsgs_.front() )) {
-					// only pop the message from the queue if sending was successful
-					numMessagesToSend_--;
-					std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-					outgoingMsgs_.pop();
-				}
-			}
+		while(outgoingMsgs_.size() == 0 && running_) {
+			condOutputQueueEmpty_.notify_all();
+			condTransmitThread_.wait(lock);
+		}
+		// after the wait function we own the lock. copy data and unlock.
+		if(!running_) {
+			return;
+		}
+		CANMsg cmsg = outgoingMsgs_.front();
+		lock.unlock();
+
+
+		writeSuccess = writeCanMessage( lock, cmsg );
+
+		lock.lock();
+
+		if(writeSuccess) {
+			// only pop the message from the queue if sending was successful
+			outgoingMsgs_.pop();
 		}
 	}
 }

@@ -27,7 +27,8 @@
 class Bus {
 public:
 	typedef std::shared_ptr<Device> DevicePtr;
-	typedef std::unordered_map<uint32_t, std::function<bool(const CANMsg&)> > CobIdToFunctionMap;
+	typedef std::function<bool(const CANMsg&)> CallbackPtr;
+	typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
 
 	Bus();
 
@@ -37,36 +38,77 @@ public:
 	 * @param device	Pointer to the device
 	 * @return true if init was successfull
 	 */
-	bool addDevice(DevicePtr device);
+	bool addDevice(DevicePtr device) {
+		devices_.push_back(device);
+		return device->initDeviceInternal(this);
+	}
 
 	/*! Adds a can message (identified by its cobId) and a function pointer to its parse function
+	 * to the map, which is used to assign incoming messages to their callbacks.
 	 * @param cobId				cobId of the message
 	 * @param parseFunction		pointer to the parse function
 	 * @return true if successfull
 	 */
-	bool addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>&& parseFunction);
+	bool addCanMessage(const uint32_t cobId, CallbackPtr&& parseFunction)
+	{
+		return cobIdToFunctionMap_.emplace(cobId, std::move(parseFunction)).second;
+	}
 
-	/*! Add a can message to be sent
+	/*! Add a can message to be sent (added to the output queue)
 	 * @param cmsg	reference to the can message
 	 */
-	void sendMessage(const CANMsg& cmsg);
+	void sendMessage(const CANMsg& cmsg) {
+		std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
+		sendMessageWithoutLock(cmsg);
+	}
 
+	/*! Send a sync message on the bus. Is called by BusManager::sendSyncOnAllBuses or directly.
+	 */
+	void sendSync() {
+		sendMessage(CANMsg(0x80, 0, nullptr));
+	}
 
+	/*! Send a sync message on the bus without locking the queue.
+	 * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
+	 */
+	void sendSyncWithoutLock() {
+		sendMessageWithoutLock(CANMsg(0x80, 0, nullptr));
+	}
+
+	/*! Waits until the output queue is empty, locks the queue and returns the lock
+	 */
+	void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
+	{
+		lock = std::unique_lock<std::mutex>(outgointMsgsMutex_);
+		condOutputQueueEmpty_.wait(lock, [this]{return outgoingMsgs_.size() > 0 || !running_;});
+	}
+
+	/*! Internal function. Is called after reception of a message.
+	 * Routes the message to the callback.
+	 * @param cmsg	reference to the can message
+	 */
 	void handleMessage(const CANMsg& cmsg);
 
-	void setOperational(const bool operational) { isOperational_ = operational; }
-	bool getOperational() const { return isOperational_; }
+	inline void setOperational(const bool operational) { isOperational_ = operational; }
+	inline bool getOperational() const { return isOperational_; }
 
 	// thread loop functions
 	void receiveWorker();
 	void transmitWorker();
 
-
 	virtual bool initializeBus() = 0;
-
 protected:
 	virtual bool readCanMessage() = 0;
-	virtual bool writeCanMessage(const CANMsg& cmsg) = 0;
+	virtual bool writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) = 0;
+
+	void sendMessageWithoutLock(const CANMsg& cmsg)
+	{
+		outgoingMsgs_.push( cmsg );	// do not use emplace here. We need a copy of the message in some situations
+									// (SDO queue processing). Declaring another sendMessage(..) which uses move
+									// semantics does not increase performance as CANMsg has only POD members
+
+		condTransmitThread_.notify_all();
+	}
 
 protected:
 	// state of the bus. True if all devices are operational. Sync messages is sent only if bus is operational
@@ -78,6 +120,7 @@ protected:
 	// map mapping COB id to parse functions
 	CobIdToFunctionMap cobIdToFunctionMap_;
 
+	// output queue containing all messages to be sent by the transmitThread_
 	std::mutex outgointMsgsMutex_;
 	std::queue<CANMsg> outgoingMsgs_;
 
@@ -86,10 +129,11 @@ protected:
 	std::thread transmitThread_;
 	std::atomic<bool> running_;
 
-	// variables to wake the transmitThread after inserting something to the message output queue
-	std::atomic<unsigned int> numMessagesToSend_;
+	// variable to wake the transmitThread after inserting something to the message output queue
 	std::condition_variable condTransmitThread_;
-	std::mutex mutexTransmitThread_;
+
+	// variable to wait for empty output queues (required for global sync)
+	std::condition_variable condOutputQueueEmpty_;
 };
 
 #endif /* BUS_HPP_ */

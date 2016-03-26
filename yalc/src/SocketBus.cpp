@@ -125,7 +125,7 @@ bool SocketBus::readCanMessage() {
 }
 
 
-bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
+bool SocketBus::writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) {
 
 	usleep((cmsg.getLength()*8+44)/baudRate_*1000); // sleep the amount of time the message needs to be transmitted
 	return true;

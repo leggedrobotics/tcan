@@ -38,14 +38,15 @@ public:
 	 */
 //    Bus* getBus(const unsigned int index) { return buses_.at(index); }
 
-	void sendSyncOnAllBuses();
+	/*! Send a sync message on all buses
+	 * @param	wheter the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
+	 * 			ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
+	 */
+	void sendSyncOnAllBuses(const bool waitForEmptyQueues=false);
 
 protected:
 	std::vector<std::unique_ptr<Bus>> buses_;
 
-	// wheter the busmanager should wait until the Output message queues of all buses are empty before sendign the global SYNC.
-	// ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
-	bool syncWaitForEmptyQueue_;
 };
 
 #endif /* BUSMANAGER_HPP_ */

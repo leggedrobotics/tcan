@@ -15,7 +15,8 @@
 #include "yalc/canopen_sdos.hpp"
 
 DeviceExample::DeviceExample(const uint32_t nodeId, const std::string& name):
-	DeviceCanOpen(nodeId, name)
+	DeviceCanOpen(nodeId, name),
+	myMeasurement_(0.f)
 {
 
 }
@@ -42,6 +43,8 @@ bool DeviceExample::initDevice() {
 
 	bus_->addCanMessage(DeviceCanOpen::TxSDOId + nodeId_, std::bind(&DeviceCanOpen::parseSDOAnswer, this, std::placeholders::_1));
 	bus_->addCanMessage(DeviceCanOpen::TxNMT + nodeId_, std::bind(&DeviceCanOpen::parseHeartBeat, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + nodeId_, std::bind(&DeviceExample::parsePDO1, this, std::placeholders::_1));
+
 	setNmtRestartRemoteDevice();
 	return true;
 }
@@ -53,10 +56,16 @@ void DeviceExample::configureDevice() {
 }
 
 void DeviceExample::setCommand(const float value) {
-	CANMsg cmsg(DeviceCanOpen::RxPDO1Id);
+	CANMsg cmsg(DeviceCanOpen::RxPDO1Id + nodeId_);
 	cmsg.write(static_cast<uint32_t>(value), 0);
 
 	bus_->sendMessage(cmsg);
+}
+
+bool DeviceExample::parsePDO1(const CANMsg& cmsg) {
+	// variable is atomic - no need for mutexes
+	myMeasurement_ = cmsg.readint32(0);
+	return true;
 }
 
 

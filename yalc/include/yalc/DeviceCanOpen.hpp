@@ -109,8 +109,9 @@ protected:
 	//! the can state the device is in
 	std::atomic<NMTStates> nmtState_;
 
-	//! Heartbeat time interval [ms]. Set to 0 to disable heartbeat message reception checking.
+	//! Heartbeat time interval [ms], produced by the device. Set to 0 to disable heartbeat message reception checking.
 	uint16_t producerHeartBeatTime_;
+
 
 	std::mutex sdoMsgsMutex_;
 	std::queue<SDOMsg> sdoMsgs_;
