@@ -12,8 +12,6 @@
 #define DEVICECANOPEN_HPP_
 
 #include <stdint.h>
-#include <string>
-#include <memory>
 #include <queue>
 #include <mutex>
 #include <atomic>
@@ -26,9 +24,6 @@
 
 class DeviceCanOpen : public Device {
 public:
-
-	typedef std::unique_ptr<SDOMsg> SDOMsgPtr;
-
 	static constexpr int TxPDO1Id = 0x180;
 	static constexpr int TxPDO2Id = 0x280;
 	static constexpr int TxPDO3Id = 0x380;

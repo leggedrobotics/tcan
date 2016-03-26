@@ -11,6 +11,7 @@
 #define SDOMSG_HPP_
 
 #include <stdint.h>
+#include <string>
 
 #include "yalc/CANMsg.hpp"
 

@@ -36,8 +36,8 @@ Bus::~Bus()
 }
 
 bool Bus::addDevice(DevicePtr device) {
-	devices_.emplace_back(std::move(device));
-	return devices_[devices_.size()-1]->initDeviceInternal(this);
+	devices_.push_back(device);
+	return device->initDeviceInternal(this);
 }
 
 bool Bus::addCanMessage(const uint32_t cobId, std::function<bool(const CANMsg&)>&& parseFunction) {

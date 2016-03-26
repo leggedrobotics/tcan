@@ -12,11 +12,6 @@
 #define DEVICEEXAMPLE_HPP_
 
 #include <stdint.h>
-#include <string>
-#include <memory>
-#include <queue>
-#include <mutex>
-#include <atomic>
 
 #include "yalc/DeviceCanOpen.hpp"
 
