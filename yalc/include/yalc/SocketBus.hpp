@@ -1,11 +1,8 @@
-/*!
- * @file 	Bus.hpp
- * @brief	Type definitions
- * @author 	Christian Gehring
- * @date 	Jan, 2012
- * @version 1.0
- * @ingroup robotCAN, bus
+/*
+ * SocketBus.hpp
  *
+ *  Created on: Mar 27, 2016
+ *      Author: Philipp Leemann
  */
 
 #ifndef SOCKETBUS_HPP_

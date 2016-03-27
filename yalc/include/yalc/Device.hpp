@@ -1,11 +1,8 @@
-/*!
- * @file 	Device.hpp
- * @brief
- * @author 	Christian Gehring
- * @date 	Jan, 2012
- * @version 1.0
- * @ingroup robotCAN, device
+/*
+ * Device.hpp
  *
+ *  Created on: Mar 27, 2016
+ *      Author: Philipp Leemann
  */
 
 #ifndef DEVICE_HPP_

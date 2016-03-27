@@ -1,11 +1,8 @@
-/*!
- * @file 	Bus.cpp
- * @brief	Type definitions
- * @author 	Christian Gehring
- * @date 	Jan, 2012
- * @version 1.0
- * @ingroup robotCAN, bus
+/*
+ * SocketBus.cpp
  *
+ *  Created on: Mar 27, 2016
+ *      Author: Philipp Leemann
  */
 
 #include <sys/socket.h>

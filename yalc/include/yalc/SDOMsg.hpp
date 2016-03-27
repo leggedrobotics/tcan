@@ -1,12 +1,10 @@
-/*!
- * @file 	SDOMsg.hpp
- * @brief	Type definitions
- * @author 	Christian Gehring
- * @date 	Jan, 2012
- * @version 1.0
- * @ingroup robotCAN
+/*
+ * SDOMsg.hpp
  *
+ *  Created on: Mar 27, 2016
+ *      Author: Philipp Leemann
  */
+
 #ifndef SDOMSG_HPP_
 #define SDOMSG_HPP_
 

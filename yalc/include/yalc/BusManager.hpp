@@ -1,12 +1,10 @@
-/*!
- * @file 	BusManager.hpp
- * @brief	Type definitions
- * @author 	Christian Gehring
- * @date 	Jan, 2012
- * @version 1.0
- * @ingroup robotCAN, bus
+/*
+ * BusManager.hpp
  *
+ *  Created on: Mar 27, 2016
+ *      Author: Philipp Leemann
  */
+
 #ifndef BUSMANAGER_HPP_
 #define BUSMANAGER_HPP_
 
