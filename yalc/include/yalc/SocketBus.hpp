@@ -15,14 +15,14 @@
 #include <string>
 
 #include "yalc/Bus.hpp"
-
-class BusManager;
+#include "yalc/SocketBusOptions.hpp"
 
 class SocketBus : public Bus {
 public:
 
 	SocketBus() = delete;
-	SocketBus(const std::string& interface);
+	SocketBus(const std::string& interface, const unsigned int baudrate);
+	SocketBus(const SocketBusOptions& options);
 
 	virtual ~SocketBus();
 
@@ -38,8 +38,8 @@ protected:
 	std::string interface_;
 
 	pollfd socket_;
-	unsigned int baudRate_; // baud rate of the bus [kbps]
 
+	unsigned int baudRate_;
 };
 
 #endif /* SOCKETBUS_HPP_ */

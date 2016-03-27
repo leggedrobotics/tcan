@@ -135,7 +135,7 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
 	if(producerHeartBeatTime_ == 0) {
-		nmtState_ == NMTStates::preOperational;
+		nmtState_ = NMTStates::preOperational;
 	}
 }
 
@@ -145,7 +145,7 @@ void DeviceCanOpen::setNmtStartRemoteDevice() {
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
 	if(producerHeartBeatTime_ == 0) {
-		nmtState_ == NMTStates::operational;
+		nmtState_ = NMTStates::operational;
 	}
 }
 
@@ -155,7 +155,7 @@ void DeviceCanOpen::setNmtStopRemoteDevice() {
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
 	if(producerHeartBeatTime_ == 0) {
-		nmtState_ == NMTStates::stopped;
+		nmtState_ = NMTStates::stopped;
 	}
 }
 

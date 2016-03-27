@@ -5,7 +5,7 @@
 class CanManager : public BusManager {
 public:
 	CanManager() {
-		addBus( new SocketBus("can0") );
+		addBus( new SocketBus("can0", 1000) );
 		addDeviceExample();
 	}
 

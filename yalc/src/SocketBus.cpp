@@ -19,12 +19,21 @@
 
 #include "yalc/SocketBus.hpp"
 
-SocketBus::SocketBus(const std::string& interface):
-	Bus(),
+SocketBus::SocketBus(const std::string& interface, const unsigned int baudrate):
+	Bus(true, 1000),
 	interface_(interface),
 	socket_(),
-	baudRate_(125)
+	baudRate_(baudrate)
 {
+}
+
+SocketBus::SocketBus(const SocketBusOptions& options):
+	Bus(options),
+	interface_(options.interface),
+	socket_(),
+	baudRate_(options.baudrate)
+{
+
 }
 
 SocketBus::~SocketBus()

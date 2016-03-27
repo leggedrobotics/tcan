@@ -23,6 +23,7 @@
 
 #include "yalc/CANMsg.hpp"
 #include "yalc/Device.hpp"
+#include "yalc/BusOptions.hpp"
 
 class Bus {
 public:
@@ -30,7 +31,9 @@ public:
 	typedef std::function<bool(const CANMsg&)> CallbackPtr;
 	typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
 
-	Bus();
+	Bus() = delete;
+	Bus(const bool asynchronous, const unsigned int sanityCheckInterval);
+	Bus(const BusOptions& options);
 
 	virtual ~Bus();
 
@@ -83,6 +86,22 @@ public:
 		condOutputQueueEmpty_.wait(lock, [this]{return outgoingMsgs_.size() > 0 || !running_;});
 	}
 
+	/*! write all messages in the queue to the CAN driver. Call this function inside your control loop if
+	 * asynchronous mode is not used.
+	 */
+	void writeMessages();
+	/*! read all messages from the CAN driver. Call this function inside your control loop if
+	 * asynchronous mode is not used.
+	 */
+	void readMessages() {
+		readCanMessage();
+	}
+
+	/*! Do a sanity check of all devices. Call this function inside your control loop if
+	 * asynchronous mode is not used.
+	 */
+	bool sanityCheck();
+
 	/*! Internal function. Is called after reception of a message.
 	 * Routes the message to the callback.
 	 * @param cmsg	reference to the can message
@@ -92,11 +111,8 @@ public:
 	inline void setOperational(const bool operational) { isOperational_ = operational; }
 	inline bool getOperational() const { return isOperational_; }
 
-	// thread loop functions
-	void receiveWorker();
-	void transmitWorker();
-
 	virtual bool initializeBus() = 0;
+
 protected:
 	virtual bool readCanMessage() = 0;
 	virtual bool writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) = 0;
@@ -110,9 +126,16 @@ protected:
 		condTransmitThread_.notify_all();
 	}
 
+	// thread loop functions
+	void receiveWorker();
+	void transmitWorker();
+	void sanityCheckWorker();
+
 protected:
-	// state of the bus. True if all devices are operational. Sync messages is sent only if bus is operational
+	// state of the bus. True if all devices are operational.
 	bool isOperational_;
+
+	unsigned int sanityCheckInterval_;
 
 	// vector containing all devices
 	std::vector<DevicePtr> devices_;
@@ -124,9 +147,10 @@ protected:
 	std::mutex outgointMsgsMutex_;
 	std::queue<CANMsg> outgoingMsgs_;
 
-	// threads for message reception and transmission
+	// threads for message reception and transmission and device sanity checking
 	std::thread receiveThread_;
 	std::thread transmitThread_;
+	std::thread sanityCheckThread_;
 	std::atomic<bool> running_;
 
 	// variable to wake the transmitThread after inserting something to the message output queue
