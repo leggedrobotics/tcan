@@ -12,6 +12,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>yalc</depend>
+  <depend>m545_utils</depend>
 
   <export>
   </export>

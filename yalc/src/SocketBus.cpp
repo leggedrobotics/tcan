@@ -17,18 +17,14 @@
 #include "yalc/SocketBus.hpp"
 
 SocketBus::SocketBus(const std::string& interface, const unsigned int baudrate):
-	Bus(true, 1000),
-	interface_(interface),
-	socket_(),
-	baudRate_(baudrate)
+	Bus(new SocketBusOptions(interface, baudrate)),
+	socket_()
 {
 }
 
-SocketBus::SocketBus(const SocketBusOptions& options):
+SocketBus::SocketBus(SocketBusOptions* options):
 	Bus(options),
-	interface_(options.interface),
-	socket_(),
-	baudRate_(options.baudrate)
+	socket_()
 {
 
 }
@@ -38,24 +34,27 @@ SocketBus::~SocketBus()
 	closeBus();
 }
 
-bool SocketBus::initializeBus()
+bool SocketBus::initializeCanBus()
 {
+	const auto options = static_cast<SocketBusOptions*>(options_);
+	const char* interface = options->interface.c_str();
+
 	/* **************************
 	 * CAN DRIVER SETUP
 	 ***************************/
 	/* open channel */
 	int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 	if(fd < 0) {
-		printf("Opening CAN channel %s failed: %d\n", interface_.c_str(), fd);
+		printf("Opening CAN channel %s failed: %d\n", interface, fd);
 		return false;
 	}
 
 	//Configure the socket:
 	struct ifreq ifr;
-	strcpy(ifr.ifr_name, interface_.c_str());
+	strcpy(ifr.ifr_name, interface);
 	ioctl(fd, SIOCGIFINDEX, &ifr);
 
-	int loopback = 0; /* 0 = disabled, 1 = enabled (default) */
+	int loopback = options->loopback; /* 0 = disabled, 1 = enabled (default) */
 	setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback));
 	int recv_own_msgs = 0; /* 0 = disabled (default), 1 = enabled */
 	setsockopt(fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS,&recv_own_msgs, sizeof(recv_own_msgs));
@@ -71,7 +70,7 @@ bool SocketBus::initializeBus()
 	addr.can_ifindex = ifr.ifr_ifindex;
 	//printf("%s at index %d\n", channelname, ifr.ifr_ifindex);
 	if(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		printf("Error in socket %s bind.\n", interface_.c_str());
+		printf("Error in socket %s bind.\n", interface);
 		return false;
 	}
 
@@ -81,6 +80,8 @@ bool SocketBus::initializeBus()
 	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
 	socket_ = {fd, POLLIN, 0};
+
+	printf("Opened socket %s.\n", interface);
 
 	return true;
 }
@@ -132,7 +133,9 @@ bool SocketBus::readCanMessage() {
 
 
 bool SocketBus::writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) {
+	const unsigned int baudRate = static_cast<SocketBusOptions*>(options_)->baudrate;
 
-	usleep((cmsg.getLength()*8+44)/baudRate_*1000); // sleep the amount of time the message needs to be transmitted
+//	printf("sending %x\n", cmsg.getCOBId());
+	usleep((cmsg.getLength()*8+44)/baudRate*1000); // sleep the amount of time the message needs to be transmitted
 	return true;
 }

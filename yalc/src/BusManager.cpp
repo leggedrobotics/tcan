@@ -15,13 +15,15 @@ BusManager::BusManager():
 
 BusManager::~BusManager()
 {
-
+	for(Bus* bus : buses_) {
+		delete bus;
+	}
 }
 
 bool BusManager::addBus(Bus* bus)
 {
-	buses_.emplace_back( bus );
-	return bus->initializeBus();
+	buses_.push_back( bus );
+	return bus->initBus();
 }
 
 void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {

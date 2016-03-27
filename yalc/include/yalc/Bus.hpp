@@ -24,21 +24,26 @@
 
 class Bus {
 public:
-	typedef std::shared_ptr<Device> DevicePtr;
+
 	typedef std::function<bool(const CANMsg&)> CallbackPtr;
 	typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
 
 	Bus() = delete;
 	Bus(const bool asynchronous, const unsigned int sanityCheckInterval);
-	Bus(const BusOptions& options);
+	Bus(BusOptions* options);
 
 	virtual ~Bus();
+
+	/*! Initializes the Bus. Sets up threads and calls initializeCanBus(..).
+	 * @return true if init was successfull
+	 */
+	bool initBus();
 
 	/*! Adds a device to the device vector and calls its initDevice function
 	 * @param device	Pointer to the device
 	 * @return true if init was successfull
 	 */
-	bool addDevice(DevicePtr device) {
+	bool addDevice(Device* device) {
 		devices_.push_back(device);
 		return device->initDeviceInternal(this);
 	}
@@ -90,9 +95,7 @@ public:
 	/*! read all messages from the CAN driver. Call this function inside your control loop if
 	 * asynchronous mode is not used.
 	 */
-	void readMessages() {
-		readCanMessage();
-	}
+	void readMessages();
 
 	/*! Do a sanity check of all devices. Call this function inside your control loop if
 	 * asynchronous mode is not used.
@@ -108,9 +111,10 @@ public:
 	inline void setOperational(const bool operational) { isOperational_ = operational; }
 	inline bool getOperational() const { return isOperational_; }
 
-	virtual bool initializeBus() = 0;
+
 
 protected:
+	virtual bool initializeCanBus() = 0;
 	virtual bool readCanMessage() = 0;
 	virtual bool writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) = 0;
 
@@ -132,10 +136,10 @@ protected:
 	// state of the bus. True if all devices are operational.
 	bool isOperational_;
 
-	unsigned int sanityCheckInterval_;
+	BusOptions* options_;
 
 	// vector containing all devices
-	std::vector<DevicePtr> devices_;
+	std::vector<Device*> devices_;
 
 	// map mapping COB id to parse functions
 	CobIdToFunctionMap cobIdToFunctionMap_;

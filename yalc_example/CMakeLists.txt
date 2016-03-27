@@ -3,6 +3,7 @@ project(yalc_example)
 
 find_package(catkin REQUIRED COMPONENTS
   yalc
+  m545_utils
 )
 
 ###################################
@@ -12,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES yalc_example
- CATKIN_DEPENDS yalc
+ CATKIN_DEPENDS yalc m545_utils
 #  DEPENDS system_lib
 )
 

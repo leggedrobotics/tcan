@@ -14,6 +14,8 @@
 #include "yalc/Bus.hpp"
 #include "yalc/canopen_sdos.hpp"
 
+namespace example_can {
+
 DeviceExample::DeviceExample(const uint32_t nodeId, const std::string& name):
 	DeviceCanOpen(nodeId, name),
 	myMeasurement_(0.f)
@@ -77,3 +79,4 @@ void DeviceExample::handleReadSDOAnswer(const uint16_t index, const uint8_t subI
 	}
 }
 
+} /* namespace example_can */

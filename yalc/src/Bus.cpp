@@ -11,33 +11,24 @@
 #include "yalc/Bus.hpp"
 
 Bus::Bus(const bool asynchronous, const unsigned int sanityCheckInterval):
-	Bus(BusOptions(asynchronous, sanityCheckInterval))
+	Bus(new BusOptions(asynchronous, sanityCheckInterval))
 {
 
 }
 
-Bus::Bus(const BusOptions& options):
+Bus::Bus(BusOptions* options):
 	isOperational_(false),
-	sanityCheckInterval_(options.sanityCheckInterval),
+	options_(options),
 	cobIdToFunctionMap_(),
 	outgointMsgsMutex_(),
 	outgoingMsgs_(),
 	receiveThread_(),
 	transmitThread_(),
 	sanityCheckThread_(),
-	running_(true),
+	running_(false),
 	condTransmitThread_(),
 	condOutputQueueEmpty_()
 {
-	if(options.asynchronous) {
-		receiveThread_ = std::thread(&Bus::receiveWorker, this);
-		transmitThread_ = std::thread(&Bus::transmitWorker, this);
-		// todo: set thread priorities
-	}
-
-	if(sanityCheckInterval_) {
-		sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
-	}
 
 }
 
@@ -48,6 +39,29 @@ Bus::~Bus()
 
 	receiveThread_.join();
 	transmitThread_.join();
+	sanityCheckThread_.join();
+
+	for(Device* device : devices_) {
+		delete device;
+	}
+
+	delete options_;
+}
+
+bool Bus::initBus() {
+	running_ = true;
+
+	if(options_->asynchronous) {
+		receiveThread_ = std::thread(&Bus::receiveWorker, this);
+		transmitThread_ = std::thread(&Bus::transmitWorker, this);
+		// todo: set thread priorities
+	}
+
+	if(options_->sanityCheckInterval) {
+		sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
+	}
+
+	return initializeCanBus();
 }
 
 void Bus::handleMessage(const CANMsg& cmsg) {
@@ -101,6 +115,10 @@ void Bus::writeMessages() {
 	}
 }
 
+void Bus::readMessages() {
+	readCanMessage();
+}
+
 bool Bus::sanityCheck() {
 	bool allFine = true;
 	for(auto device : devices_) {
@@ -118,18 +136,24 @@ void Bus::receiveWorker() {
 	while(running_) {
 		readMessages();
 	}
+
+	printf("receive thread terminated\n");
 }
 
 void Bus::transmitWorker() {
 	while(running_) {
 		writeMessages();
 	}
+
+	printf("transmit thread terminated\n");
 }
 
 void Bus::sanityCheckWorker() {
 	while(running_) {
 		sanityCheck();
 
-		std::this_thread::sleep_until(std::chrono::steady_clock::now() + std::chrono::milliseconds(sanityCheckInterval_));
+		std::this_thread::sleep_until(std::chrono::steady_clock::now() + std::chrono::milliseconds(options_->sanityCheckInterval));
 	}
+
+	printf("sanityCheck thread terminated\n");
 }

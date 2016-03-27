@@ -16,7 +16,7 @@
 
 #include "yalc/DeviceCanOpen.hpp"
 
-
+namespace example_can {
 //! An example device that is connected via CAN.
 
 class DeviceExample : public DeviceCanOpen {
@@ -41,6 +41,8 @@ public:
 
 	bool parsePDO1(const CANMsg& cmsg);
 
+	float getMeasurement() const { return myMeasurement_; }
+
 	/*! Handle a SDO answer
 	 * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests
 	 * @param index		index of the SDO
@@ -52,5 +54,7 @@ public:
 protected:
 	std::atomic<float> myMeasurement_;
 };
+
+} /* namespace example_can */
 
 #endif /* DEVICEEXAMPLE_HPP_ */

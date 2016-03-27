@@ -43,7 +43,7 @@ public:
 	void sendSyncOnAllBuses(const bool waitForEmptyQueues=false);
 
 protected:
-	std::vector<std::unique_ptr<Bus>> buses_;
+	std::vector<Bus*> buses_;
 
 };
 
