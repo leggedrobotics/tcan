@@ -105,7 +105,7 @@ void Bus::writeMessages() {
 	lock.unlock();
 
 
-	writeSuccess = writeCanMessage( lock, cmsg );
+	writeSuccess = writeCanMessage( cmsg );
 
 	lock.lock();
 

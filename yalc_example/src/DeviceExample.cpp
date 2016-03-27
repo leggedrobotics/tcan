@@ -67,6 +67,8 @@ void DeviceExample::setCommand(const float value) {
 bool DeviceExample::parsePDO1(const CANMsg& cmsg) {
 	// variable is atomic - no need for mutexes
 	myMeasurement_ = cmsg.readint32(0);
+
+	printf("recieved PDO1 message\n");
 	return true;
 }
 

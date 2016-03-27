@@ -116,7 +116,7 @@ public:
 protected:
 	virtual bool initializeCanBus() = 0;
 	virtual bool readCanMessage() = 0;
-	virtual bool writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) = 0;
+	virtual bool writeCanMessage(const CANMsg& cmsg) = 0;
 
 	void sendMessageWithoutLock(const CANMsg& cmsg)
 	{

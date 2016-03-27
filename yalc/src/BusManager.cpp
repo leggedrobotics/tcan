@@ -38,6 +38,6 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 	}
 
 	for(unsigned int i=0; i<bussize; i++) {
-		buses_[i]->sendSync();
+		buses_[i]->sendSyncWithoutLock();
 	}
 }

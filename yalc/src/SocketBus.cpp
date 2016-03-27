@@ -108,7 +108,7 @@ bool SocketBus::readCanMessage() {
 		/*******************************************************
 		 * READ INCOMING CAN MESSAGES
 		 *******************************************************/
-		struct can_frame frame;
+		can_frame frame;
 		socket_.revents = 0;
 		bool dataAvailable=true;
 		do {
@@ -132,10 +132,21 @@ bool SocketBus::readCanMessage() {
 }
 
 
-bool SocketBus::writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg) {
+bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 	const unsigned int baudRate = static_cast<SocketBusOptions*>(options_)->baudrate;
 
-//	printf("sending %x\n", cmsg.getCOBId());
-	usleep((cmsg.getLength()*8+44)/baudRate*1000); // sleep the amount of time the message needs to be transmitted
+	can_frame frame;
+	frame.can_id = cmsg.getCOBId();
+	frame.can_dlc = cmsg.getLength();
+	std::copy(cmsg.getData(), &(cmsg.getData()[frame.can_dlc]), frame.data);
+
+	if( write(socket_.fd, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+		printf("Error at sending CAN message %x\n", cmsg.getCOBId());
+		perror("write");
+		return false;
+	}
+
+	// sleep the amount of time the message needs to be transmitted
+	usleep((cmsg.getLength()*8+44)/baudRate*1000);
 	return true;
 }

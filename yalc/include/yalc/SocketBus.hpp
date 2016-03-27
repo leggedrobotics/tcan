@@ -27,7 +27,7 @@ public:
 protected:
 	virtual bool initializeCanBus();
 	virtual bool readCanMessage();
-	virtual bool writeCanMessage(std::unique_lock<std::mutex>& lock, const CANMsg& cmsg);
+	virtual bool writeCanMessage(const CANMsg& cmsg);
 
 protected:
 	pollfd socket_;

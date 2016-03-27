@@ -1,6 +1,7 @@
 #include <string>
 #include <unistd.h>
 #include <iostream>
+#include <functional>
 
 #include "yalc/BusManager.hpp"
 #include "yalc/SocketBus.hpp"
@@ -30,6 +31,7 @@ public:
 		deviceExampleContainer_()
 	{
 		addSocketBus(BusId::BUS1, "can0");
+		buses_.at(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, std::bind(&CanManager::parseIncomingSync, this, std::placeholders::_1));
 
 		addDeviceExample(BusId::BUS1, DeviceExampleId::EXAMPLE_DEVICE_1, NodeId::EXAMPLE_DEVICE_1);
 	}
@@ -52,6 +54,10 @@ public:
 		busContainer_.insert(std::make_tuple("BUS1", static_cast<unsigned int>(busId), busId), bus);
 	}
 
+	bool parseIncomingSync(const CANMsg& cmsg) {
+		std::cout << "received SYNC message" << std::endl;
+	}
+
 	DeviceExampleContainer& getDeviceExampleContainer() {
 		return deviceExampleContainer_;
 	}
@@ -66,9 +72,9 @@ int main() {
 
 	while(true) {
 		auto device = canManager_.getDeviceExampleContainer().at(CanManager::DeviceExampleId::EXAMPLE_DEVICE_1);
-		std::cout << device->getMeasurement() << std::endl;
+		std::cout << "Measurement=" << device->getMeasurement() << std::endl;
 		device->setCommand(0.3465f);
-
+		canManager_.sendSyncOnAllBuses(true);
 		sleep(1);
 	}
 	return 0;
