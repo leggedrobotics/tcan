@@ -6,6 +6,6 @@
   <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
   <license>BSD</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
+  
   <buildtool_depend>catkin</buildtool_depend>
-  <build_export_depend>Boost</build_export_depend>
 </package>

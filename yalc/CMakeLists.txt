@@ -2,16 +2,15 @@ cmake_minimum_required(VERSION 2.6)
 project(yalc)
 
 find_package(catkin REQUIRED)
-find_package(Boost REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES yalc
+  LIBRARIES ${PROJECT_NAME}
 #  CATKIN_DEPENDS 
-  DEPENDS Boost
+#  DEPENDS Boost
 )
 
 ###########
@@ -24,7 +23,6 @@ add_definitions(-std=c++11)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME}
