@@ -134,6 +134,7 @@ bool SocketBus::readCanMessage() {
 
 bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 	const unsigned int baudRate = static_cast<SocketBusOptions*>(options_)->baudrate;
+	const bool sleepAfterSending = static_cast<SocketBusOptions*>(options_)->sleepAfterSending;
 
 	can_frame frame;
 	frame.can_id = cmsg.getCOBId();
@@ -147,6 +148,8 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 	}
 
 	// sleep the amount of time the message needs to be transmitted
-	usleep((cmsg.getLength()*8+44)/baudRate*1000);
+	if(sleepAfterSending) {
+		usleep((cmsg.getLength()*8+44)/baudRate*1000);
+	}
 	return true;
 }

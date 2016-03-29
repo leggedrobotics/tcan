@@ -41,6 +41,10 @@ public:
 	//! loop back sent messages
 	bool loopback;
 
+	//! if true, the writeCanMessage(..) function sleeps for the estimated amount of time the can driver
+	// needs to send the message on the bus (prevent overflow)
+	bool sleepAfterSending;
+
 	//! baud rate of the bus in kbps
 	unsigned int baudrate;
 
