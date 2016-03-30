@@ -19,7 +19,8 @@ public:
 		BusOptions(),
 		interface(),
 		loopback(false),
-		baudrate(125)
+		baudrate(125),
+		sndBufLength(0)
 	{
 
 	}
@@ -28,7 +29,8 @@ public:
 		BusOptions(),
 		interface(interface_name),
 		loopback(false),
-		baudrate(baud_rate)
+		baudrate(baud_rate),
+		sndBufLength(0)
 	{
 
 	}
@@ -41,12 +43,12 @@ public:
 	//! loop back sent messages
 	bool loopback;
 
-	//! if true, the writeCanMessage(..) function sleeps for the estimated amount of time the can driver
-	// needs to send the message on the bus (prevent overflow)
-	bool sleepAfterSending;
-
 	//! baud rate of the bus in kbps
 	unsigned int baudrate;
+
+	//! length of the socket buffer. 0=default. If the txqueuelen of the netdevice cannot be changed (default=10), set this value to prevent ENOBUFS errors when writing.
+	// The minimum length is 1024, set 0 to keep the default
+	unsigned int sndBufLength;
 
 };
 

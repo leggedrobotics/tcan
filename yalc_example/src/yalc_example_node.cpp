@@ -49,7 +49,6 @@ public:
 
 	void addSocketBus(const BusId busId, const std::string& interface) {
 		SocketBusOptions* options = new SocketBusOptions();
-		options->loopback = true;
 		options->interface = interface;
 		options->baudrate = 1000;
 
@@ -85,6 +84,8 @@ int main() {
 		}
 		canManager_.sendSyncOnAllBuses(true);
 
+//		std::cout << "sleeping..\n\n";
+//		sleep(5);
 		nextStep += std::chrono::microseconds(10000);
 		std::this_thread::sleep_until( nextStep );
 	}
