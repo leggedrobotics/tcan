@@ -21,6 +21,20 @@ namespace yalc {
 namespace example_can {
 //! An example device that is connected via CAN.
 
+class DeviceExampleOptions : public DeviceCanOpenOptions {
+public:
+	DeviceExampleOptions() = delete;
+	DeviceExampleOptions(const uint32_t nodeId, const std::string& name):
+		DeviceCanOpenOptions(nodeId, name),
+		someParameter(0)
+	{
+
+	}
+
+	unsigned int someParameter;
+};
+
+
 class DeviceExample : public DeviceCanOpen {
 public:
 
@@ -29,8 +43,8 @@ public:
 	 * @param name		name of the device
 	 */
 	DeviceExample() = delete;
-	DeviceExample(const uint32_t nodeId);
 	DeviceExample(const uint32_t nodeId, const std::string& name);
+	DeviceExample(DeviceExampleOptions* options);
 
 	//! Destructor
 	virtual ~DeviceExample();

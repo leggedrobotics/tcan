@@ -19,15 +19,17 @@ namespace yalc {
 namespace example_can {
 
 DeviceExample::DeviceExample(const uint32_t nodeId, const std::string& name):
-	DeviceCanOpen(nodeId, name),
-	myMeasurement_(0.f)
+	DeviceExample(new DeviceExampleOptions(nodeId, name))
+
 {
 
 }
 
-DeviceExample::DeviceExample(const uint32_t nodeId):
-	DeviceExample(nodeId, std::string())
+DeviceExample::DeviceExample(DeviceExampleOptions* options):
+	DeviceCanOpen(options),
+	myMeasurement_(0.f)
 {
+
 }
 
 DeviceExample::~DeviceExample()
@@ -45,9 +47,9 @@ public:
 
 bool DeviceExample::initDevice() {
 
-	bus_->addCanMessage(DeviceCanOpen::TxSDOId + nodeId_, std::bind(&DeviceCanOpen::parseSDOAnswer, this, std::placeholders::_1));
-	bus_->addCanMessage(DeviceCanOpen::TxNMT + nodeId_, std::bind(&DeviceCanOpen::parseHeartBeat, this, std::placeholders::_1));
-	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + nodeId_, std::bind(&DeviceExample::parsePDO1, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxSDOId + getNodeId(), std::bind(&DeviceCanOpen::parseSDOAnswer, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxNMT + getNodeId(), std::bind(&DeviceCanOpen::parseHeartBeat, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), std::bind(&DeviceExample::parsePDO1, this, std::placeholders::_1));
 
 	setNmtRestartRemoteDevice();
 	return true;
@@ -55,12 +57,12 @@ bool DeviceExample::initDevice() {
 
 void DeviceExample::configureDevice() {
 	setNmtEnterPreOperational();
-	sendSDO(mySDO(nodeId_, 0x40));
+	sendSDO(mySDO(getNodeId(), 0x40));
 	setNmtStartRemoteDevice();
 }
 
 void DeviceExample::setCommand(const float value) {
-	CANMsg cmsg(DeviceCanOpen::RxPDO1Id + nodeId_);
+	CANMsg cmsg(DeviceCanOpen::RxPDO1Id + getNodeId());
 	cmsg.write(static_cast<uint32_t>(value), 0);
 
 	bus_->sendMessage(cmsg);

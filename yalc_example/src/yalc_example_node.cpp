@@ -44,9 +44,14 @@ public:
 
 	void addDeviceExample(const BusId busId, const DeviceExampleId deviceId, const NodeId nodeId) {
 		const unsigned int iBus = static_cast<unsigned int>(busId);
-		auto device = new example_can::DeviceExample(static_cast<uint32_t>(nodeId));
+		const std::string name = "EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId));
+
+		auto options = new example_can::DeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
+		options->someParameter = 37;
+
+		auto device = new example_can::DeviceExample(options); // or example_can::DeviceExample(nodeId, name);
 		buses_.at(iBus)->addDevice( device );
-		deviceExampleContainer_.insert(std::make_tuple("EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId)), static_cast<unsigned int>(deviceId), deviceId), device);
+		deviceExampleContainer_.insert(std::make_tuple(name, static_cast<unsigned int>(deviceId), deviceId), device);
 	}
 
 	void addSocketBus(const BusId busId, const std::string& interface) {

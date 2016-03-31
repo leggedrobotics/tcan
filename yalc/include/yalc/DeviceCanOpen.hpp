@@ -15,6 +15,7 @@
 
 #include "yalc/Device.hpp"
 #include "yalc/SDOMsg.hpp"
+#include "yalc/DeviceCanOpenOptions.hpp"
 
 namespace yalc {
 //! A CANOpen device that is connected via CAN.
@@ -48,8 +49,8 @@ public:
 	 * @param name		name of the device
 	 */
 	DeviceCanOpen() = delete;
-	DeviceCanOpen(const uint32_t nodeId);
 	DeviceCanOpen(const uint32_t nodeId, const std::string& name);
+	DeviceCanOpen(DeviceCanOpenOptions* options);
 
 	//! Destructor
 	virtual ~DeviceCanOpen();
@@ -106,10 +107,6 @@ protected:
 protected:
 	//! the can state the device is in
 	std::atomic<NMTStates> nmtState_;
-
-	//! Heartbeat time interval [ms], produced by the device. Set to 0 to disable heartbeat message reception checking.
-	uint16_t producerHeartBeatTime_;
-
 
 	std::mutex sdoMsgsMutex_;
 	std::queue<SDOMsg> sdoMsgs_;

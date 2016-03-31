@@ -13,18 +13,18 @@
 namespace yalc {
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
-	Device(nodeId, name),
-	nmtState_(NMTStates::initializing),
-	producerHeartBeatTime_(0),
-	sdoMsgsMutex_(),
-	sdoMsgs_()
+	DeviceCanOpen(new DeviceCanOpenOptions(nodeId, name))
 {
 
 }
 
-DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId):
-			DeviceCanOpen(nodeId, std::string())
+DeviceCanOpen::DeviceCanOpen(DeviceCanOpenOptions* options):
+	Device(options),
+	nmtState_(NMTStates::initializing),
+	sdoMsgsMutex_(),
+	sdoMsgs_()
 {
+
 }
 
 DeviceCanOpen::~DeviceCanOpen()
@@ -41,12 +41,12 @@ bool DeviceCanOpen::sanityCheck() {
 bool DeviceCanOpen::parseHeartBeat(const CANMsg& cmsg) {
 
 	if(cmsg.getLength() != 1) {
-		printf("Invalid Heartbeat message length from nodeId %x: %d\n", nodeId_, cmsg.getLength());
+		printf("Invalid Heartbeat message length from nodeId %x: %d\n", getNodeId(), cmsg.getLength());
 		return false;
 	}
 
 	switch(cmsg.readuint8(0)) {
-	case 0x0: // bootup
+	case 0x0: // boot up
 		nmtState_ = NMTStates::preOperational; // devices should switch automatically to pre-operational after bootup
 		configureDevice();
 		break;
@@ -64,7 +64,7 @@ bool DeviceCanOpen::parseHeartBeat(const CANMsg& cmsg) {
 		break;
 
 	default:
-		printf("Invalid Heartbeat message data from nodeId %x: %x\n", nodeId_, cmsg.readuint8(0));
+		printf("Invalid Heartbeat message data from nodeId %x: %x\n", getNodeId(), cmsg.readuint8(0));
 		return false;
 		break;
 	}
@@ -131,32 +131,32 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 		// swap with an empty queue to clear it
 		std::queue<SDOMsg>().swap(sdoMsgs_);
 	}
-	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x80) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
 	// todo: wait some time?
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
-	if(producerHeartBeatTime_ == 0) {
+	if(static_cast<DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
 		nmtState_ = NMTStates::preOperational;
 	}
 }
 
 void DeviceCanOpen::setNmtStartRemoteDevice() {
-	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x1) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x1) );
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
-	if(producerHeartBeatTime_ == 0) {
+	if(static_cast<DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
 		nmtState_ = NMTStates::operational;
 	}
 }
 
 void DeviceCanOpen::setNmtStopRemoteDevice() {
-	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x2) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x2) );
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
-	if(producerHeartBeatTime_ == 0) {
+	if(static_cast<DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
 		nmtState_ = NMTStates::stopped;
 	}
 }
@@ -167,7 +167,7 @@ void DeviceCanOpen::setNmtResetRemoteCommunication() {
 		// swap with an empty queue to clear it
 		std::queue<SDOMsg>().swap(sdoMsgs_);
 	}
-	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x82) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
 
 	nmtState_ = NMTStates::initializing;
 }
@@ -178,7 +178,7 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
 		// swap with an empty queue to clear it
 		std::queue<SDOMsg>().swap(sdoMsgs_);
 	}
-	sendSDO( SDOMsg(static_cast<uint8_t>(nodeId_), 0x81) );
+	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
 
 	nmtState_ = NMTStates::initializing;
 }
