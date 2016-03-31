@@ -42,6 +42,12 @@ public:
 		}
 	}
 
+	virtual ~CanManager()
+	{
+		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destructed object (parseIncomingSync(..) in this case)
+		closeBuses();
+	}
+
 	void addDeviceExample(const BusId busId, const DeviceExampleId deviceId, const NodeId nodeId) {
 		const unsigned int iBus = static_cast<unsigned int>(busId);
 		const std::string name = "EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId));
@@ -57,6 +63,8 @@ public:
 	void addSocketBus(const BusId busId, const std::string& interface) {
 		SocketBusOptions* options = new SocketBusOptions();
 		options->interface = interface;
+		options->loopback = true;
+		options->sndBufLength = 1;
 
 		auto bus = new SocketBus(options);
 		addBus( bus );
@@ -64,8 +72,11 @@ public:
 	}
 
 	bool parseIncomingSync(const CANMsg& cmsg) {
-		std::cout << "received SYNC message" << std::endl;
+		for(auto device : deviceExampleContainer_) {
+			device->setCommand(0.f);
+		}
 
+//		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
 		return true;
 	}
 
@@ -93,15 +104,15 @@ int main() {
 	auto nextStep = std::chrono::steady_clock::now();
 
 	while(g_running) {
-		for(auto device : canManager_.getDeviceExampleContainer()) {
+//		for(auto device : canManager_.getDeviceExampleContainer()) {
 //			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
-			device->setCommand(12345.f);
-		}
-		canManager_.sendSyncOnAllBuses(true);
+//			device->setCommand(0.f);
+//		}
+//		canManager_.sendSyncOnAllBuses(true);
 
 //		std::cout << "sleeping..\n\n";
 //		sleep(5);
-		nextStep += std::chrono::microseconds(10000);
+		nextStep += std::chrono::microseconds(1000000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;

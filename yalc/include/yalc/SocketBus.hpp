@@ -24,8 +24,6 @@ public:
 
 	virtual ~SocketBus();
 
-	bool closeBus();
-
 protected:
 	virtual bool initializeCanBus();
 	virtual bool readCanMessage();

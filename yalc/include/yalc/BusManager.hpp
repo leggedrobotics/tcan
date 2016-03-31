@@ -41,6 +41,8 @@ public:
 	 */
 	void sendSyncOnAllBuses(const bool waitForEmptyQueues=false);
 
+	void closeBuses();
+
 protected:
 	std::vector<Bus*> buses_;
 

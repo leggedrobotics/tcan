@@ -36,12 +36,7 @@ Bus::Bus(BusOptions* options):
 
 Bus::~Bus()
 {
-	running_ = false;
-	condTransmitThread_.notify_all();
-
-	receiveThread_.join();
-	transmitThread_.join();
-	sanityCheckThread_.join();
+	stopThreads();
 
 	for(Device* device : devices_) {
 		delete device;
@@ -50,7 +45,30 @@ Bus::~Bus()
 	delete options_;
 }
 
+void Bus::stopThreads() {
+	running_ = false;
+	condTransmitThread_.notify_all();
+
+	if(sanityCheckThread_.joinable()) {
+		sanityCheckThread_.join();
+	}
+
+	if(transmitThread_.joinable()) {
+		transmitThread_.join();
+	}
+
+	if(receiveThread_.joinable()) {
+		receiveThread_.join();
+	}
+
+}
+
 bool Bus::initBus() {
+
+	if(!initializeCanBus()) {
+		return false;
+	}
+
 	running_ = true;
 
 	if(options_->asynchronous) {
@@ -63,7 +81,7 @@ bool Bus::initBus() {
 		sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
 	}
 
-	return initializeCanBus();
+	return true;
 }
 
 void Bus::handleMessage(const CANMsg& cmsg) {

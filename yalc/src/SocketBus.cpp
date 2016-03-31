@@ -33,7 +33,8 @@ SocketBus::SocketBus(SocketBusOptions* options):
 
 SocketBus::~SocketBus()
 {
-	closeBus();
+	stopThreads();
+	close(socket_.fd);
 }
 
 bool SocketBus::initializeCanBus()
@@ -92,14 +93,21 @@ bool SocketBus::initializeCanBus()
 		setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength), sizeof(options->sndBufLength));
 	}
 
-//	timeval timeout;
-//	timeout.tv_sec = 1;
-//	timeout.tv_usec = 0;
-//	if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
-//		printf("Failed to set read timeout\n");
-//		perror("setsockopt");
-//	}
+	timeval timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+	if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
+		printf("Failed to set read timeout\n");
+		perror("setsockopt");
+	}
 
+	//Set nonblocking:
+//	int flags;
+//	if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
+//	if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
+//		printf("Failed to set socket nonblocking\n");
+//		perror("fcntl");
+//	}
 
 	/* bind socket */
 	struct sockaddr_can addr;
@@ -120,29 +128,26 @@ bool SocketBus::initializeCanBus()
 	return true;
 }
 
-bool SocketBus::closeBus() {
-	close(socket_.fd);
-	return true;
-}
-
 
 bool SocketBus::readCanMessage() {
 
-	// poll the socket, even if it is non-blocking, to provide a timeout
-	const int ret = poll( &socket_, 1, 1000 );
+	// poll the socket only in synchronous mode, so this function DOES NOT block until we have read some data (or timeout).
+	// If asynchronous, we set the socket to blocking and have a separate thread reading from it.
 
-	if ( ret == -1 ) {
-		printf("poll failed");
-		perror("poll()");
-		return false;
-	}else if ( ret == 0 || !(socket_.revents & POLLIN) ) {
-		/*******************************************************
-		 * no data received, poll timed out
-		 *******************************************************/
-	}else{
-		/*******************************************************
-		 * data ready to be read
-		 *******************************************************/
+//	const int ret = poll( &socket_, 1, 1000 );
+//
+//	if ( ret == -1 ) {
+//		printf("poll failed");
+//		perror("poll()");
+//		return false;
+//	}else if ( ret == 0 || !(socket_.revents & POLLIN) ) {
+//		/*******************************************************
+//		 * no data received, poll timed out
+//		 *******************************************************/
+//	}else{
+//		/*******************************************************
+//		 * data ready to be read
+//		 *******************************************************/
 		can_frame frame;
 		socket_.revents = 0;
 		bool dataAvailable=true;
@@ -159,8 +164,7 @@ bool SocketBus::readCanMessage() {
 				handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
 			}
 		} while(dataAvailable);
-
-	}
+//	}
 
 	return true;
 }
@@ -168,7 +172,8 @@ bool SocketBus::readCanMessage() {
 
 bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
-	// no need to poll(..) the device if the socket is blocking.
+	// poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout).
+	// If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
 	can_frame frame;
 	frame.can_id = cmsg.getCOBId();

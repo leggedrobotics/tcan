@@ -17,9 +17,7 @@ BusManager::BusManager():
 
 BusManager::~BusManager()
 {
-	for(Bus* bus : buses_) {
-		delete bus;
-	}
+	closeBuses();
 }
 
 bool BusManager::addBus(Bus* bus)
@@ -42,6 +40,14 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 	for(unsigned int i=0; i<bussize; i++) {
 		buses_[i]->sendSyncWithoutLock();
 	}
+}
+
+void BusManager::closeBuses() {
+	for(Bus* bus : buses_) {
+		delete bus;
+	}
+
+	buses_.clear();
 }
 
 } /* namespace yalc */

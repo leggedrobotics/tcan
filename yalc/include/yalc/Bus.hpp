@@ -116,6 +116,8 @@ public:
 
 
 protected:
+	void stopThreads();
+
 	virtual bool initializeCanBus() = 0;
 	virtual bool readCanMessage() = 0;
 	virtual bool writeCanMessage(const CANMsg& cmsg) = 0;
