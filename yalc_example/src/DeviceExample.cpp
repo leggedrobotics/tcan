@@ -14,6 +14,8 @@
 #include "yalc/Bus.hpp"
 #include "yalc/canopen_sdos.hpp"
 
+namespace yalc {
+
 namespace example_can {
 
 DeviceExample::DeviceExample(const uint32_t nodeId, const std::string& name):
@@ -82,3 +84,5 @@ void DeviceExample::handleReadSDOAnswer(const uint16_t index, const uint8_t subI
 }
 
 } /* namespace example_can */
+
+} /* namespace yalc */

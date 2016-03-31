@@ -13,6 +13,7 @@
 
 #include "yalc/CANMsg.hpp"
 
+namespace yalc {
 
 //! Service Data Object Message Container
 /*! It contains an output CANOpen message that needs to be sent to the CAN node and
@@ -173,5 +174,7 @@ private:
 	//! if true, message will stay in the SDO queue until answer was received or timed out.
 	const bool requiresAnswer_;
 };
+
+} /* namespace yalc */
 
 #endif /* SDOMSG_HPP_ */

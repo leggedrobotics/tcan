@@ -22,6 +22,8 @@
 #include "yalc/Device.hpp"
 #include "yalc/BusOptions.hpp"
 
+namespace yalc {
+
 class Bus {
 public:
 
@@ -160,5 +162,7 @@ protected:
 	// variable to wait for empty output queues (required for global sync)
 	std::condition_variable condOutputQueueEmpty_;
 };
+
+} /* namespace yalc */
 
 #endif /* BUS_HPP_ */

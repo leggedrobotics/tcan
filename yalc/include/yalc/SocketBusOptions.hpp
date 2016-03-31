@@ -12,6 +12,8 @@
 
 #include "yalc/BusOptions.hpp"
 
+namespace yalc {
+
 class SocketBusOptions : public BusOptions {
 public:
 
@@ -19,17 +21,15 @@ public:
 		BusOptions(),
 		interface(),
 		loopback(false),
-		baudrate(125),
 		sndBufLength(0)
 	{
 
 	}
 
-	SocketBusOptions(const std::string& interface_name, const unsigned int baud_rate):
+	SocketBusOptions(const std::string& interface_name):
 		BusOptions(),
 		interface(interface_name),
 		loopback(false),
-		baudrate(baud_rate),
 		sndBufLength(0)
 	{
 
@@ -43,13 +43,12 @@ public:
 	//! loop back sent messages
 	bool loopback;
 
-	//! baud rate of the bus in kbps
-	unsigned int baudrate;
-
 	//! length of the socket buffer. 0=default. If the txqueuelen of the netdevice cannot be changed (default=10), set this value to prevent ENOBUFS errors when writing.
 	// The minimum length is 1024, set 0 to keep the default
 	unsigned int sndBufLength;
 
 };
+
+} /* namespace yalc */
 
 #endif /* SOCKETBUSOPTIONS_HPP_ */

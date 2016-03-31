@@ -16,6 +16,8 @@
 
 #include "yalc/DeviceCanOpen.hpp"
 
+namespace yalc {
+
 namespace example_can {
 //! An example device that is connected via CAN.
 
@@ -56,5 +58,7 @@ protected:
 };
 
 } /* namespace example_can */
+
+} /* namespace yalc */
 
 #endif /* DEVICEEXAMPLE_HPP_ */

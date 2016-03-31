@@ -3,12 +3,14 @@
 #include <iostream>
 #include <functional>
 #include <chrono>
+#include <signal.h>
 
 #include "yalc/BusManager.hpp"
 #include "yalc/SocketBus.hpp"
 #include "yalc_example/DeviceExample.hpp"
 #include "m545_utils/containers/MultiKeyContainer.hpp"
 
+namespace yalc {
 class CanManager : public BusManager {
 public:
 	enum class BusId : unsigned int {
@@ -50,7 +52,6 @@ public:
 	void addSocketBus(const BusId busId, const std::string& interface) {
 		SocketBusOptions* options = new SocketBusOptions();
 		options->interface = interface;
-		options->baudrate = 1000;
 
 		auto bus = new SocketBus(options);
 		addBus( bus );
@@ -72,12 +73,21 @@ protected:
 	DeviceExampleContainer deviceExampleContainer_;
 };
 
+} /* namespace yalc */
+
+bool g_running = true;
+
+void signal_handler(int) {
+	g_running = false;
+}
+
 int main() {
-	CanManager canManager_;
+	signal(SIGINT, signal_handler);
+	yalc::CanManager canManager_;
 
 	auto nextStep = std::chrono::steady_clock::now();
 
-	while(true) {
+	while(g_running) {
 		for(auto device : canManager_.getDeviceExampleContainer()) {
 //			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
 			device->setCommand(12345.f);

@@ -10,6 +10,8 @@
 
 #include "yalc/Bus.hpp"
 
+namespace yalc {
+
 Bus::Bus(const bool asynchronous, const unsigned int sanityCheckInterval):
 	Bus(new BusOptions(asynchronous, sanityCheckInterval))
 {
@@ -73,7 +75,7 @@ void Bus::handleMessage(const CANMsg& cmsg) {
 		it->second(cmsg); // call function pointer
 	} else {
 		auto value = cmsg.getData();
-		printf("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+		printf("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
 				cmsg.getCOBId(),
 				value[1],
 				value[0],
@@ -149,11 +151,17 @@ void Bus::transmitWorker() {
 }
 
 void Bus::sanityCheckWorker() {
+	auto nextLoop = std::chrono::steady_clock::now();
+
 	while(running_) {
 		sanityCheck();
 
-		std::this_thread::sleep_until(std::chrono::steady_clock::now() + std::chrono::milliseconds(options_->sanityCheckInterval));
+		nextLoop += std::chrono::milliseconds(options_->sanityCheckInterval);
+		std::this_thread::sleep_until(nextLoop);
 	}
 
 	printf("sanityCheck thread terminated\n");
 }
+
+} /* namespace yalc */
+

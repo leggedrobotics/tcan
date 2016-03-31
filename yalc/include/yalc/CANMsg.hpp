@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <initializer_list>
 
+namespace yalc {
+
 //! General CANOpen message container
 
 class CANMsg {
@@ -178,5 +180,7 @@ private:
 	 */
 	uint8_t data_[8];
 };
+
+} /* namespace yalc */
 
 #endif /* CANMsg_HPP_ */

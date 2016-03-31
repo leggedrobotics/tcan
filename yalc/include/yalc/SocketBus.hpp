@@ -13,11 +13,13 @@
 #include "yalc/Bus.hpp"
 #include "yalc/SocketBusOptions.hpp"
 
+namespace yalc {
+
 class SocketBus : public Bus {
 public:
 
 	SocketBus() = delete;
-	SocketBus(const std::string& interface, const unsigned int baudrate);
+	SocketBus(const std::string& interface);
 	SocketBus(SocketBusOptions* options);
 
 	virtual ~SocketBus();
@@ -32,5 +34,7 @@ protected:
 protected:
 	pollfd socket_;
 };
+
+} /* namespace yalc */
 
 #endif /* SOCKETBUS_HPP_ */

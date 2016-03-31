@@ -13,10 +13,9 @@
 
 #include "yalc/Bus.hpp"
 
+namespace yalc {
+
 //! Container of all CAN buses
-/*! Manager to facilitate the handling of various CAN buses.
- * @ingroup robotCAN, bus
- */
 class BusManager {
 public:
 	BusManager();
@@ -46,5 +45,7 @@ protected:
 	std::vector<Bus*> buses_;
 
 };
+
+} /* namespace yalc */
 
 #endif /* BUSMANAGER_HPP_ */

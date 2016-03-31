@@ -16,7 +16,7 @@
 #include "yalc/Device.hpp"
 #include "yalc/SDOMsg.hpp"
 
-
+namespace yalc {
 //! A CANOpen device that is connected via CAN.
 
 class DeviceCanOpen : public Device {
@@ -56,6 +56,7 @@ public:
 
 	/*! Do a sanity check of the device. This function is intended to be called with constant rate
 	 * and shall check heartbeats, SDO timeouts, ...
+	 * This function is automatically called if the Bus has sanityCheckInterval > 0
 	 * @return true if everything is ok.
 	 */
 	virtual bool sanityCheck();
@@ -113,5 +114,7 @@ protected:
 	std::mutex sdoMsgsMutex_;
 	std::queue<SDOMsg> sdoMsgs_;
 };
+
+} /* namespace yalc */
 
 #endif /* DEVICECANOPEN_HPP_ */

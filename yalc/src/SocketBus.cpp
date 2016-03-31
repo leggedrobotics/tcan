@@ -16,8 +16,10 @@
 
 #include "yalc/SocketBus.hpp"
 
-SocketBus::SocketBus(const std::string& interface, const unsigned int baudrate):
-	Bus(new SocketBusOptions(interface, baudrate)),
+namespace yalc {
+
+SocketBus::SocketBus(const std::string& interface):
+	Bus(new SocketBusOptions(interface)),
 	socket_()
 {
 }
@@ -168,8 +170,6 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
 	// no need to poll(..) the device if the socket is blocking.
 
-	const unsigned int baudRate = static_cast<SocketBusOptions*>(options_)->baudrate;
-
 	can_frame frame;
 	frame.can_id = cmsg.getCOBId();
 	frame.can_dlc = cmsg.getLength();
@@ -184,3 +184,5 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
 	return true;
 }
+
+} /* namespace yalc */

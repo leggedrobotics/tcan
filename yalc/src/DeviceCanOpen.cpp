@@ -10,6 +10,8 @@
 #include "yalc/DeviceCanOpen.hpp"
 #include "yalc/Bus.hpp"
 
+namespace yalc {
+
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
 	Device(nodeId, name),
 	nmtState_(NMTStates::initializing),
@@ -31,8 +33,8 @@ DeviceCanOpen::~DeviceCanOpen()
 }
 
 bool DeviceCanOpen::sanityCheck() {
-
 	return true;
+
 }
 
 
@@ -74,33 +76,36 @@ bool DeviceCanOpen::parseSDOAnswer(const CANMsg& cmsg) {
 	const uint8_t responseMode = cmsg.readuint8(0);
 	const uint16_t index = cmsg.readuint16(1);
 	const uint8_t subindex = cmsg.readuint8(3);
-	const SDOMsg& sdo = sdoMsgs_.front();
 
-	if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
+	if(sdoMsgs_.size() != 0) {
+		const SDOMsg& sdo = sdoMsgs_.front();
 
-		if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
-			handleReadSDOAnswer( index, subindex, &(cmsg.getData()[4]) );
-		}else if(responseMode == 0x80) { // error response
-			const int32_t error = cmsg.readint32(4);
-			printf("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x\n", SDOMsg::getErrorName(error).c_str(), cmsg.getCOBId(), index, subindex, error);
-			// todo: further error handling
-		}
+		if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
-		{
-			std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-			sdoMsgs_.pop();
-
-			// put next SDO message(s) into the bus output queue
-			while(sdoMsgs_.size() > 0 && !sdoMsgs_.front().getRequiresAnswer()) {
-				bus_->sendMessage( sdoMsgs_.front() );
+			if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
+				handleReadSDOAnswer( index, subindex, &(cmsg.getData()[4]) );
+			}else if(responseMode == 0x80) { // error response
+				const int32_t error = cmsg.readint32(4);
+				printf("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x\n", SDOMsg::getErrorName(error).c_str(), cmsg.getCOBId(), index, subindex, error);
+				// todo: further error handling
 			}
+
+			{
+				std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+				sdoMsgs_.pop();
+
+				// put next SDO message(s) into the bus output queue
+				while(sdoMsgs_.size() > 0 && !sdoMsgs_.front().getRequiresAnswer()) {
+					bus_->sendMessage( sdoMsgs_.front() );
+				}
+			}
+
+			return true;
 		}
-	}else{
-		printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
-		return false;
 	}
 
-	return true;
+	printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
+	return false;
 }
 
 
@@ -178,3 +183,4 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
 	nmtState_ = NMTStates::initializing;
 }
 
+} /* namespace yalc */

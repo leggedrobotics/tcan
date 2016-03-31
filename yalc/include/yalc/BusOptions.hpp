@@ -8,6 +8,8 @@
 #ifndef BUSOPTIONS_HPP_
 #define BUSOPTIONS_HPP_
 
+namespace yalc {
+
 class BusOptions {
 public:
 
@@ -45,5 +47,7 @@ public:
 
 
 };
+
+} /* namespace yalc */
 
 #endif /* BUSOPTIONS_HPP_ */

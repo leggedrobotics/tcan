@@ -13,6 +13,7 @@
 
 #include "yalc/CANMsg.hpp"
 
+namespace yalc {
 class Bus;
 
 
@@ -51,9 +52,9 @@ public:
 	 */
 	virtual bool initDevice() = 0;
 
-	/*! Configure the device (send SDOs to initialize it)
-	 * This function is intended to be called (automatically) after reception of a
-	 * specific message from the device (e.g. bootup message in CANOpen)
+	/*! Configure the device (send SDOs)
+	 * This function is intended to be (automatically) called after reception of a
+	 * specific message from the device (e.g. bootup message in DeviceCanOpen)
 	 */
 	virtual void configureDevice() {
 
@@ -61,6 +62,7 @@ public:
 
 	/*! Do a sanity check of the device. This function is intended to be called with constant rate
 	 * and shall check heartbeats, SDO timeouts, ...
+	 * This function is automatically called if the Bus has sanityCheckInterval > 0
 	 * @return true if everything is ok.
 	 */
 	virtual bool sanityCheck() {
@@ -70,7 +72,7 @@ public:
 	/*! Initialize the device. This function is automatically called by Bus::addDevice(..).
 	 * Calls the initDevice() function.
 	 */
-	virtual bool initDeviceInternal(Bus* bus) {
+	bool initDeviceInternal(Bus* bus) {
 		bus_ = bus;
 		return initDevice();
 	}
@@ -89,5 +91,7 @@ protected:
 	//! human-readable name of the device
 	std::string name_;
 };
+
+} /* namespace yalc */
 
 #endif /* DEVICE_HPP_ */

@@ -2,6 +2,7 @@
 
 #include "yalc/SDOMsg.hpp"
 
+namespace yalc {
 namespace canopen {
 
 /** *********************************************************************
@@ -694,4 +695,5 @@ public:
 };
 
 
-} // namespace
+} // namespace canopen
+} /* namespace yalc */

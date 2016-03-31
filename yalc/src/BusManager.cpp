@@ -7,6 +7,8 @@
 
 #include "yalc/BusManager.hpp"
 
+namespace yalc {
+
 BusManager::BusManager():
 	buses_()
 {
@@ -41,3 +43,5 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 		buses_[i]->sendSyncWithoutLock();
 	}
 }
+
+} /* namespace yalc */
