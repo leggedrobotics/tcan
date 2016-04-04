@@ -29,12 +29,6 @@ public:
 	 */
 	unsigned int getSize() const { return buses_.size(); }
 
-	/*! Gets a reference to a bus by index
-	 * @param	index of bus
-	 * @return	reference to bus
-	 */
-//    Bus* getBus(const unsigned int index) { return buses_.at(index); }
-
 	/*! Send a sync message on all buses
 	 * @param	wheter the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
 	 * 			ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
@@ -49,5 +43,5 @@ protected:
 };
 
 } /* namespace yalc */
-
 #endif /* BUSMANAGER_HPP_ */
+

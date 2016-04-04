@@ -151,7 +151,7 @@ bool SocketBus::readCanMessage() {
 		can_frame frame;
 		socket_.revents = 0;
 		bool dataAvailable=true;
-		do {
+//		do {
 			const int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
 //			printf("CanManager_ bytes read: %i\n", bytes_read);
 
@@ -163,7 +163,7 @@ bool SocketBus::readCanMessage() {
 
 				handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
 			}
-		} while(dataAvailable);
+//		} while(dataAvailable);
 //	}
 
 	return true;

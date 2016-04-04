@@ -43,7 +43,8 @@ public:
 	//! loop back sent messages
 	bool loopback;
 
-	//! length of the socket buffer. 0=default. If the txqueuelen of the netdevice cannot be changed (default=10), set this value to prevent ENOBUFS errors when writing.
+	//! length of the socket buffer. 0=default. If the txqueuelen (default=10) of the netdevice cannot be changed
+	// (e.g. with "ip link set <interface> txqueuelen 1000" in the command line), set this value to prevent ENOBUFS errors when writing.
 	// The minimum length is 1024, set 0 to keep the default
 	unsigned int sndBufLength;
 

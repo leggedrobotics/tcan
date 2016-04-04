@@ -102,11 +102,25 @@ public:
 	bool isMissing()		const { return (nmtState_ == NMTStates::missing); }
 
 protected:
+	/*! Put an SDO at the end of the sdo queue and send automatically on the CAN bus.
+	 * To receive the answer of read SDO's it is necessary to implement the handleReadSDOAnswer(..) function.
+	 * @param sdoMsg	Message to be sent
+	 */
 	void sendSDO(const SDOMsg& sdoMsg);
+
+	/*! Check if the SDO at the front of the SDO queue has timed out. If so, try to resend it a couple of times (see DeviceCanOpenOptions)
+	 * @return false if no answer was received after a couple of sending attempts.
+	 */
+	bool checkSdoTimeout();
+
+	void sendNextSdo();
 
 protected:
 	//! the can state the device is in
 	std::atomic<NMTStates> nmtState_;
+
+	std::atomic<unsigned int> sdoTimeoutCounter_;
+	std::atomic<unsigned int> sdoSentCounter_;
 
 	std::mutex sdoMsgsMutex_;
 	std::queue<SDOMsg> sdoMsgs_;

@@ -10,6 +10,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <atomic>
 
 #include "yalc/CANMsg.hpp"
 #include "yalc/DeviceOptions.hpp"
@@ -35,6 +36,7 @@ public:
 
 	Device(DeviceOptions* options):
 		options_(options),
+		deviceTimeoutCounter_(0),
 		bus_(nullptr)
 	{
 	}
@@ -57,9 +59,7 @@ public:
 	 * This function is intended to be (automatically) called after reception of a
 	 * specific message from the device (e.g. bootup message in DeviceCanOpen)
 	 */
-	virtual void configureDevice() {
-
-	}
+	virtual void configureDevice() = 0;
 
 	/*! Do a sanity check of the device. This function is intended to be called with constant rate
 	 * and shall check heartbeats, SDO timeouts, ...
@@ -67,7 +67,7 @@ public:
 	 * @return true if everything is ok.
 	 */
 	virtual bool sanityCheck() {
-		return true;
+		return checkDeviceTimeout();
 	}
 
 	/*! Initialize the device. This function is automatically called by Bus::addDevice(..).
@@ -78,12 +78,21 @@ public:
 		return initDevice();
 	}
 
-	inline uint32_t getNodeId() const { return options_->nodeId_; }
-	inline const std::string& getName() const { return options_->name_; }
+	inline uint32_t getNodeId() const { return options_->nodeId; }
+	inline const std::string& getName() const { return options_->name; }
+
+protected:
+	inline bool checkDeviceTimeout()
+	{
+		return (options_->maxDeviceTimeoutCounter != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter) );
+		// deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
+	}
 
 protected:
 
 	DeviceOptions* options_;
+
+	std::atomic<unsigned int> deviceTimeoutCounter_;
 
 	//!  reference to the CAN bus the device is connected to
 	Bus* bus_;

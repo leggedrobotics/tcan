@@ -49,18 +49,17 @@ void Bus::stopThreads() {
 	running_ = false;
 	condTransmitThread_.notify_all();
 
-	if(sanityCheckThread_.joinable()) {
-		sanityCheckThread_.join();
+	if(receiveThread_.joinable()) {
+		receiveThread_.join();
 	}
 
 	if(transmitThread_.joinable()) {
 		transmitThread_.join();
 	}
 
-	if(receiveThread_.joinable()) {
-		receiveThread_.join();
+	if(sanityCheckThread_.joinable()) {
+		sanityCheckThread_.join();
 	}
-
 }
 
 bool Bus::initBus() {
@@ -74,11 +73,13 @@ bool Bus::initBus() {
 	if(options_->asynchronous) {
 		receiveThread_ = std::thread(&Bus::receiveWorker, this);
 		transmitThread_ = std::thread(&Bus::transmitWorker, this);
-		// todo: set thread priorities
-	}
 
-	if(options_->sanityCheckInterval) {
-		sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
+
+		if(options_->sanityCheckInterval > 0) {
+			sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
+		}
+
+		// todo: set thread priorities
 	}
 
 	return true;
@@ -133,10 +134,6 @@ void Bus::writeMessages() {
 		// only pop the message from the queue if sending was successful
 		outgoingMsgs_.pop();
 	}
-}
-
-void Bus::readMessages() {
-	readCanMessage();
 }
 
 bool Bus::sanityCheck() {

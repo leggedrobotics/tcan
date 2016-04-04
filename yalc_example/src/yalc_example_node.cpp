@@ -54,6 +54,7 @@ public:
 
 		auto options = new example_can::DeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
 		options->someParameter = 37;
+		options->maxDeviceTimeoutCounter = 1000;
 
 		auto device = new example_can::DeviceExample(options); // or example_can::DeviceExample(nodeId, name);
 		buses_.at(iBus)->addDevice( device );
@@ -64,10 +65,13 @@ public:
 		SocketBusOptions* options = new SocketBusOptions();
 		options->interface = interface;
 		options->loopback = true;
-		options->sndBufLength = 1;
+		options->sndBufLength = 0;
 
 		auto bus = new SocketBus(options);
-		addBus( bus );
+		if(!addBus( bus )) {
+			std::cout << "failed to add Bus " << interface << std::endl;
+			exit(-1);
+		}
 		busContainer_.insert(std::make_tuple("BUS1", static_cast<unsigned int>(busId), busId), bus);
 	}
 

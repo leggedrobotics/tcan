@@ -94,10 +94,14 @@ public:
 	 * asynchronous mode is not used.
 	 */
 	void writeMessages();
+
 	/*! read all messages from the CAN driver. Call this function inside your control loop if
 	 * asynchronous mode is not used.
 	 */
-	void readMessages();
+	inline void readMessages()
+	{
+		readCanMessage();
+	}
 
 	/*! Do a sanity check of all devices. Call this function inside your control loop if
 	 * asynchronous mode is not used.

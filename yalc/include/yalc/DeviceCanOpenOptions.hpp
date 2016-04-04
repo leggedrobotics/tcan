@@ -19,8 +19,8 @@ public:
 
 	DeviceCanOpenOptions(const uint32_t nodeId, const std::string name):
 		DeviceOptions(nodeId, name),
-		sdoTimeoutCounter(0),
-		sdoSendTries(0),
+		maxSdoTimeoutCounter(1),
+		sdoSendTries(10),
 		producerHeartBeatTime(0)
 	{
 
@@ -29,7 +29,8 @@ public:
 	virtual ~DeviceCanOpenOptions() { }
 
 	//! counter limit at which an SDO is considered as timed out. Set 0 to disable.
-	unsigned int sdoTimeoutCounter;
+	// maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 1Hz by default (see BusOptions))
+	unsigned int maxSdoTimeoutCounter;
 
 	//! number of tries of an SDO transmission
 	unsigned int sdoSendTries;
