@@ -7,6 +7,7 @@
 
 #include <utility>
 #include <chrono>
+#include <pthread.h>
 
 #include "yalc/Bus.hpp"
 
@@ -74,12 +75,33 @@ bool Bus::initBus() {
 		receiveThread_ = std::thread(&Bus::receiveWorker, this);
 		transmitThread_ = std::thread(&Bus::transmitWorker, this);
 
+		sched_param sched;
+		sched.sched_priority = options_->priorityReceiveThread;
+		if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
+			printf("Failed to set receive thread priority");
+			perror("pthread_setschedparam");
+		}
+
+		sched.sched_priority = options_->priorityTransmitThread;
+		if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
+			printf("Failed to set transmit thread priority");
+			perror("pthread_setschedparam");
+		}
 
 		if(options_->sanityCheckInterval > 0) {
 			sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
+
+			sched.sched_priority = options_->prioritySanityCheckThread;
+			if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
+				printf("Failed to set receive thread priority");
+				perror("pthread_setschedparam");
+			}
 		}
 
-		// todo: set thread priorities
+        int policy;
+
+
+
 	}
 
 	return true;
