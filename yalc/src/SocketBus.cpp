@@ -55,11 +55,14 @@ bool SocketBus::initializeCanBus()
 	strcpy(ifr.ifr_name, interface);
 	ioctl(fd, SIOCGIFINDEX, &ifr);
 
-	int loopback = options->loopback; /* 0 = disabled, 1 = enabled (default) */
+	// loopback
+	int loopback = options->loopback;
 	if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback)) != 0) {
 		printf("Failed to set loopback mode\n");
 		perror("setsockopt");
 	}
+
+	// receive own messages
 	int recv_own_msgs = 0; /* 0 = disabled (default), 1 = enabled */
 	if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &recv_own_msgs, sizeof(recv_own_msgs)) != 0) {
 		printf("Failed to set reception of own messages option\n");
@@ -67,7 +70,7 @@ bool SocketBus::initializeCanBus()
 	}
 
 	// CAN error handling
-	can_err_mask_t err_mask = CAN_ERR_MASK; //( CAN_ERR_TX_TIMEOUT | CAN_ERR_BUSOFF );
+	can_err_mask_t err_mask = options->canErrorMask;
 	if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_ERR_FILTER, &err_mask, sizeof(err_mask)) != 0) {
 		printf("Failed to set error mask\n");
 		perror("setsockopt");
@@ -93,12 +96,22 @@ bool SocketBus::initializeCanBus()
 		setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength), sizeof(options->sndBufLength));
 	}
 
+	// set receive timeout
 	timeval timeout;
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
 	if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
 		printf("Failed to set read timeout\n");
 		perror("setsockopt");
+	}
+
+
+	// set up filters
+	if(options->canFilters.size() != 0) {
+		if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters[0]), sizeof(can_filter)*options->canFilters.size()) != 0) {
+			printf("Failed to set read timeout\n");
+			perror("setsockopt");
+		}
 	}
 
 	//Set nonblocking for synchronous mode

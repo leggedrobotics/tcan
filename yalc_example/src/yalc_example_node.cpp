@@ -66,6 +66,8 @@ public:
 		options->interface = interface;
 		options->loopback = true;
 		options->sndBufLength = 0;
+		// add (multiple) can filters like this {can_id, can_msg}:
+		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
 
 		auto bus = new SocketBus(options);
 		if(!addBus( bus )) {

@@ -9,6 +9,8 @@
 #define SOCKETBUSOPTIONS_HPP_
 
 #include <string>
+#include <vector>
+#include <linux/can.h>
 
 #include "yalc/BusOptions.hpp"
 
@@ -21,7 +23,9 @@ public:
 		BusOptions(),
 		interface(),
 		loopback(false),
-		sndBufLength(0)
+		sndBufLength(0),
+		canErrorMask(CAN_ERR_MASK),
+		canFilters()
 	{
 
 	}
@@ -30,7 +34,9 @@ public:
 		BusOptions(),
 		interface(interface_name),
 		loopback(false),
-		sndBufLength(0)
+		sndBufLength(0),
+		canErrorMask(CAN_ERR_MASK),
+		canFilters()
 	{
 
 	}
@@ -48,6 +54,14 @@ public:
 	// The minimum length is 1024, set 0 to keep the default
 	unsigned int sndBufLength;
 
+	//! error mask. By default, subscribe to all error messages
+	// see https://www.kernel.org/doc/Documentation/networking/can.txt
+	unsigned int canErrorMask;
+
+
+	//! vector of can filters to be applied
+	// see https://www.kernel.org/doc/Documentation/networking/can.txt
+	std::vector<can_filter> canFilters;
 };
 
 } /* namespace yalc */

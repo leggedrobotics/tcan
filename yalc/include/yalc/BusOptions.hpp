@@ -15,7 +15,7 @@ public:
 
 	BusOptions():
 		asynchronous(true),
-		sanityCheckInterval(1000),
+		sanityCheckInterval(100),
 		priorityReceiveThread(99),
 		priorityTransmitThread(98),
 		prioritySanityCheckThread(1)
@@ -38,7 +38,7 @@ public:
 	//! will create recieve and transmit threads if set to true
 	bool asynchronous;
 
-	//! if > 0, a thread will be created which does a sanity check of the devices. [ms]
+	//! if > 0 and in asynchronous mode, a thread will be created which does a sanity check of the devices. Default is 100 [ms].
 	unsigned int sanityCheckInterval;
 
 	int priorityReceiveThread;
