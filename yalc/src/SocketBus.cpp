@@ -39,7 +39,7 @@ SocketBus::~SocketBus()
 
 bool SocketBus::initializeCanBus()
 {
-	const auto options = static_cast<SocketBusOptions*>(options_);
+	const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_);
 	const char* interface = options->interface.c_str();
 
 	/* open socket */
@@ -101,13 +101,15 @@ bool SocketBus::initializeCanBus()
 		perror("setsockopt");
 	}
 
-	//Set nonblocking:
-//	int flags;
-//	if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
-//	if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
-//		printf("Failed to set socket nonblocking\n");
-//		perror("fcntl");
-//	}
+	//Set nonblocking for synchronous mode
+	if(!options_->asynchronous) {
+		int flags;
+		if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
+		if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
+			printf("Failed to set socket nonblocking\n");
+			perror("fcntl");
+		}
+	}
 
 	/* bind socket */
 	struct sockaddr_can addr;
@@ -121,7 +123,7 @@ bool SocketBus::initializeCanBus()
 		return false;
 	}
 
-	socket_ = {fd, POLLIN, 0};
+	socket_ = {fd, POLLOUT, 0};
 
 	printf("Opened socket %s.\n", interface);
 
@@ -131,40 +133,25 @@ bool SocketBus::initializeCanBus()
 
 bool SocketBus::readCanMessage() {
 
-	// poll the socket only in synchronous mode, so this function DOES NOT block until we have read some data (or timeout).
+	// no need to poll the socket.
+	// In synchronous mode, the socket is non-blocking, so this function returns as soon as there is no data available to be read
 	// If asynchronous, we set the socket to blocking and have a separate thread reading from it.
 
-//	const int ret = poll( &socket_, 1, 1000 );
-//
-//	if ( ret == -1 ) {
-//		printf("poll failed");
-//		perror("poll()");
-//		return false;
-//	}else if ( ret == 0 || !(socket_.revents & POLLIN) ) {
-//		/*******************************************************
-//		 * no data received, poll timed out
-//		 *******************************************************/
-//	}else{
-//		/*******************************************************
-//		 * data ready to be read
-//		 *******************************************************/
-		can_frame frame;
-		socket_.revents = 0;
-		bool dataAvailable=true;
-//		do {
-			const int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
-//			printf("CanManager_ bytes read: %i\n", bytes_read);
+	can_frame frame;
+	bool dataAvailable=true;
+	do {
+		const int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
+//		printf("CanManager_ bytes read: %i\n", bytes_read);
 
-			if(bytes_read<=0) {
-//				printf("read nothing\n");
-				dataAvailable=false;
-			} else {
-				// printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+		if(bytes_read<=0) {
+//			printf("read nothing\n");
+			dataAvailable=false;
+		} else {
+//			printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-				handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
-			}
-//		} while(dataAvailable);
-//	}
+			handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
+		}
+	} while(!options_->asynchronous && dataAvailable); // only use this loop in synchronous mode. In asynchronous mode, the socket is blocking and this function would never return as long as there is data incoming (at a faster rate then the timeout)
 
 	return true;
 }
@@ -174,6 +161,24 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
 	// poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout).
 	// If asynchronous, we set the socket to blocking and have a separate thread writing to it.
+
+	if(!options_->asynchronous) {
+		socket_.revents = 0;
+
+		const int ret = poll( &socket_, 1, 1000 );
+
+		if ( ret == -1 ) {
+			printf("poll failed");
+			perror("poll()");
+			return false;
+		}else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
+			// poll timed out, without being able to write => raise error
+			printf("polling for socket writeability timed out. Socket overflow?");
+			return false;
+		}else{
+			// socket ready for write operations => proceed
+		}
+	}
 
 	can_frame frame;
 	frame.can_id = cmsg.getCOBId();

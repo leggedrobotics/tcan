@@ -144,7 +144,7 @@ protected:
 	// state of the bus. True if all devices are operational.
 	bool isOperational_;
 
-	BusOptions* options_;
+	const BusOptions* options_;
 
 	// vector containing all devices
 	std::vector<Device*> devices_;
