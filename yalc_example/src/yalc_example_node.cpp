@@ -14,7 +14,8 @@ namespace yalc {
 class CanManager : public BusManager {
 public:
 	enum class BusId : unsigned int {
-		BUS1=0
+		BUS1=0,
+		BUS2=1
 	};
 
 	enum class DeviceExampleId : unsigned int {
@@ -37,8 +38,14 @@ public:
 		addSocketBus(BusId::BUS1, "can0");
 		buses_.at(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, std::bind(&CanManager::parseIncomingSync, this, std::placeholders::_1));
 
-		for(unsigned int i; i<30; i++) {
+		for(unsigned int i=0; i<30; i++) {
 			addDeviceExample(BusId::BUS1, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
+		}
+
+		addSocketBus(BusId::BUS2, "can1");
+
+		for(unsigned int i=30; i<40; i++) {
+			addDeviceExample(BusId::BUS2, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
 		}
 	}
 
@@ -62,6 +69,8 @@ public:
 	}
 
 	void addSocketBus(const BusId busId, const std::string& interface) {
+		const unsigned int iBus = static_cast<unsigned int>(busId);
+
 		SocketBusOptions* options = new SocketBusOptions();
 		options->interface = interface;
 		options->loopback = true;
@@ -74,7 +83,8 @@ public:
 			std::cout << "failed to add Bus " << interface << std::endl;
 			exit(-1);
 		}
-		busContainer_.insert(std::make_tuple("BUS1", static_cast<unsigned int>(busId), busId), bus);
+
+		busContainer_.insert(std::make_tuple("BUS" + std::to_string(iBus), iBus, busId), bus);
 	}
 
 	bool parseIncomingSync(const CANMsg& cmsg) {
@@ -110,15 +120,15 @@ int main() {
 	auto nextStep = std::chrono::steady_clock::now();
 
 	while(g_running) {
-//		for(auto device : canManager_.getDeviceExampleContainer()) {
+		for(auto device : canManager_.getDeviceExampleContainer()) {
 //			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
-//			device->setCommand(0.f);
-//		}
-//		canManager_.sendSyncOnAllBuses(true);
+			device->setCommand(0.f);
+		}
+		canManager_.sendSyncOnAllBuses(true);
 
 //		std::cout << "sleeping..\n\n";
 //		sleep(5);
-		nextStep += std::chrono::microseconds(1000000);
+		nextStep += std::chrono::microseconds(10000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;

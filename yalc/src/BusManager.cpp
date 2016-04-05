@@ -34,6 +34,7 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 		for(unsigned int i=0; i<bussize; i++) {
 			buses_[i]->waitForEmptyQueue(locks[i]);
 		}
+
 		// we now own a lock on all output message queues
 	}
 

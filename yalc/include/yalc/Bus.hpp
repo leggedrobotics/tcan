@@ -87,7 +87,7 @@ public:
 	void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
 	{
 		lock = std::unique_lock<std::mutex>(outgointMsgsMutex_);
-		condOutputQueueEmpty_.wait(lock, [this]{return outgoingMsgs_.size() > 0 || !running_;});
+		condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
 	}
 
 	/*! write all messages in the queue to the CAN driver. Call this function inside your control loop if

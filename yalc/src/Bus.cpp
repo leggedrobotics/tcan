@@ -49,6 +49,7 @@ Bus::~Bus()
 void Bus::stopThreads() {
 	running_ = false;
 	condTransmitThread_.notify_all();
+	condOutputQueueEmpty_.notify_all();
 
 	if(receiveThread_.joinable()) {
 		receiveThread_.join();
@@ -78,13 +79,13 @@ bool Bus::initBus() {
 		sched_param sched;
 		sched.sched_priority = options_->priorityReceiveThread;
 		if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-			printf("Failed to set receive thread priority");
+			printf("Failed to set receive thread priority\n");
 			perror("pthread_setschedparam");
 		}
 
 		sched.sched_priority = options_->priorityTransmitThread;
 		if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-			printf("Failed to set transmit thread priority");
+			printf("Failed to set transmit thread priority\n");
 			perror("pthread_setschedparam");
 		}
 
@@ -93,15 +94,10 @@ bool Bus::initBus() {
 
 			sched.sched_priority = options_->prioritySanityCheckThread;
 			if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-				printf("Failed to set receive thread priority");
+				printf("Failed to set receive thread priority\n");
 				perror("pthread_setschedparam");
 			}
 		}
-
-        int policy;
-
-
-
 	}
 
 	return true;
