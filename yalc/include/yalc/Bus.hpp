@@ -90,21 +90,28 @@ public:
 		condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
 	}
 
-	/*! write all messages in the queue to the CAN driver. Call this function inside your control loop if
-	 * asynchronous mode is not used.
+	/*! write the message at the front of the queue to the CAN bus
+	 * @return true if a message was successfully written to the bus
 	 */
-	void writeMessages();
-
-	/*! read all messages from the CAN driver. Call this function inside your control loop if
-	 * asynchronous mode is not used.
-	 */
-	inline void readMessages()
+	inline bool writeMessage()
 	{
-		readCanMessage();
+		if(outgoingMsgs_.size() != 0 && writeCanMessage( outgoingMsgs_.front() )) {
+			outgoingMsgs_.pop();
+			return true;
+		}
+
+		return false;
 	}
 
-	/*! Do a sanity check of all devices. Call this function inside your control loop if
-	 * asynchronous mode is not used.
+	/*! read and parse a message from the CAN bus
+	 * @return true if a message was read
+	 */
+	inline bool readMessage()
+	{
+		return readCanMessage();
+	}
+
+	/*! Do a sanity check of all devices on this bus.
 	 */
 	bool sanityCheck();
 
@@ -122,15 +129,29 @@ public:
 protected:
 	void stopThreads();
 
+	/*! Initialized the device driver
+	 * @return true if successful
+	 */
 	virtual bool initializeCanBus() = 0;
+
+	/*! read CAN message from the device driver
+	 * @return true if a message was successfully read and parsed
+	 */
 	virtual bool readCanMessage() = 0;
+
+	/*! write CAN message to the device driver
+	 * @return true if the message was successfully written
+	 */
 	virtual bool writeCanMessage(const CANMsg& cmsg) = 0;
+
+
+	bool processOutputQueue();
 
 	void sendMessageWithoutLock(const CANMsg& cmsg)
 	{
 		outgoingMsgs_.push( cmsg );	// do not use emplace here. We need a copy of the message in some situations
-									// (SDO queue processing). Declaring another sendMessage(..) which uses move
-									// semantics does not increase performance as CANMsg has only POD members
+		// (SDO queue processing). Declaring another sendMessage(..) which uses move
+		// semantics does not increase performance as CANMsg has only POD members
 
 		condTransmitThread_.notify_all();
 	}

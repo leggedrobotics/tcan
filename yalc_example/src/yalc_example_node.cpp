@@ -10,6 +10,9 @@
 #include "yalc_example/DeviceExample.hpp"
 #include "m545_utils/containers/MultiKeyContainer.hpp"
 
+
+//#define USE_SYNCHRONOUS_MODE
+
 namespace yalc {
 class CanManager : public BusManager {
 public:
@@ -72,11 +75,15 @@ public:
 		const unsigned int iBus = static_cast<unsigned int>(busId);
 
 		SocketBusOptions* options = new SocketBusOptions();
+#ifdef USE_SYNCHRONOUS_MODE
+		options->asynchronous = false;
+#endif
 		options->interface = interface;
 		options->loopback = true;
 		options->sndBufLength = 0;
 		// add (multiple) can filters like this {can_id, can_msg}:
 		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
+//		options->canErrorMask = 0;
 
 		auto bus = new SocketBus(options);
 		if(!addBus( bus )) {
@@ -120,11 +127,25 @@ int main() {
 	auto nextStep = std::chrono::steady_clock::now();
 
 	while(g_running) {
+#ifdef USE_SYNCHRONOUS_MODE
+		canManager_.readMessagesSynchrounous();
+
+		canManager_.sanityCheckSynchronous();
+#endif
 		for(auto device : canManager_.getDeviceExampleContainer()) {
 //			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
 			device->setCommand(0.f);
 		}
+#ifdef USE_SYNCHRONOUS_MODE
+		canManager_.writeMessagesSynchronous();
+#endif
+#ifdef USE_SYNCHRONOUS_MODE
+		canManager_.sendSyncOnAllBuses();
+		canManager_.writeMessagesSynchronous();
+#else
 		canManager_.sendSyncOnAllBuses(true);
+#endif
+
 
 //		std::cout << "sleeping..\n\n";
 //		sleep(5);

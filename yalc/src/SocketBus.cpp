@@ -151,20 +151,17 @@ bool SocketBus::readCanMessage() {
 	// If asynchronous, we set the socket to blocking and have a separate thread reading from it.
 
 	can_frame frame;
-	bool dataAvailable=true;
-	do {
-		const int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
-//		printf("CanManager_ bytes read: %i\n", bytes_read);
+	const int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
+//	printf("CanManager_ bytes read: %i\n", bytes_read);
 
-		if(bytes_read<=0) {
-//			printf("read nothing\n");
-			dataAvailable=false;
-		} else {
-//			printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+	if(bytes_read<=0) {
+//		printf("read nothing\n");
+		return false;
+	} else {
+//		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-			handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
-		}
-	} while(!options_->asynchronous && dataAvailable); // only use this loop in synchronous mode. In asynchronous mode, the socket is blocking and this function would never return as long as there is data incoming (at a faster rate then the timeout)
+		handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
+	}
 
 	return true;
 }
@@ -172,7 +169,7 @@ bool SocketBus::readCanMessage() {
 
 bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
-	// poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout).
+	// poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
 	// If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
 	if(!options_->asynchronous) {

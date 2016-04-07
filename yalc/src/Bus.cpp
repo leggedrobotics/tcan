@@ -128,7 +128,8 @@ void Bus::handleMessage(const CANMsg& cmsg) {
 	}
 }
 
-void Bus::writeMessages() {
+
+bool Bus::processOutputQueue() {
 	bool writeSuccess = false;
 	std::unique_lock<std::mutex> lock(outgointMsgsMutex_);
 
@@ -137,12 +138,13 @@ void Bus::writeMessages() {
 		condTransmitThread_.wait(lock);
 	}
 	// after the wait function we own the lock. copy data and unlock.
+
 	if(!running_) {
-		return;
+		return true;
 	}
+
 	CANMsg cmsg = outgoingMsgs_.front();
 	lock.unlock();
-
 
 	writeSuccess = writeCanMessage( cmsg );
 
@@ -152,6 +154,8 @@ void Bus::writeMessages() {
 		// only pop the message from the queue if sending was successful
 		outgoingMsgs_.pop();
 	}
+
+	return writeSuccess;
 }
 
 bool Bus::sanityCheck() {
@@ -169,7 +173,7 @@ bool Bus::sanityCheck() {
 
 void Bus::receiveWorker() {
 	while(running_) {
-		readMessages();
+		readMessage();
 	}
 
 	printf("receive thread terminated\n");
@@ -177,7 +181,7 @@ void Bus::receiveWorker() {
 
 void Bus::transmitWorker() {
 	while(running_) {
-		writeMessages();
+		processOutputQueue();
 	}
 
 	printf("transmit thread terminated\n");

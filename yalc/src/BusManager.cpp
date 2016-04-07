@@ -43,6 +43,38 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 	}
 }
 
+
+void BusManager::readMessagesSynchrounous() {
+	for(auto bus : buses_) {
+		while(bus->readMessage()) {
+		}
+	}
+}
+
+void BusManager::writeMessagesSynchronous() {
+	bool sendingData = true;
+
+	while(sendingData) {
+		sendingData = false;
+
+		for(auto bus : buses_) {
+			sendingData |= bus->writeMessage();
+		}
+	}
+}
+
+bool BusManager::sanityCheckSynchronous() {
+	bool allFine = true;
+	for(auto bus : buses_) {
+		if(!bus->sanityCheck()) {
+			allFine = false;
+		}
+	}
+
+	return allFine;
+}
+
+
 void BusManager::closeBuses() {
 	for(Bus* bus : buses_) {
 		delete bus;
