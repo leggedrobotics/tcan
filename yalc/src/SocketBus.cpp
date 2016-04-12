@@ -178,12 +178,12 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 		const int ret = poll( &socket_, 1, 1000 );
 
 		if ( ret == -1 ) {
-			printf("poll failed");
+			printf("poll failed on bus %s", static_cast<const SocketBusOptions*>(options_)->interface.c_str());
 			perror("poll()");
 			return false;
 		}else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
 			// poll timed out, without being able to write => raise error
-			printf("polling for socket writeability timed out. Socket overflow?");
+			printf("polling for socket writeability timed out for bus %s. Socket overflow?", static_cast<const SocketBusOptions*>(options_)->interface.c_str());
 			return false;
 		}else{
 			// socket ready for write operations => proceed
@@ -197,7 +197,7 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 
 	int ret;
 	if( ( ret = write(socket_.fd, &frame, sizeof(struct can_frame)) ) != sizeof(struct can_frame)) {
-		printf("Error at sending CAN message %x : %d\n", cmsg.getCOBId(), ret);
+		printf("Error at sending CAN message %x on bus %s : %d\n", cmsg.getCOBId(), static_cast<const SocketBusOptions*>(options_)->interface.c_str(), ret);
 		perror("write");
 		return false;
 	}
