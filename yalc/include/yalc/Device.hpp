@@ -5,14 +5,13 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef DEVICE_HPP_
-#define DEVICE_HPP_
+#pragma once
 
 #include <string>
 #include <stdint.h>
+#include <yalc/CanMsg.hpp>
 #include <atomic>
 
-#include "yalc/CANMsg.hpp"
 #include "yalc/DeviceOptions.hpp"
 
 namespace yalc {
@@ -99,5 +98,3 @@ protected:
 };
 
 } /* namespace yalc */
-
-#endif /* DEVICE_HPP_ */

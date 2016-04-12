@@ -5,16 +5,13 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef DEVICECANOPENOPTIONS_HPP_
-#define DEVICECANOPENOPTIONS_HPP_
+#pragma once
 
 #include "yalc/DeviceOptions.hpp"
 
 namespace yalc {
 
-class DeviceCanOpenOptions : public DeviceOptions {
-public:
-
+struct DeviceCanOpenOptions : public DeviceOptions {
 	DeviceCanOpenOptions() = delete;
 
 	DeviceCanOpenOptions(const uint32_t nodeId, const std::string name):
@@ -41,5 +38,3 @@ public:
 };
 
 } /* namespace yalc */
-
-#endif /* DEVICECANOPENOPTIONS_HPP_ */

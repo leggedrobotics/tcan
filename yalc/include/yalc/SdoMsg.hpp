@@ -1,17 +1,16 @@
 /*
- * SDOMsg.hpp
+ * SdoMsg.hpp
  *
  *  Created on: Mar 27, 2016
  *      Author: Philipp Leemann
  */
 
-#ifndef SDOMSG_HPP_
-#define SDOMSG_HPP_
+#pragma once
 
 #include <stdint.h>
+#include <yalc/CanMsg.hpp>
 #include <string>
 
-#include "yalc/CANMsg.hpp"
 
 namespace yalc {
 
@@ -27,7 +26,7 @@ namespace yalc {
  *
  * @ingroup robotCAN
  */
-class SDOMsg : public CANMsg {
+class SdoMsg : public CanMsg {
 public:
 
 	enum class Command : uint8_t {
@@ -44,10 +43,10 @@ public:
 	 * @param subIndex  subindex to be read/write
 	 * @param command   SDO command (read or write)
 	 */
-	SDOMsg() = delete;
+	SdoMsg() = delete;
 
-	SDOMsg(const uint32_t nodeId, const Command command, const uint16_t index, const uint8_t subIndex, const uint32_t data):
-		CANMsg(nodeId, 8, {
+	SdoMsg(const uint32_t nodeId, const Command command, const uint16_t index, const uint8_t subIndex, const uint32_t data):
+		CanMsg(nodeId, 8, {
 				static_cast<uint8_t>(command),
 				static_cast<uint8_t>(index & 0xff),
 				static_cast<uint8_t>((index >> 8) & 0xff),
@@ -63,15 +62,15 @@ public:
 	}
 
 	// special constructor for NMT messages
-	SDOMsg(const uint8_t nodeId, const uint8_t nmtState):
-		CANMsg(0x0, 2, {nmtState, nodeId}),
+	SdoMsg(const uint8_t nodeId, const uint8_t nmtState):
+		CanMsg(0x0, 2, {nmtState, nodeId}),
 		requiresAnswer_(false)
 	{
 
 	}
 
 	//! Destructor
-	virtual ~SDOMsg()
+	virtual ~SdoMsg()
 	{
 
 	}
@@ -176,5 +175,3 @@ private:
 };
 
 } /* namespace yalc */
-
-#endif /* SDOMSG_HPP_ */

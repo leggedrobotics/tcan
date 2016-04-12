@@ -55,7 +55,7 @@ public:
 
 	void setCommand(const float value);
 
-	bool parsePDO1(const CANMsg& cmsg);
+	bool parsePdo1(const CanMsg& cmsg);
 
 	float getMeasurement() const { return myMeasurement_; }
 

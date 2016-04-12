@@ -5,14 +5,11 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef BUSOPTIONS_HPP_
-#define BUSOPTIONS_HPP_
+#pragma once
 
 namespace yalc {
 
-class BusOptions {
-public:
-
+struct BusOptions {
 	BusOptions():
 		asynchronous(true),
 		sanityCheckInterval(100),
@@ -49,5 +46,3 @@ public:
 };
 
 } /* namespace yalc */
-
-#endif /* BUSOPTIONS_HPP_ */

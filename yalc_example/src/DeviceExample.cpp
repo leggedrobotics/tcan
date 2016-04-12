@@ -37,10 +37,10 @@ DeviceExample::~DeviceExample()
 
 }
 
-class mySDO : public SDOMsg {
+class mySdo : public SdoMsg {
 public:
-	mySDO(uint32_t nodeid, int value):
-		SDOMsg(nodeid, SDOMsg::Command::WRITE_4_BYTE, 0x1010, 0x00, value) {
+	mySdo(uint32_t nodeid, int value):
+		SdoMsg(nodeid, SdoMsg::Command::WRITE_4_BYTE, 0x1010, 0x00, value) {
 
 	}
 };
@@ -49,7 +49,7 @@ bool DeviceExample::initDevice() {
 
 	bus_->addCanMessage(DeviceCanOpen::TxSDOId + getNodeId(), std::bind(&DeviceCanOpen::parseSDOAnswer, this, std::placeholders::_1));
 	bus_->addCanMessage(DeviceCanOpen::TxNMT + getNodeId(), std::bind(&DeviceCanOpen::parseHeartBeat, this, std::placeholders::_1));
-	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), std::bind(&DeviceExample::parsePDO1, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), std::bind(&DeviceExample::parsePdo1, this, std::placeholders::_1));
 
 	setNmtRestartRemoteDevice();
 	return true;
@@ -59,18 +59,18 @@ void DeviceExample::configureDevice() {
 	// device is in pre-operational state when this function is called
 	printf("configureDevice called\n");
 	setNmtEnterPreOperational();
-	sendSDO(mySDO(getNodeId(), static_cast<DeviceExampleOptions*>(options_)->someParameter));
+	sendSdo(mySdo(getNodeId(), static_cast<DeviceExampleOptions*>(options_)->someParameter));
 	setNmtStartRemoteDevice();
 }
 
 void DeviceExample::setCommand(const float value) {
-	CANMsg cmsg(DeviceCanOpen::RxPDO1Id + getNodeId());
+	CanMsg cmsg(DeviceCanOpen::RxPDO1Id + getNodeId());
 	cmsg.write(static_cast<uint32_t>(value), 0);
 
 	bus_->sendMessage(cmsg);
 }
 
-bool DeviceExample::parsePDO1(const CANMsg& cmsg) {
+bool DeviceExample::parsePdo1(const CanMsg& cmsg) {
 	// variable is atomic - no need for mutexes
 	myMeasurement_ = cmsg.readint32(0);
 

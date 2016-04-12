@@ -1,6 +1,6 @@
 #pragma once
 
-#include "yalc/SDOMsg.hpp"
+#include <yalc/SdoMsg.hpp>
 
 namespace yalc {
 namespace canopen {
@@ -9,31 +9,31 @@ namespace canopen {
 ----------------------------- Communication -----------------------------
 ********************************************************************* **/
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetRS232Baudrate: public SDOMsg
+class SDOSetRS232Baudrate: public SdoMsg
 {
 public:
   SDOSetRS232Baudrate(const uint32_t nodeId, const uint32_t baudrate):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x2002, 0x00, baudrate)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x2002, 0x00, baudrate)
   {};
   virtual ~SDOSetRS232Baudrate(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetCANBitrate: public SDOMsg
+class SDOSetCANBitrate: public SdoMsg
 {
 public:
   SDOSetCANBitrate(const uint32_t nodeId, const uint32_t bitrate):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x2001, 0x00, bitrate)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2001, 0x00, bitrate)
   {};
   virtual ~SDOSetCANBitrate(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetAbortConnectionOptionCode: public SDOMsg
+class SDOSetAbortConnectionOptionCode: public SdoMsg
 {
 public:
   SDOSetAbortConnectionOptionCode(const uint32_t nodeId, const uint32_t value):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6007, 0x00, value)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6007, 0x00, value)
   {};
   virtual ~SDOSetAbortConnectionOptionCode(){};
 };
@@ -43,60 +43,60 @@ public:
 ----------------------------- Initialization ----------------------------
 ********************************************************************* **/
 //////////////////////////////////////////////////////////////////////////////
-class SDOControlword: public SDOMsg
+class SDOControlword: public SdoMsg
 {
 public:
   SDOControlword(const uint32_t nodeId, const uint32_t controlword):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, controlword)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, controlword)
   {};
   virtual ~SDOControlword(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOShutdown: public SDOMsg
+class SDOShutdown: public SdoMsg
 {
 public:
   SDOShutdown(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x06)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x06)
   {};
   virtual ~SDOShutdown(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOSwitchOn: public SDOMsg
+class SDOSwitchOn: public SdoMsg
 {
 public:
   SDOSwitchOn(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x07)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x07)
   {};
   virtual ~SDOSwitchOn(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOEnableOperation: public SDOMsg
+class SDOEnableOperation: public SdoMsg
 {
 public:
   SDOEnableOperation(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x0F)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x0F)
   {};
   virtual ~SDOEnableOperation(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDODisableOperation: public SDOMsg
+class SDODisableOperation: public SdoMsg
 {
 public:
   SDODisableOperation(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x07)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x07)
   {};
   virtual ~SDODisableOperation(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOFaultReset: public SDOMsg
+class SDOFaultReset: public SdoMsg
 {
 public:
   SDOFaultReset(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x80)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x80)
   {};
   virtual ~SDOFaultReset(){};
 };
@@ -105,33 +105,33 @@ public:
 ------------------------ Digital Inputs ---------------------------------
 ********************************************************************* **/
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetDigitalInputFunctionalitiesMask: public SDOMsg
+class SDOSetDigitalInputFunctionalitiesMask: public SdoMsg
 {
 public:
   SDOSetDigitalInputFunctionalitiesMask(const uint32_t nodeId, const uint32_t value):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x2071, 0x02, value)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2071, 0x02, value)
   {};
   virtual ~SDOSetDigitalInputFunctionalitiesMask(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
 class SDOSetDigitalInputFunctionalitiesPolarity
-: public SDOMsg
+: public SdoMsg
 {
 public:
   SDOSetDigitalInputFunctionalitiesPolarity(const uint32_t nodeId, const uint32_t value):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x2071, 0x03, value)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2071, 0x03, value)
   {};
   virtual ~SDOSetDigitalInputFunctionalitiesPolarity(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
 class SDOSetDigitalInputFunctionalitiesExecutionMask
-: public SDOMsg
+: public SdoMsg
 {
 public:
   SDOSetDigitalInputFunctionalitiesExecutionMask(const uint32_t nodeId, const uint32_t value):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x2071, 0x04, value)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2071, 0x04, value)
   {};
   virtual ~SDOSetDigitalInputFunctionalitiesExecutionMask(){};
 };
@@ -141,41 +141,41 @@ public:
 -------------------- Life guard and heartbeat control-------------------
 ********************************************************************* **/
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetGuardTime: public SDOMsg
+class SDOSetGuardTime: public SdoMsg
 {
 public:
   SDOSetGuardTime(const uint32_t nodeId, const uint32_t time_ms):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x100C, 0x00, time_ms)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x100C, 0x00, time_ms)
   {};
   virtual ~SDOSetGuardTime(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetLifeTimeFactor: public SDOMsg
+class SDOSetLifeTimeFactor: public SdoMsg
 {
 public:
   SDOSetLifeTimeFactor(const uint32_t nodeId, const uint32_t factor):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x100D, 0x00, factor)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x100D, 0x00, factor)
   {};
   virtual ~SDOSetLifeTimeFactor(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOWriteProducerHeartbeatTime: public SDOMsg
+class SDOWriteProducerHeartbeatTime: public SdoMsg
 {
 public:
   SDOWriteProducerHeartbeatTime(const uint32_t nodeId, const uint32_t time_ms):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x1017, 0x00, time_ms)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1017, 0x00, time_ms)
   {};
   virtual ~SDOWriteProducerHeartbeatTime(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOReadProducerHeartbeatTime: public SDOMsg
+class SDOReadProducerHeartbeatTime: public SdoMsg
 {
 public:
   SDOReadProducerHeartbeatTime(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::READ, 0x1017, 0x00, 0x0)
+    SdoMsg(nodeId, SdoMsg::Command::READ, 0x1017, 0x00, 0x0)
   {};
 
   virtual ~SDOReadProducerHeartbeatTime(){};
@@ -185,31 +185,31 @@ public:
 ------------------------------ Utilities --------------------------------
 ********************************************************************* **/
 //////////////////////////////////////////////////////////////////////////////
-class SDOSetCOBIDSYNC: public SDOMsg
+class SDOSetCOBIDSYNC: public SdoMsg
 {
 public:
   SDOSetCOBIDSYNC(const uint32_t nodeId, const uint32_t ID):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1005, 0x00, ID)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1005, 0x00, ID)
   {};
   virtual ~SDOSetCOBIDSYNC(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOSaveAllParameters: public SDOMsg
+class SDOSaveAllParameters: public SdoMsg
 {
 public:
   SDOSaveAllParameters(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1010, 0x01, 0x65766173)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1010, 0x01, 0x65766173)
   {};
   virtual ~SDOSaveAllParameters(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORestoreAllDefaultParameters: public SDOMsg
+class SDORestoreAllDefaultParameters: public SdoMsg
 {
 public:
   SDORestoreAllDefaultParameters(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1011, 0x01, 0x64616F6C)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1011, 0x01, 0x64616F6C)
   {};
   virtual ~SDORestoreAllDefaultParameters(){};
 };
@@ -224,60 +224,60 @@ public:
  *********************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO1Disable: public SDOMsg
+class SDOTxPDO1Disable: public SdoMsg
 {
 public:
   SDOTxPDO1Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1800, 0x01, 0x80000180 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1800, 0x01, 0x80000180 + nodeId)
   {};
   virtual ~SDOTxPDO1Disable(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO1SetInhibitTime: public SDOMsg
+class SDOTxPDO1SetInhibitTime: public SdoMsg
 {
 public:
   SDOTxPDO1SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_2_BYTE, 0x1800, 0x03, time_100us)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1800, 0x03, time_100us)
   {};
   virtual ~SDOTxPDO1SetInhibitTime(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO1SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDOTxPDO1SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDOTxPDO1SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1A00, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A00, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDOTxPDO1SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO1ConfigureCOBID: public SDOMsg
+class SDOTxPDO1ConfigureCOBID: public SdoMsg
 {
 public:
   SDOTxPDO1ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1800, 0x01, 0x40000180 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1800, 0x01, 0x40000180 + nodeId)
   {};
   virtual ~SDOTxPDO1ConfigureCOBID(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO1SetTransmissionType: public SDOMsg
+class SDOTxPDO1SetTransmissionType: public SdoMsg
 {
 public:
   SDOTxPDO1SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1800, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1800, 0x02, type)
   {};
   virtual ~SDOTxPDO1SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO1SetMapping: public SDOMsg
+class SDOTxPDO1SetMapping: public SdoMsg
 {
 public:
   SDOTxPDO1SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1A00, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A00, indexOfObject, object)
   {};
   virtual ~SDOTxPDO1SetMapping(){};
 };
@@ -287,50 +287,50 @@ public:
  * PDO 2 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO2SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDOTxPDO2SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDOTxPDO2SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1A01, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A01, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDOTxPDO2SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO2ConfigureCOBID: public SDOMsg
+class SDOTxPDO2ConfigureCOBID: public SdoMsg
 {
 public:
   SDOTxPDO2ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1801, 0x01, 0x40000280 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1801, 0x01, 0x40000280 + nodeId)
   {};
   virtual ~SDOTxPDO2ConfigureCOBID(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO2Disable: public SDOMsg
+class SDOTxPDO2Disable: public SdoMsg
 {
 public:
   SDOTxPDO2Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1801, 0x01, 0x80000280 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1801, 0x01, 0x80000280 + nodeId)
   {};
   virtual ~SDOTxPDO2Disable(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO2SetTransmissionType: public SDOMsg
+class SDOTxPDO2SetTransmissionType: public SdoMsg
 {
 public:
   SDOTxPDO2SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1801, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1801, 0x02, type)
   {};
   virtual ~SDOTxPDO2SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO2SetMapping: public SDOMsg
+class SDOTxPDO2SetMapping: public SdoMsg
 {
 public:
   SDOTxPDO2SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1A01, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A01, indexOfObject, object)
   {};
   virtual ~SDOTxPDO2SetMapping(){};
 };
@@ -339,49 +339,49 @@ public:
  * PDO 3 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO3SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDOTxPDO3SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDOTxPDO3SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1A02, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A02, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDOTxPDO3SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO3ConfigureCOBID: public SDOMsg
+class SDOTxPDO3ConfigureCOBID: public SdoMsg
 {
 public:
   SDOTxPDO3ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1802, 0x01, 0x40000380 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1802, 0x01, 0x40000380 + nodeId)
   {};
   virtual ~SDOTxPDO3ConfigureCOBID(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO3Disable: public SDOMsg
+class SDOTxPDO3Disable: public SdoMsg
 {
 public:
   SDOTxPDO3Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1802, 0x01, 0x80000380 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1802, 0x01, 0x80000380 + nodeId)
   {};
   virtual ~SDOTxPDO3Disable(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO3SetTransmissionType: public SDOMsg
+class SDOTxPDO3SetTransmissionType: public SdoMsg
 {
 public:
   SDOTxPDO3SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1802, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1802, 0x02, type)
   {};
   virtual ~SDOTxPDO3SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO3SetMapping: public SDOMsg
+class SDOTxPDO3SetMapping: public SdoMsg
 {
 public:
   SDOTxPDO3SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1A02, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A02, indexOfObject, object)
   {};
   virtual ~SDOTxPDO3SetMapping(){};
 };
@@ -390,49 +390,49 @@ public:
  * PDO 4 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO4SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDOTxPDO4SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDOTxPDO4SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1A03, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A03, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDOTxPDO4SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO4ConfigureCOBID: public SDOMsg
+class SDOTxPDO4ConfigureCOBID: public SdoMsg
 {
 public:
   SDOTxPDO4ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0x40000480 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0x40000480 + nodeId)
   {};
   virtual ~SDOTxPDO4ConfigureCOBID(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO4Disable: public SDOMsg
+class SDOTxPDO4Disable: public SdoMsg
 {
 public:
 	SDOTxPDO4Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0xFFFFFFFF)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0xFFFFFFFF)
   {};
   virtual ~SDOTxPDO4Disable(){};
 };
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO4SetTransmissionType: public SDOMsg
+class SDOTxPDO4SetTransmissionType: public SdoMsg
 {
 public:
   SDOTxPDO4SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1803, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1803, 0x02, type)
   {};
   virtual ~SDOTxPDO4SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOTxPDO4SetMapping: public SDOMsg
+class SDOTxPDO4SetMapping: public SdoMsg
 {
 public:
   SDOTxPDO4SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1A03, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A03, indexOfObject, object)
   {};
   virtual ~SDOTxPDO4SetMapping(){};
 };
@@ -445,51 +445,51 @@ public:
  * PDO 1 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO1SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDORxPDO1SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDORxPDO1SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1600, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1600, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDORxPDO1SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO1ConfigureCOBID: public SDOMsg
+class SDORxPDO1ConfigureCOBID: public SdoMsg
 {
 public:
   SDORxPDO1ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1400, 0x01, 0x40000200 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1400, 0x01, 0x40000200 + nodeId)
   {};
   virtual ~SDORxPDO1ConfigureCOBID(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO1Disable: public SDOMsg
+class SDORxPDO1Disable: public SdoMsg
 {
 public:
   SDORxPDO1Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1400, 0x01, 0xFFFFFFFF)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1400, 0x01, 0xFFFFFFFF)
   {};
   virtual ~SDORxPDO1Disable(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO1SetTransmissionType: public SDOMsg
+class SDORxPDO1SetTransmissionType: public SdoMsg
 {
 public:
   SDORxPDO1SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1400, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1400, 0x02, type)
   {};
   virtual ~SDORxPDO1SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO1SetMapping: public SDOMsg
+class SDORxPDO1SetMapping: public SdoMsg
 {
 public:
   SDORxPDO1SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1600, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1600, indexOfObject, object)
   {};
   virtual ~SDORxPDO1SetMapping(){};
 };
@@ -498,51 +498,51 @@ public:
  * PDO 2 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO2SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDORxPDO2SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDORxPDO2SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1601, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1601, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDORxPDO2SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO2ConfigureCOBID: public SDOMsg
+class SDORxPDO2ConfigureCOBID: public SdoMsg
 {
 public:
   SDORxPDO2ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1401, 0x01, 0x40000300 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1401, 0x01, 0x40000300 + nodeId)
   {};
   virtual ~SDORxPDO2ConfigureCOBID(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO2Disable: public SDOMsg
+class SDORxPDO2Disable: public SdoMsg
 {
 public:
 	SDORxPDO2Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1401, 0x01, 0xFFFFFFFF)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1401, 0x01, 0xFFFFFFFF)
   {};
   virtual ~SDORxPDO2Disable(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO2SetTransmissionType: public SDOMsg
+class SDORxPDO2SetTransmissionType: public SdoMsg
 {
 public:
   SDORxPDO2SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1401, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1401, 0x02, type)
   {};
   virtual ~SDORxPDO2SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO2SetMapping: public SDOMsg
+class SDORxPDO2SetMapping: public SdoMsg
 {
 public:
   SDORxPDO2SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1601, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1601, indexOfObject, object)
   {};
   virtual ~SDORxPDO2SetMapping(){};
 };
@@ -551,51 +551,51 @@ public:
  * PDO 3 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO3SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDORxPDO3SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDORxPDO3SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1602, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1602, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDORxPDO3SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO3ConfigureCOBID: public SDOMsg
+class SDORxPDO3ConfigureCOBID: public SdoMsg
 {
 public:
   SDORxPDO3ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1402, 0x01, 0x40000400 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1402, 0x01, 0x40000400 + nodeId)
   {};
   virtual ~SDORxPDO3ConfigureCOBID(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO3Disable: public SDOMsg
+class SDORxPDO3Disable: public SdoMsg
 {
 public:
 	SDORxPDO3Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1402, 0x01, 0xFFFFFFFF)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1402, 0x01, 0xFFFFFFFF)
   {};
   virtual ~SDORxPDO3Disable(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO3SetTransmissionType: public SDOMsg
+class SDORxPDO3SetTransmissionType: public SdoMsg
 {
 public:
   SDORxPDO3SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1402, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1402, 0x02, type)
   {};
   virtual ~SDORxPDO3SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO3SetMapping: public SDOMsg
+class SDORxPDO3SetMapping: public SdoMsg
 {
 public:
   SDORxPDO3SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1602, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1602, indexOfObject, object)
   {};
   virtual ~SDORxPDO3SetMapping(){};
 };
@@ -604,61 +604,61 @@ public:
  * PDO 4 Parameter
  *********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO4SetNumberOfMappedApplicationObjects: public SDOMsg
+class SDORxPDO4SetNumberOfMappedApplicationObjects: public SdoMsg
 {
 public:
   SDORxPDO4SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1603, 0x00, number_of_mapped_objects)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1603, 0x00, number_of_mapped_objects)
   {};
   virtual ~SDORxPDO4SetNumberOfMappedApplicationObjects(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO4ConfigureCOBID: public SDOMsg
+class SDORxPDO4ConfigureCOBID: public SdoMsg
 {
 public:
   SDORxPDO4ConfigureCOBID(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1403, 0x01, 0x40000500 + nodeId)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1403, 0x01, 0x40000500 + nodeId)
   {};
   virtual ~SDORxPDO4ConfigureCOBID(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO4Disable: public SDOMsg
+class SDORxPDO4Disable: public SdoMsg
 {
 public:
 	SDORxPDO4Disable(const uint32_t nodeId):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1403, 0x01, 0xFFFFFFFF)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1403, 0x01, 0xFFFFFFFF)
   {};
   virtual ~SDORxPDO4Disable(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO4SetTransmissionType: public SDOMsg
+class SDORxPDO4SetTransmissionType: public SdoMsg
 {
 public:
   SDORxPDO4SetTransmissionType(const uint32_t nodeId, const uint32_t type):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_1_BYTE, 0x1403, 0x02, type)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1403, 0x02, type)
   {};
   virtual ~SDORxPDO4SetTransmissionType(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDORxPDO4SetMapping: public SDOMsg
+class SDORxPDO4SetMapping: public SdoMsg
 {
 public:
   SDORxPDO4SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
-    SDOMsg(nodeId, SDOMsg::Command::WRITE_4_BYTE, 0x1603, indexOfObject, object)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1603, indexOfObject, object)
   {};
   virtual ~SDORxPDO4SetMapping(){};
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class SDOReadErrorRegister: public SDOMsg
+class SDOReadErrorRegister: public SdoMsg
 {
 public:
   SDOReadErrorRegister(const uint32_t nodeId):
-	  SDOMsg(nodeId, SDOMsg::Command::READ, 0x1001, 0x00, 0x0)
+	  SdoMsg(nodeId, SdoMsg::Command::READ, 0x1001, 0x00, 0x0)
   {};
   virtual ~SDOReadErrorRegister(){};
 

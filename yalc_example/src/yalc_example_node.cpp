@@ -94,7 +94,7 @@ public:
 		busContainer_.insert(std::make_tuple("BUS" + std::to_string(iBus), iBus, busId), bus);
 	}
 
-	bool parseIncomingSync(const CANMsg& cmsg) {
+	bool parseIncomingSync(const CanMsg& cmsg) {
 		for(auto device : deviceExampleContainer_) {
 			device->setCommand(0.f);
 		}

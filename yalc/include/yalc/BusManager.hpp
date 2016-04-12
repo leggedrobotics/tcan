@@ -5,8 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef BUSMANAGER_HPP_
-#define BUSMANAGER_HPP_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -56,5 +55,3 @@ protected:
 };
 
 } /* namespace yalc */
-#endif /* BUSMANAGER_HPP_ */
-

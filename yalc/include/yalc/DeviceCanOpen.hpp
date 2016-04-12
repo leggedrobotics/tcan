@@ -5,16 +5,15 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef DEVICECANOPEN_HPP_
-#define DEVICECANOPEN_HPP_
+#pragma once
 
 #include <stdint.h>
+#include <yalc/SdoMsg.hpp>
 #include <queue>
 #include <mutex>
 #include <atomic>
 
 #include "yalc/Device.hpp"
-#include "yalc/SDOMsg.hpp"
 #include "yalc/DeviceCanOpenOptions.hpp"
 
 namespace yalc {
@@ -74,13 +73,13 @@ public:
 	/*! Parse a heartbeat message
 	 * @param cmsg   reference to the received message
 	 */
-	bool parseHeartBeat(const CANMsg& cmsg);
+	bool parseHeartBeat(const CanMsg& cmsg);
 
 	/*! Parse a SDO answer
 	 * This function removes the SDO from the queue and calls handleReadSDOAnswer() if the SDO is a read response.
 	 * @param cmsg   reference to the received message
 	 */
-	bool parseSDOAnswer(const CANMsg& cmsg);
+	bool parseSDOAnswer(const CanMsg& cmsg);
 
 	/*! NMT state requests. Send a NMT CAN message to the device.
 	 * The following functions also clear the sdo queue and set the nmtState_:
@@ -106,7 +105,7 @@ protected:
 	 * To receive the answer of read SDO's it is necessary to implement the handleReadSDOAnswer(..) function.
 	 * @param sdoMsg	Message to be sent
 	 */
-	void sendSDO(const SDOMsg& sdoMsg);
+	void sendSdo(const SdoMsg& sdoMsg);
 
 	/*! Check if the SDO at the front of the SDO queue has timed out. If so, try to resend it a couple of times (see DeviceCanOpenOptions)
 	 * @return false if no answer was received after a couple of sending attempts.
@@ -123,9 +122,7 @@ protected:
 	std::atomic<unsigned int> sdoSentCounter_;
 
 	std::mutex sdoMsgsMutex_;
-	std::queue<SDOMsg> sdoMsgs_;
+	std::queue<SdoMsg> sdoMsgs_;
 };
 
 } /* namespace yalc */
-
-#endif /* DEVICECANOPEN_HPP_ */

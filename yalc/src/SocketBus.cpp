@@ -160,14 +160,14 @@ bool SocketBus::readCanMessage() {
 	} else {
 //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-		handleMessage( CANMsg(frame.can_id, frame.can_dlc, frame.data) );
+		handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
 	}
 
 	return true;
 }
 
 
-bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
+bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
 
 	// poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
 	// If asynchronous, we set the socket to blocking and have a separate thread writing to it.
@@ -191,13 +191,13 @@ bool SocketBus::writeCanMessage(const CANMsg& cmsg) {
 	}
 
 	can_frame frame;
-	frame.can_id = cmsg.getCOBId();
+	frame.can_id = cmsg.getCobId();
 	frame.can_dlc = cmsg.getLength();
 	std::copy(cmsg.getData(), &(cmsg.getData()[frame.can_dlc]), frame.data);
 
 	int ret;
 	if( ( ret = write(socket_.fd, &frame, sizeof(struct can_frame)) ) != sizeof(struct can_frame)) {
-		printf("Error at sending CAN message %x on bus %s : %d\n", cmsg.getCOBId(), static_cast<const SocketBusOptions*>(options_)->interface.c_str(), ret);
+		printf("Error at sending CAN message %x on bus %s : %d\n", cmsg.getCobId(), static_cast<const SocketBusOptions*>(options_)->interface.c_str(), ret);
 		perror("write");
 		return false;
 	}

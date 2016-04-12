@@ -51,7 +51,7 @@ bool DeviceCanOpen::sanityCheck() {
 }
 
 
-bool DeviceCanOpen::parseHeartBeat(const CANMsg& cmsg) {
+bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
 
 	if(cmsg.getLength() != 1) {
 		printf("Invalid Heartbeat message length from nodeId %x: %d\n", getNodeId(), cmsg.getLength());
@@ -85,14 +85,14 @@ bool DeviceCanOpen::parseHeartBeat(const CANMsg& cmsg) {
 	return true;
 }
 
-bool DeviceCanOpen::parseSDOAnswer(const CANMsg& cmsg) {
+bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 	const uint8_t responseMode = cmsg.readuint8(0);
 	const uint16_t index = cmsg.readuint16(1);
 	const uint8_t subindex = cmsg.readuint8(3);
 
 	if(sdoMsgs_.size() != 0) {
 		std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
-		const SDOMsg& sdo = sdoMsgs_.front();
+		const SdoMsg& sdo = sdoMsgs_.front();
 
 		if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
@@ -100,7 +100,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CANMsg& cmsg) {
 				handleReadSDOAnswer( index, subindex, &(cmsg.getData()[4]) );
 			}else if(responseMode == 0x80) { // error response
 				const int32_t error = cmsg.readint32(4);
-				printf("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x\n", SDOMsg::getErrorName(error).c_str(), cmsg.getCOBId(), index, subindex, error);
+				printf("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x\n", SdoMsg::getErrorName(error).c_str(), cmsg.getCobId(), index, subindex, error);
 				// todo: further error handling
 			}
 
@@ -110,12 +110,12 @@ bool DeviceCanOpen::parseSDOAnswer(const CANMsg& cmsg) {
 		}
 	}
 
-	printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCOBId(), index, subindex, cmsg.readuint32(4));
+	printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCobId(), index, subindex, cmsg.readuint32(4));
 	return false;
 }
 
 
-void DeviceCanOpen::sendSDO(const SDOMsg& sdoMsg) {
+void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
 
 	std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
 	sdoMsgs_.push(sdoMsg);
@@ -137,9 +137,9 @@ bool DeviceCanOpen::checkSdoTimeout() {
 		// sdoTimeoutCounter_ is only increased if options_->maxSdoTimeoutCounter != 0 and sdoMsgs_.size() != 0
 
 		std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent parseSDOAnswer from making changes on sdoMsgs_
-		const SDOMsg& msg = sdoMsgs_.front();
+		const SdoMsg& msg = sdoMsgs_.front();
 		if(sdoSentCounter_ > options->sdoSendTries) {
-			printf("Device %s: SDO timeout (COB=%x / index=%x / sub-index=%x / data=%x)\n", getName().c_str(), msg.getCOBId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
+			printf("Device %s: SDO timeout (COB=%x / index=%x / sub-index=%x / data=%x)\n", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
 
 			sdoMsgs_.pop();
 
@@ -177,9 +177,9 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 	{
 		std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
 		// swap with an empty queue to clear it
-		std::queue<SDOMsg>().swap(sdoMsgs_);
+		std::queue<SdoMsg>().swap(sdoMsgs_);
 	}
-	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
+	sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
 	// todo: wait some time?
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
@@ -190,7 +190,7 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 }
 
 void DeviceCanOpen::setNmtStartRemoteDevice() {
-	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x1) );
+	sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x1) );
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
@@ -200,7 +200,7 @@ void DeviceCanOpen::setNmtStartRemoteDevice() {
 }
 
 void DeviceCanOpen::setNmtStopRemoteDevice() {
-	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x2) );
+	sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x2) );
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
@@ -213,9 +213,9 @@ void DeviceCanOpen::setNmtResetRemoteCommunication() {
 	{
 		std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
 		// swap with an empty queue to clear it
-		std::queue<SDOMsg>().swap(sdoMsgs_);
+		std::queue<SdoMsg>().swap(sdoMsgs_);
 	}
-	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
+	sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
 
 	nmtState_ = NMTStates::initializing;
 }
@@ -224,9 +224,9 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
 	{
 		std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
 		// swap with an empty queue to clear it
-		std::queue<SDOMsg>().swap(sdoMsgs_);
+		std::queue<SdoMsg>().swap(sdoMsgs_);
 	}
-	sendSDO( SDOMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
+	sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
 
 	nmtState_ = NMTStates::initializing;
 }

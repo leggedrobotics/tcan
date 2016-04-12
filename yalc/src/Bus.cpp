@@ -103,17 +103,17 @@ bool Bus::initBus() {
 	return true;
 }
 
-void Bus::handleMessage(const CANMsg& cmsg) {
+void Bus::handleMessage(const CanMsg& cmsg) {
 
 	// Check if CAN message is handled.
-	CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(cmsg.getCOBId());
+	CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(cmsg.getCobId());
 	if (it != cobIdToFunctionMap_.end()) {
 
 		it->second(cmsg); // call function pointer
 	} else {
 		auto value = cmsg.getData();
 		printf("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
-				cmsg.getCOBId(),
+				cmsg.getCobId(),
 				value[1],
 				value[0],
 				value[0],
@@ -143,7 +143,7 @@ bool Bus::processOutputQueue() {
 		return true;
 	}
 
-	CANMsg cmsg = outgoingMsgs_.front();
+	CanMsg cmsg = outgoingMsgs_.front();
 	lock.unlock();
 
 	writeSuccess = writeCanMessage( cmsg );

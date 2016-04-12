@@ -1,12 +1,11 @@
 /*
- * CANMsg.hpp
+ * CanMsg.hpp
  *
  *  Created on: Mar 27, 2016
  *      Author: Philipp Leemann
  */
 
-#ifndef CANMsg_HPP_
-#define CANMsg_HPP_
+#pragma once
 
 #include <algorithm>
 #include <stdint.h>
@@ -16,35 +15,31 @@ namespace yalc {
 
 //! General CANOpen message container
 
-class CANMsg {
+class CanMsg {
 public:
 	/*! Constructor
 	 * @param	COBId	Communication Object Identifier
 	 */
-	CANMsg() = delete;//:
-//		CANMsg(0)
-//	{
-//
-//	}
+	CanMsg() = delete;
 
-	CANMsg(const uint32_t COBId):
-		COBId_(COBId),
+	CanMsg(const uint32_t CobId):
+		CobId_(CobId),
 		length_{0},
 		data_{0, 0, 0, 0, 0, 0, 0, 0}
 	{
 
 	}
 
-	CANMsg(const uint32_t COBId, const uint8_t length, const uint8_t* data):
-		COBId_(COBId),
+	CanMsg(const uint32_t CobId, const uint8_t length, const uint8_t* data):
+		CobId_(CobId),
 		length_(length),
 		data_{0, 0, 0, 0, 0, 0, 0, 0}
 	{
 		std::copy(&data[0], &data[length], data_);
 	}
 
-	CANMsg(const uint32_t COBId, const uint8_t length, const std::initializer_list<uint8_t> data):
-		COBId_(COBId),
+	CanMsg(const uint32_t CobId, const uint8_t length, const std::initializer_list<uint8_t> data):
+		CobId_(CobId),
 		length_(length),
 		data_{0, 0, 0, 0, 0, 0, 0, 0}
 	{
@@ -52,13 +47,13 @@ public:
 	}
 
 	//! Destructor
-	virtual ~CANMsg() { }
+	virtual ~CanMsg() { }
 
 	/*! Gets the Communication Object Identifier
 	 *
 	 * @return COBId
 	 */
-	inline uint32_t getCOBId() const { return COBId_; }
+	inline uint32_t getCobId() const { return CobId_; }
 
 
 	/*! Gets the stack of values
@@ -171,7 +166,7 @@ public:
 
 private:
 	//! Communication Object Identifier
-	uint32_t COBId_;
+	uint32_t CobId_;
 
 	//! the message data length
 	uint8_t length_;
@@ -182,5 +177,3 @@ private:
 };
 
 } /* namespace yalc */
-
-#endif /* CANMsg_HPP_ */

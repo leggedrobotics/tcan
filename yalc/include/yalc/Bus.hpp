@@ -5,10 +5,10 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef BUS_HPP_
-#define BUS_HPP_
+#pragma once
 
 #include <stdint.h>
+#include <yalc/CanMsg.hpp>
 #include <unordered_map>
 #include <memory>
 #include <functional>
@@ -18,7 +18,6 @@
 #include <atomic>
 #include <condition_variable>
 
-#include "yalc/CANMsg.hpp"
 #include "yalc/Device.hpp"
 #include "yalc/BusOptions.hpp"
 
@@ -27,7 +26,7 @@ namespace yalc {
 class Bus {
 public:
 
-	typedef std::function<bool(const CANMsg&)> CallbackPtr;
+	typedef std::function<bool(const CanMsg&)> CallbackPtr;
 	typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
 
 	Bus() = delete;
@@ -64,7 +63,7 @@ public:
 	/*! Add a can message to be sent (added to the output queue)
 	 * @param cmsg	reference to the can message
 	 */
-	void sendMessage(const CANMsg& cmsg) {
+	void sendMessage(const CanMsg& cmsg) {
 		std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
 		sendMessageWithoutLock(cmsg);
 	}
@@ -72,14 +71,14 @@ public:
 	/*! Send a sync message on the bus. Is called by BusManager::sendSyncOnAllBuses or directly.
 	 */
 	void sendSync() {
-		sendMessage(CANMsg(0x80, 0, nullptr));
+		sendMessage(CanMsg(0x80, 0, nullptr));
 	}
 
 	/*! Send a sync message on the bus without locking the queue.
 	 * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
 	 */
 	void sendSyncWithoutLock() {
-		sendMessageWithoutLock(CANMsg(0x80, 0, nullptr));
+		sendMessageWithoutLock(CanMsg(0x80, 0, nullptr));
 	}
 
 	/*! Waits until the output queue is empty, locks the queue and returns the lock
@@ -119,7 +118,7 @@ public:
 	 * Routes the message to the callback.
 	 * @param cmsg	reference to the can message
 	 */
-	void handleMessage(const CANMsg& cmsg);
+	void handleMessage(const CanMsg& cmsg);
 
 	inline void setOperational(const bool operational) { isOperational_ = operational; }
 	inline bool getOperational() const { return isOperational_; }
@@ -142,12 +141,12 @@ protected:
 	/*! write CAN message to the device driver
 	 * @return true if the message was successfully written
 	 */
-	virtual bool writeCanMessage(const CANMsg& cmsg) = 0;
+	virtual bool writeCanMessage(const CanMsg& cmsg) = 0;
 
 
 	bool processOutputQueue();
 
-	void sendMessageWithoutLock(const CANMsg& cmsg)
+	void sendMessageWithoutLock(const CanMsg& cmsg)
 	{
 		outgoingMsgs_.push( cmsg );	// do not use emplace here. We need a copy of the message in some situations
 		// (SDO queue processing). Declaring another sendMessage(..) which uses move
@@ -175,7 +174,7 @@ protected:
 
 	// output queue containing all messages to be sent by the transmitThread_
 	std::mutex outgointMsgsMutex_;
-	std::queue<CANMsg> outgoingMsgs_;
+	std::queue<CanMsg> outgoingMsgs_;
 
 	// threads for message reception and transmission and device sanity checking
 	std::thread receiveThread_;
@@ -192,4 +191,3 @@ protected:
 
 } /* namespace yalc */
 
-#endif /* BUS_HPP_ */

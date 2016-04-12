@@ -5,8 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef SOCKETBUS_HPP_
-#define SOCKETBUS_HPP_
+#pragma once
 
 #include <poll.h>
 
@@ -27,12 +26,10 @@ public:
 protected:
 	virtual bool initializeCanBus();
 	virtual bool readCanMessage();
-	virtual bool writeCanMessage(const CANMsg& cmsg);
+	virtual bool writeCanMessage(const CanMsg& cmsg);
 
 protected:
 	pollfd socket_;
 };
 
 } /* namespace yalc */
-
-#endif /* SOCKETBUS_HPP_ */

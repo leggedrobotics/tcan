@@ -5,8 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef SOCKETBUSOPTIONS_HPP_
-#define SOCKETBUSOPTIONS_HPP_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -16,9 +15,7 @@
 
 namespace yalc {
 
-class SocketBusOptions : public BusOptions {
-public:
-
+struct SocketBusOptions : public BusOptions {
 	SocketBusOptions():
 		BusOptions(),
 		interface(),
@@ -65,5 +62,3 @@ public:
 };
 
 } /* namespace yalc */
-
-#endif /* SOCKETBUSOPTIONS_HPP_ */

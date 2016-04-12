@@ -5,8 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#ifndef DEVICEOPTIONS_HPP_
-#define DEVICEOPTIONS_HPP_
+#pragma once
 
 #include <string>
 
@@ -41,5 +40,3 @@ public:
 };
 
 } /* namespace yalc */
-
-#endif /* DEVICEOPTIONS_HPP_ */
