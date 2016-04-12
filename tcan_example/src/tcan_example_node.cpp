@@ -5,15 +5,15 @@
 #include <chrono>
 #include <signal.h>
 
-#include "yalc/BusManager.hpp"
-#include "yalc/SocketBus.hpp"
-#include "yalc_example/DeviceExample.hpp"
+#include "tcan/BusManager.hpp"
+#include "tcan/SocketBus.hpp"
+#include "tcan_example/DeviceExample.hpp"
 #include "m545_utils/containers/MultiKeyContainer.hpp"
 
 
 //#define USE_SYNCHRONOUS_MODE
 
-namespace yalc {
+namespace tcan {
 class CanManager : public BusManager {
 public:
 	enum class BusId : unsigned int {
@@ -112,7 +112,7 @@ protected:
 	DeviceExampleContainer deviceExampleContainer_;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */
 
 bool g_running = true;
 
@@ -122,7 +122,7 @@ void signal_handler(int) {
 
 int main() {
 	signal(SIGINT, signal_handler);
-	yalc::CanManager canManager_;
+	tcan::CanManager canManager_;
 
 	auto nextStep = std::chrono::steady_clock::now();
 

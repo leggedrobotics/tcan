@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace yalc {
+namespace tcan {
 
 class DeviceOptions {
 public:
@@ -39,4 +39,4 @@ public:
 
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

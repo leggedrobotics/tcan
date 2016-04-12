@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(yalc_example)
+project(tcan_example)
 
 find_package(catkin REQUIRED COMPONENTS
-  yalc
+  tcan
   m545_utils
 )
 
@@ -12,8 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES yalc_example
- CATKIN_DEPENDS yalc m545_utils
+ LIBRARIES tcan_example
+ CATKIN_DEPENDS tcan m545_utils
 #  DEPENDS system_lib
 )
 
@@ -30,12 +30,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(yalc_example_node
+add_executable(tcan_example_node
   src/DeviceExample.cpp
-  src/yalc_example_node.cpp
+  src/tcan_example_node.cpp
 )
 
-target_link_libraries(yalc_example_node
+target_link_libraries(tcan_example_node
   ${catkin_LIBRARIES}
 )
 
@@ -44,7 +44,7 @@ target_link_libraries(yalc_example_node
 #############
 
 
-install(TARGETS yalc_example_node
+install(TARGETS tcan_example_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -60,7 +60,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_yalc_example.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_tcan_example.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

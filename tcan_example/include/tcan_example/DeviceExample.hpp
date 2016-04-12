@@ -8,15 +8,14 @@
  *
  */
 
-#ifndef DEVICEEXAMPLE_HPP_
-#define DEVICEEXAMPLE_HPP_
+#pragma once
 
 #include <stdint.h>
 #include <atomic>
 
-#include "yalc/DeviceCanOpen.hpp"
+#include "tcan/DeviceCanOpen.hpp"
 
-namespace yalc {
+namespace tcan {
 
 namespace example_can {
 //! An example device that is connected via CAN.
@@ -73,6 +72,4 @@ protected:
 
 } /* namespace example_can */
 
-} /* namespace yalc */
-
-#endif /* DEVICEEXAMPLE_HPP_ */
+} /* namespace tcan */

@@ -1,1 +1,1 @@
-# Yet Another LibCan #
+# Threaded CAN library #

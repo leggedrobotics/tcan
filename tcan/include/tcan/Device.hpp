@@ -9,12 +9,12 @@
 
 #include <string>
 #include <stdint.h>
-#include <yalc/CanMsg.hpp>
+#include <tcan/CanMsg.hpp>
 #include <atomic>
 
-#include "yalc/DeviceOptions.hpp"
+#include "tcan/DeviceOptions.hpp"
 
-namespace yalc {
+namespace tcan {
 class Bus;
 
 
@@ -97,4 +97,4 @@ protected:
 	Bus* bus_;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

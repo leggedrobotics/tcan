@@ -5,9 +5,9 @@
  *      Author: Philipp Leemann
  */
 
-#include "yalc/BusManager.hpp"
+#include "tcan/BusManager.hpp"
 
-namespace yalc {
+namespace tcan {
 
 BusManager::BusManager():
 	buses_()
@@ -83,4 +83,4 @@ void BusManager::closeBuses() {
 	buses_.clear();
 }
 
-} /* namespace yalc */
+} /* namespace tcan */

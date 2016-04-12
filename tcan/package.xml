@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>yalc</name>
+  <name>tcan</name>
   <version>0.0.0</version>
   <description>The libcanplusplus package</description>
   <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>

@@ -14,9 +14,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "yalc/SocketBus.hpp"
+#include "tcan/SocketBus.hpp"
 
-namespace yalc {
+namespace tcan {
 
 SocketBus::SocketBus(const std::string& interface):
 	Bus(new SocketBusOptions(interface)),
@@ -205,4 +205,4 @@ bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
 	return true;
 }
 
-} /* namespace yalc */
+} /* namespace tcan */

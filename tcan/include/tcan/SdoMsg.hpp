@@ -8,11 +8,11 @@
 #pragma once
 
 #include <stdint.h>
-#include <yalc/CanMsg.hpp>
+#include <tcan/CanMsg.hpp>
 #include <string>
 
 
-namespace yalc {
+namespace tcan {
 
 //! Service Data Object Message Container
 /*! It contains an output CANOpen message that needs to be sent to the CAN node and
@@ -174,4 +174,4 @@ private:
 	const bool requiresAnswer_;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

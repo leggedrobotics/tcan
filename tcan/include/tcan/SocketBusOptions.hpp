@@ -11,9 +11,9 @@
 #include <vector>
 #include <linux/can.h>
 
-#include "yalc/BusOptions.hpp"
+#include "tcan/BusOptions.hpp"
 
-namespace yalc {
+namespace tcan {
 
 struct SocketBusOptions : public BusOptions {
 	SocketBusOptions():
@@ -61,4 +61,4 @@ struct SocketBusOptions : public BusOptions {
 	std::vector<can_filter> canFilters;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

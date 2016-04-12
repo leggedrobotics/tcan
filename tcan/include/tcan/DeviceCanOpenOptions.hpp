@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include "yalc/DeviceOptions.hpp"
+#include "tcan/DeviceOptions.hpp"
 
-namespace yalc {
+namespace tcan {
 
 struct DeviceCanOpenOptions : public DeviceOptions {
 	DeviceCanOpenOptions() = delete;
@@ -37,4 +37,4 @@ struct DeviceCanOpenOptions : public DeviceOptions {
 
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

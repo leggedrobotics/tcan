@@ -8,15 +8,15 @@
 #pragma once
 
 #include <stdint.h>
-#include <yalc/SdoMsg.hpp>
+#include <tcan/SdoMsg.hpp>
 #include <queue>
 #include <mutex>
 #include <atomic>
 
-#include "yalc/Device.hpp"
-#include "yalc/DeviceCanOpenOptions.hpp"
+#include "tcan/Device.hpp"
+#include "tcan/DeviceCanOpenOptions.hpp"
 
-namespace yalc {
+namespace tcan {
 //! A CANOpen device that is connected via CAN.
 
 class DeviceCanOpen : public Device {
@@ -125,4 +125,4 @@ protected:
 	std::queue<SdoMsg> sdoMsgs_;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

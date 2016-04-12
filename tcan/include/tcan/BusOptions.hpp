@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace yalc {
+namespace tcan {
 
 struct BusOptions {
 	BusOptions():
@@ -45,4 +45,4 @@ struct BusOptions {
 
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

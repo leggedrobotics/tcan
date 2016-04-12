@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(yalc)
+project(tcan)
 
 find_package(catkin REQUIRED)
 

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <initializer_list>
 
-namespace yalc {
+namespace tcan {
 
 //! General CANOpen message container
 
@@ -176,4 +176,4 @@ private:
 	uint8_t data_[8];
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

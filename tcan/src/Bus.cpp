@@ -9,9 +9,9 @@
 #include <chrono>
 #include <pthread.h>
 
-#include "yalc/Bus.hpp"
+#include "tcan/Bus.hpp"
 
-namespace yalc {
+namespace tcan {
 
 Bus::Bus(const bool asynchronous, const unsigned int sanityCheckInterval):
 	Bus(new BusOptions(asynchronous, sanityCheckInterval))
@@ -200,5 +200,5 @@ void Bus::sanityCheckWorker() {
 	printf("sanityCheck thread terminated\n");
 }
 
-} /* namespace yalc */
+} /* namespace tcan */
 

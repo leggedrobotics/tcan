@@ -9,10 +9,10 @@
 
 #include <poll.h>
 
-#include "yalc/Bus.hpp"
-#include "yalc/SocketBusOptions.hpp"
+#include "tcan/Bus.hpp"
+#include "tcan/SocketBusOptions.hpp"
 
-namespace yalc {
+namespace tcan {
 
 class SocketBus : public Bus {
 public:
@@ -32,4 +32,4 @@ protected:
 	pollfd socket_;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */

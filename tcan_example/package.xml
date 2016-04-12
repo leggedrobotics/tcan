@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>yalc_example</name>
+  <name>tcan_example</name>
   <version>0.0.0</version>
-  <description>The yalc_example package</description>
+  <description>The tcan_example package</description>
 
   <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
   <license>TODO</license>
-  <!-- <url type="website">http://wiki.ros.org/yalc_example</url> -->
+  <!-- <url type="website">http://wiki.ros.org/tcan_example</url> -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>yalc</depend>
+  <depend>tcan</depend>
   <depend>m545_utils</depend>
 
   <export>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <yalc/SdoMsg.hpp>
+#include <tcan/SdoMsg.hpp>
 
-namespace yalc {
+namespace tcan {
 namespace canopen {
 
 /** *********************************************************************
@@ -696,4 +696,4 @@ public:
 
 
 } // namespace canopen
-} /* namespace yalc */
+} /* namespace tcan */

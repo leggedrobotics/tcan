@@ -10,11 +10,11 @@
 
 #include <stdio.h>
 
-#include "yalc_example/DeviceExample.hpp"
-#include "yalc/Bus.hpp"
-#include "yalc/canopen_sdos.hpp"
+#include "tcan_example/DeviceExample.hpp"
+#include "tcan/Bus.hpp"
+#include "tcan/canopen_sdos.hpp"
 
-namespace yalc {
+namespace tcan {
 
 namespace example_can {
 
@@ -89,4 +89,4 @@ void DeviceExample::handleReadSDOAnswer(const uint16_t index, const uint8_t subI
 
 } /* namespace example_can */
 
-} /* namespace yalc */
+} /* namespace tcan */

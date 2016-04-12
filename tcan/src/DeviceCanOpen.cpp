@@ -7,10 +7,10 @@
 
 #include <stdio.h>
 
-#include "yalc/DeviceCanOpen.hpp"
-#include "yalc/Bus.hpp"
+#include "tcan/DeviceCanOpen.hpp"
+#include "tcan/Bus.hpp"
 
-namespace yalc {
+namespace tcan {
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
 	DeviceCanOpen(new DeviceCanOpenOptions(nodeId, name))
@@ -231,4 +231,4 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
 	nmtState_ = NMTStates::initializing;
 }
 
-} /* namespace yalc */
+} /* namespace tcan */

@@ -8,7 +8,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <yalc/CanMsg.hpp>
+#include <tcan/CanMsg.hpp>
 #include <unordered_map>
 #include <memory>
 #include <functional>
@@ -18,10 +18,10 @@
 #include <atomic>
 #include <condition_variable>
 
-#include "yalc/Device.hpp"
-#include "yalc/BusOptions.hpp"
+#include "tcan/Device.hpp"
+#include "tcan/BusOptions.hpp"
 
-namespace yalc {
+namespace tcan {
 
 class Bus {
 public:
@@ -189,5 +189,5 @@ protected:
 	std::condition_variable condOutputQueueEmpty_;
 };
 
-} /* namespace yalc */
+} /* namespace tcan */
 

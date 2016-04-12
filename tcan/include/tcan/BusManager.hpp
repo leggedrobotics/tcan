@@ -10,9 +10,9 @@
 #include <memory>
 #include <vector>
 
-#include "yalc/Bus.hpp"
+#include "tcan/Bus.hpp"
 
-namespace yalc {
+namespace tcan {
 
 //! Container of all CAN buses
 class BusManager {
@@ -54,4 +54,4 @@ protected:
 
 };
 
-} /* namespace yalc */
+} /* namespace tcan */
