@@ -13,12 +13,6 @@
 
 namespace tcan {
 
-Bus::Bus(const bool asynchronous, const unsigned int sanityCheckInterval):
-	Bus(new BusOptions(asynchronous, sanityCheckInterval))
-{
-
-}
-
 Bus::Bus(BusOptions* options):
 	isOperational_(false),
 	options_(options),
@@ -72,29 +66,29 @@ bool Bus::initBus() {
 
 	running_ = true;
 
-	if(options_->asynchronous) {
+	if(options_->asynchronous_) {
 		receiveThread_ = std::thread(&Bus::receiveWorker, this);
 		transmitThread_ = std::thread(&Bus::transmitWorker, this);
 
 		sched_param sched;
-		sched.sched_priority = options_->priorityReceiveThread;
+		sched.sched_priority = options_->priorityReceiveThread_;
 		if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-			printf("Failed to set receive thread priority\n");
+			printf("Failed to set receive thread priority for bus %s\n", options_->name_.c_str());
 			perror("pthread_setschedparam");
 		}
 
-		sched.sched_priority = options_->priorityTransmitThread;
+		sched.sched_priority = options_->priorityTransmitThread_;
 		if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-			printf("Failed to set transmit thread priority\n");
+			printf("Failed to set transmit thread priority for bus %s\n", options_->name_.c_str());
 			perror("pthread_setschedparam");
 		}
 
-		if(options_->sanityCheckInterval > 0) {
+		if(options_->sanityCheckInterval_ > 0) {
 			sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
 
-			sched.sched_priority = options_->prioritySanityCheckThread;
+			sched.sched_priority = options_->prioritySanityCheckThread_;
 			if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-				printf("Failed to set receive thread priority\n");
+				printf("Failed to set receive thread priority for bus %s\n", options_->name_.c_str());
 				perror("pthread_setschedparam");
 			}
 		}
@@ -176,7 +170,7 @@ void Bus::receiveWorker() {
 		readMessage();
 	}
 
-	printf("receive thread terminated\n");
+	printf("receive thread for bus %s terminated\n", options_->name_.c_str());
 }
 
 void Bus::transmitWorker() {
@@ -184,7 +178,7 @@ void Bus::transmitWorker() {
 		processOutputQueue();
 	}
 
-	printf("transmit thread terminated\n");
+	printf("transmit thread for bus %s terminated\n", options_->name_.c_str());
 }
 
 void Bus::sanityCheckWorker() {
@@ -193,11 +187,11 @@ void Bus::sanityCheckWorker() {
 	while(running_) {
 		sanityCheck();
 
-		nextLoop += std::chrono::milliseconds(options_->sanityCheckInterval);
+		nextLoop += std::chrono::milliseconds(options_->sanityCheckInterval_);
 		std::this_thread::sleep_until(nextLoop);
 	}
 
-	printf("sanityCheck thread terminated\n");
+	printf("sanityCheck thread for bus %s terminated\n", options_->name_.c_str());
 }
 
 } /* namespace tcan */

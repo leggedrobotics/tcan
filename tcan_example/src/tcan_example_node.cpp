@@ -78,9 +78,9 @@ public:
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
-		options->interface = interface;
-		options->loopback = true;
-		options->sndBufLength = 0;
+		options->name_ = interface;
+		options->loopback_ = true;
+		options->sndBufLength_ = 0;
 		// add (multiple) can filters like this {can_id, can_msg}:
 		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
 //		options->canErrorMask = 0;

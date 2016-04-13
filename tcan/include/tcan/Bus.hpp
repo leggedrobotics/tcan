@@ -30,7 +30,6 @@ public:
 	typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
 
 	Bus() = delete;
-	Bus(const bool asynchronous, const unsigned int sanityCheckInterval);
 	Bus(BusOptions* options);
 
 	virtual ~Bus();
@@ -148,6 +147,9 @@ protected:
 
 	void sendMessageWithoutLock(const CanMsg& cmsg)
 	{
+		if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
+			printf("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+		}
 		outgoingMsgs_.push( cmsg );	// do not use emplace here. We need a copy of the message in some situations
 		// (SDO queue processing). Declaring another sendMessage(..) which uses move
 		// semantics does not increase performance as CANMsg has only POD members

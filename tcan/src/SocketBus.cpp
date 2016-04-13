@@ -40,7 +40,7 @@ SocketBus::~SocketBus()
 bool SocketBus::initializeCanBus()
 {
 	const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_);
-	const char* interface = options->interface.c_str();
+	const char* interface = options->name_.c_str();
 
 	/* open socket */
 	int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -56,7 +56,7 @@ bool SocketBus::initializeCanBus()
 	ioctl(fd, SIOCGIFINDEX, &ifr);
 
 	// loopback
-	int loopback = options->loopback;
+	int loopback = options->loopback_;
 	if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback)) != 0) {
 		printf("Failed to set loopback mode\n");
 		perror("setsockopt");
@@ -70,7 +70,7 @@ bool SocketBus::initializeCanBus()
 	}
 
 	// CAN error handling
-	can_err_mask_t err_mask = options->canErrorMask;
+	can_err_mask_t err_mask = options->canErrorMask_;
 	if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_ERR_FILTER, &err_mask, sizeof(err_mask)) != 0) {
 		printf("Failed to set error mask\n");
 		perror("setsockopt");
@@ -92,11 +92,11 @@ bool SocketBus::initializeCanBus()
 	// If this is not possible, the sndbuf size of the socket can be decrease, such that the socket writes are the limiting pipe, leading to blocking socket write(..) calls. (write becomes poll(..)-able)
 	// https://www.mail-archive.com/socketcan-users@lists.berlios.de/msg00787.html
 	// http://socket-can.996257.n3.nabble.com/Solving-ENOBUFS-returned-by-write-td2886.html
-	if(options->sndBufLength != 0) {
-		setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength), sizeof(options->sndBufLength));
+	if(options->sndBufLength_ != 0) {
+		setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_));
 	}
 
-	// set receive timeout
+	// set read timeout
 	timeval timeout;
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
@@ -104,18 +104,24 @@ bool SocketBus::initializeCanBus()
 		printf("Failed to set read timeout\n");
 		perror("setsockopt");
 	}
+	// set write timeout
+	if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
+		printf("Failed to set write timeout\n");
+		perror("setsockopt");
+	}
+
 
 
 	// set up filters
-	if(options->canFilters.size() != 0) {
-		if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters[0]), sizeof(can_filter)*options->canFilters.size()) != 0) {
+	if(options->canFilters_.size() != 0) {
+		if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters_[0]), sizeof(can_filter)*options->canFilters_.size()) != 0) {
 			printf("Failed to set read timeout\n");
 			perror("setsockopt");
 		}
 	}
 
 	//Set nonblocking for synchronous mode
-	if(!options_->asynchronous) {
+	if(!options_->asynchronous_) {
 		int flags;
 		if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
 		if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
@@ -172,18 +178,18 @@ bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
 	// poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
 	// If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
-	if(!options_->asynchronous) {
+	if(!options_->asynchronous_) {
 		socket_.revents = 0;
 
 		const int ret = poll( &socket_, 1, 1000 );
 
 		if ( ret == -1 ) {
-			printf("poll failed on bus %s", static_cast<const SocketBusOptions*>(options_)->interface.c_str());
+			printf("poll failed on bus %s", options_->name_.c_str());
 			perror("poll()");
 			return false;
 		}else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
 			// poll timed out, without being able to write => raise error
-			printf("polling for socket writeability timed out for bus %s. Socket overflow?", static_cast<const SocketBusOptions*>(options_)->interface.c_str());
+			printf("polling for socket writeability timed out for bus %s. Socket overflow?", options_->name_.c_str());
 			return false;
 		}else{
 			// socket ready for write operations => proceed
@@ -197,7 +203,7 @@ bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
 
 	int ret;
 	if( ( ret = write(socket_.fd, &frame, sizeof(struct can_frame)) ) != sizeof(struct can_frame)) {
-		printf("Error at sending CAN message %x on bus %s : %d\n", cmsg.getCobId(), static_cast<const SocketBusOptions*>(options_)->interface.c_str(), ret);
+		printf("Error at sending CAN message %x on bus %s : %d\n", cmsg.getCobId(), options_->name_.c_str(), ret);
 		perror("write");
 		return false;
 	}

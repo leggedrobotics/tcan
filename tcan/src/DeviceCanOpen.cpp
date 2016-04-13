@@ -58,10 +58,13 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
 		return false;
 	}
 
+	if(isInitializing()) {
+		configureDevice();
+	}
+
 	switch(cmsg.readuint8(0)) {
 	case 0x0: // boot up
 		nmtState_ = NMTStates::preOperational; // devices should switch automatically to pre-operational after bootup
-		configureDevice();
 		break;
 
 	case 0x7F: // pre-operational
