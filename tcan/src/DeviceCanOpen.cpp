@@ -35,8 +35,6 @@ DeviceCanOpen::~DeviceCanOpen()
 }
 
 bool DeviceCanOpen::sanityCheck() {
-	const DeviceCanOpenOptions* options = static_cast<DeviceCanOpenOptions*>(options_);
-
 	if(!isMissing() && !checkDeviceTimeout()) {
 		nmtState_ = NMTStates::missing;
 		printf("Device %s timed out!\n", getName().c_str());
@@ -134,7 +132,7 @@ void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
 }
 
 bool DeviceCanOpen::checkSdoTimeout() {
-	const DeviceCanOpenOptions* options = static_cast<DeviceCanOpenOptions*>(options_);
+	const DeviceCanOpenOptions* options = static_cast<const DeviceCanOpenOptions*>(options_);
 
 	if(options->maxSdoTimeoutCounter != 0 && sdoMsgs_.size() != 0 && (sdoTimeoutCounter_++ > options->maxSdoTimeoutCounter) ) {
 		// sdoTimeoutCounter_ is only increased if options_->maxSdoTimeoutCounter != 0 and sdoMsgs_.size() != 0
@@ -187,7 +185,7 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
-	if(static_cast<DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
+	if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
 		nmtState_ = NMTStates::preOperational;
 	}
 }
@@ -197,7 +195,7 @@ void DeviceCanOpen::setNmtStartRemoteDevice() {
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
-	if(static_cast<DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
+	if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
 		nmtState_ = NMTStates::operational;
 	}
 }
@@ -207,7 +205,7 @@ void DeviceCanOpen::setNmtStopRemoteDevice() {
 
 	// the remote device will not tell us in which state it is if heartbeat message is disabled
 	//   => assume that the state switch will be successful
-	if(static_cast<DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
+	if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime == 0) {
 		nmtState_ = NMTStates::stopped;
 	}
 }

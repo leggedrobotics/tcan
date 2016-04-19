@@ -89,7 +89,7 @@ protected:
 
 protected:
 
-	DeviceOptions* options_;
+	const DeviceOptions* options_;
 
 	std::atomic<unsigned int> deviceTimeoutCounter_;
 

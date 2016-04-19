@@ -47,8 +47,8 @@ public:
 	 * @param nodeId	ID of CAN node
 	 * @param name		name of the device
 	 */
-	DeviceCanOpen() = delete;
 	DeviceCanOpen(const uint32_t nodeId, const std::string& name);
+	DeviceCanOpen(DeviceOptions* options) = delete;
 	DeviceCanOpen(DeviceCanOpenOptions* options);
 
 	//! Destructor

@@ -76,6 +76,56 @@ public:
 		std::copy(&data[0], &data[length], data_);
 	}
 
+	inline void write(const int32_t value)
+	{
+		data_[3 + length_] = static_cast<uint8_t>((value >> 24) & 0xFF);
+		data_[2 + length_] = static_cast<uint8_t>((value >> 16) & 0xFF);
+		data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
+		data_[0 + length_] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ += 4;
+	}
+
+	inline void write(const uint32_t value)
+	{
+		data_[3 + length_] = static_cast<uint8_t>((value >> 24) & 0xFF);
+		data_[2 + length_] = static_cast<uint8_t>((value >> 16) & 0xFF);
+		data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
+		data_[0 + length_] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ += 4;
+	}
+
+	inline void write(const int16_t value)
+	{
+		data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
+		data_[0 + length_] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ += 2;
+	}
+
+	inline void write(const uint16_t value)
+	{
+		data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
+		data_[0 + length_] = static_cast<uint8_t>((value >> 0) & 0xFF);
+
+		length_ += 2;
+	}
+
+	inline void write(const int8_t value)
+	{
+		data_[0 + length_] = static_cast<uint8_t>(value);
+
+		length_ += 1;
+	}
+
+	inline void write(const uint8_t value)
+	{
+		data_[0 + length_] = value;
+
+		length_ += 1;
+	}
+
 	inline void write(const int32_t value, const uint8_t pos)
 	{
 		data_[3 + pos] = static_cast<uint8_t>((value >> 24) & 0xFF);
@@ -83,7 +133,9 @@ public:
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
-		length_ = pos+4;
+		if(pos + 4 > length_) {
+			length_ = pos+4;
+		}
 	}
 
 	inline void write(const uint32_t value, const uint8_t pos)
@@ -93,7 +145,9 @@ public:
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
-		length_ = pos+4;
+		if(pos + 4 > length_) {
+			length_ = pos+4;
+		}
 	}
 
 	inline void write(const int16_t value, const uint8_t pos)
@@ -101,7 +155,9 @@ public:
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
-		length_ = pos+2;
+		if(pos + 2 > length_) {
+			length_ = pos+2;
+		}
 	}
 
 	inline void write(const uint16_t value, const uint8_t pos)
@@ -109,21 +165,27 @@ public:
 		data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
 		data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
-		length_ = pos+2;
+		if(pos + 2 > length_) {
+			length_ = pos+2;
+		}
 	}
 
 	inline void write(const int8_t value, const uint8_t pos)
 	{
 		data_[0 + pos] = static_cast<uint8_t>(value);
 
-		length_ = pos+1;
+		if(pos + 1 > length_) {
+			length_ = pos+1;
+		}
 	}
 
 	inline void write(const uint8_t value, const uint8_t pos)
 	{
 		data_[0 + pos] = value;
 
-		length_ = pos+1;
+		if(pos + 1 > length_) {
+			length_ = pos+1;
+		}
 	}
 
 	inline int32_t readint32(uint8_t pos) const

@@ -17,8 +17,8 @@ namespace tcan {
 class SocketBus : public Bus {
 public:
 
-	SocketBus() = delete;
 	SocketBus(const std::string& interface);
+	SocketBus(BusOptions* options) = delete;
 	SocketBus(SocketBusOptions* options);
 
 	virtual ~SocketBus();

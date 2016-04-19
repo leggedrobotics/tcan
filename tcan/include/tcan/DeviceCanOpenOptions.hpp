@@ -12,8 +12,6 @@
 namespace tcan {
 
 struct DeviceCanOpenOptions : public DeviceOptions {
-	DeviceCanOpenOptions() = delete;
-
 	DeviceCanOpenOptions(const uint32_t nodeId, const std::string name):
 		DeviceOptions(nodeId, name),
 		maxSdoTimeoutCounter(1),

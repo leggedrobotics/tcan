@@ -59,7 +59,7 @@ void DeviceExample::configureDevice() {
 	// device is in pre-operational state when this function is called
 	printf("configureDevice called\n");
 	setNmtEnterPreOperational();
-	sendSdo(mySdo(getNodeId(), static_cast<DeviceExampleOptions*>(options_)->someParameter));
+	sendSdo(mySdo(getNodeId(), static_cast<const DeviceExampleOptions*>(options_)->someParameter));
 	setNmtStartRemoteDevice();
 }
 
