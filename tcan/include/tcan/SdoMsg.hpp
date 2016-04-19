@@ -51,7 +51,7 @@ public:
 	}
 
 	SdoMsg(const uint32_t nodeId, const Command command, const uint16_t index, const uint8_t subIndex, const uint32_t data):
-		CanMsg(nodeId, 8, {
+		CanMsg(0x600 + nodeId, 8, {
 				static_cast<uint8_t>(command),
 				static_cast<uint8_t>(index & 0xff),
 				static_cast<uint8_t>((index >> 8) & 0xff),
