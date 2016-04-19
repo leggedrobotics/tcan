@@ -19,7 +19,7 @@ public:
 	DeviceOptions(const uint32_t node_id, const std::string& node_name):
 		nodeId(node_id),
 		name(node_name),
-		maxDeviceTimeoutCounter(10)
+		maxDeviceTimeoutCounter(20)
 	{
 
 	}

@@ -83,7 +83,7 @@ public:
 protected:
 	inline bool checkDeviceTimeout()
 	{
-		return (options_->maxDeviceTimeoutCounter != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter) );
+		return !(options_->maxDeviceTimeoutCounter != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter) );
 		// deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
 	}
 

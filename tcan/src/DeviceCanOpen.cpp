@@ -51,6 +51,8 @@ bool DeviceCanOpen::sanityCheck() {
 
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
 
+	deviceTimeoutCounter_ = 0;
+
 	if(cmsg.getLength() != 1) {
 		printf("Invalid Heartbeat message length from nodeId %x: %d\n", getNodeId(), cmsg.getLength());
 		return false;
