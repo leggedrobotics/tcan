@@ -43,7 +43,12 @@ public:
 	 * @param subIndex  subindex to be read/write
 	 * @param command   SDO command (read or write)
 	 */
-	SdoMsg() = delete;
+	SdoMsg():
+		CanMsg(0),
+		requiresAnswer_(true)
+	{
+
+	}
 
 	SdoMsg(const uint32_t nodeId, const Command command, const uint16_t index, const uint8_t subIndex, const uint32_t data):
 		CanMsg(nodeId, 8, {
@@ -76,6 +81,7 @@ public:
 	}
 
 	//! getters for index and subindex for answer verfication
+	inline uint8_t getCommandByte() const { return readuint8(0); }
 	inline uint16_t getIndex() const { return readuint16(1); }
 	inline uint8_t getSubIndex() const { return readuint8(3); }
 
@@ -171,7 +177,7 @@ public:
 
 private:
 	//! if true, message will stay in the SDO queue until answer was received or timed out.
-	const bool requiresAnswer_;
+	bool requiresAnswer_;
 };
 
 } /* namespace tcan */
