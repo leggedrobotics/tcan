@@ -63,11 +63,9 @@ public:
 
 	/*! Handle a SDO answer
 	 * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests
-	 * @param index		index of the SDO
-	 * @param subIndex	subIndex of the SDO
-	 * @param data		data of the answer to the read request (4 bytes)
+	 * @param sdoMsg	the SDO response message
 	 */
-	virtual void handleReadSDOAnswer(const uint16_t index, const uint8_t subIndex, const uint8_t *data) { }
+	virtual void handleReadSdoAnswer(const SdoMsg& sdoMsg) { }
 
 
 	/*! Parse a heartbeat message

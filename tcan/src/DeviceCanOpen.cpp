@@ -98,7 +98,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 		if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
 			if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
-				handleReadSDOAnswer( index, subindex, &(cmsg.getData()[4]) );
+				handleReadSdoAnswer( dynamic_cast<const SdoMsg&>(cmsg) );
 			}else if(responseMode == 0x80) { // error response
 				const int32_t error = cmsg.readint32(4);
 				printf("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x\n", SdoMsg::getErrorName(error).c_str(), cmsg.getCobId(), index, subindex, error);
