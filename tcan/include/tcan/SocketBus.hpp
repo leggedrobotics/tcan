@@ -15,21 +15,21 @@
 namespace tcan {
 
 class SocketBus : public Bus {
-public:
+ public:
 
-	SocketBus(const std::string& interface);
-	SocketBus(BusOptions* options) = delete;
-	SocketBus(SocketBusOptions* options);
+    SocketBus(const std::string& interface);
+    SocketBus(BusOptions* options) = delete;
+    SocketBus(SocketBusOptions* options);
 
-	virtual ~SocketBus();
+    virtual ~SocketBus();
 
-protected:
-	virtual bool initializeCanBus();
-	virtual bool readCanMessage();
-	virtual bool writeCanMessage(const CanMsg& cmsg);
+ protected:
+    virtual bool initializeCanBus();
+    virtual bool readCanMessage();
+    virtual bool writeCanMessage(const CanMsg& cmsg);
 
-protected:
-	pollfd socket_;
+ protected:
+    pollfd socket_;
 };
 
 } /* namespace tcan */

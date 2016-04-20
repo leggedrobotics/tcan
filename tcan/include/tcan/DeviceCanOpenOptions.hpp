@@ -12,26 +12,26 @@
 namespace tcan {
 
 struct DeviceCanOpenOptions : public DeviceOptions {
-	DeviceCanOpenOptions(const uint32_t nodeId, const std::string name):
-		DeviceOptions(nodeId, name),
-		maxSdoTimeoutCounter(1),
-		sdoSendTries(10),
-		producerHeartBeatTime(0)
-	{
+    DeviceCanOpenOptions(const uint32_t nodeId, const std::string name):
+        DeviceOptions(nodeId, name),
+        maxSdoTimeoutCounter(1),
+        sdoSendTries(10),
+        producerHeartBeatTime(0)
+    {
 
-	}
+    }
 
-	virtual ~DeviceCanOpenOptions() { }
+    virtual ~DeviceCanOpenOptions() { }
 
-	//! counter limit at which an SDO is considered as timed out. Set 0 to disable.
-	// maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 1Hz by default (see BusOptions))
-	unsigned int maxSdoTimeoutCounter;
+    //! counter limit at which an SDO is considered as timed out. Set 0 to disable.
+    // maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 1Hz by default (see BusOptions))
+    unsigned int maxSdoTimeoutCounter;
 
-	//! number of tries of an SDO transmission
-	unsigned int sdoSendTries;
+    //! number of tries of an SDO transmission
+    unsigned int sdoSendTries;
 
-	//! Heartbeat time interval [ms], produced by the device. Set to 0 to disable heartbeat message reception checking.
-	uint16_t producerHeartBeatTime;
+    //! Heartbeat time interval [ms], produced by the device. Set to 0 to disable heartbeat message reception checking.
+    uint16_t producerHeartBeatTime;
 
 };
 
