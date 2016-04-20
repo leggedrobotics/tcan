@@ -20,9 +20,9 @@ class SdoMsg : public CanMsg {
 
     enum class Command : uint8_t {
         READ=0x40,
-                WRITE_1_BYTE=0x2f,
-                WRITE_2_BYTE=0x2b,
-                WRITE_4_BYTE=0x23
+        WRITE_1_BYTE=0x2f,
+        WRITE_2_BYTE=0x2b,
+        WRITE_4_BYTE=0x23
     };
 
     /*! Constructor
