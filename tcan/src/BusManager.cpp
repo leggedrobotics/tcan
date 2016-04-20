@@ -46,7 +46,9 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 
 void BusManager::readMessagesSynchrounous() {
 	for(auto bus : buses_) {
-		while(bus->readMessage()) {
+		if(!bus->isAsynchronous()) {
+			while(bus->readMessage()) {
+			}
 		}
 	}
 }
@@ -58,7 +60,9 @@ void BusManager::writeMessagesSynchronous() {
 		sendingData = false;
 
 		for(auto bus : buses_) {
-			sendingData |= bus->writeMessage();
+			if(!bus->isAsynchronous()) {
+				sendingData |= bus->writeMessage();
+			}
 		}
 	}
 }

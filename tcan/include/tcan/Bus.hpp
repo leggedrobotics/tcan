@@ -93,9 +93,11 @@ public:
 	 */
 	inline bool writeMessage()
 	{
-		if(outgoingMsgs_.size() != 0 && writeCanMessage( outgoingMsgs_.front() )) {
-			outgoingMsgs_.pop();
-			return true;
+		if(outgoingMsgs_.size() != 0) {
+			if(writeCanMessage( outgoingMsgs_.front() )) {
+				outgoingMsgs_.pop();
+				return true;
+			}
 		}
 
 		return false;
@@ -122,7 +124,7 @@ public:
 	inline void setOperational(const bool operational) { isOperational_ = operational; }
 	inline bool getOperational() const { return isOperational_; }
 
-
+	inline bool isAsynchronous() const { return options_->asynchronous_; }
 
 protected:
 	void stopThreads();
