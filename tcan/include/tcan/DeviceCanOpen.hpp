@@ -54,6 +54,13 @@ class DeviceCanOpen : public Device {
     //! Destructor
     virtual ~DeviceCanOpen();
 
+    /*! Configure the device (send SDOs)
+     * This function is automatically called after reception of a
+     * the bootup message. (or more general: After reception of any heartbeat message if the device is
+     * in nmt-state initializing or missing)
+     */
+    virtual void configureDevice() = 0;
+
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
      * This function is automatically called if the Bus has sanityCheckInterval > 0

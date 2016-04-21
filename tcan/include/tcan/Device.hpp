@@ -54,12 +54,6 @@ class Device {
      */
     virtual bool initDevice() = 0;
 
-    /*! Configure the device (send SDOs)
-     * This function is intended to be (automatically) called after reception of a
-     * specific message from the device (e.g. bootup message in DeviceCanOpen)
-     */
-    virtual void configureDevice() = 0;
-
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
      * This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0

@@ -58,7 +58,7 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
         return false;
     }
 
-    if(isInitializing()) {
+    if(isInitializing() || isMissing()) {
         configureDevice();
     }
 
