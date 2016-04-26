@@ -45,7 +45,6 @@ bool DeviceCanOpen::sanityCheck() {
 
     }
     return true;
-
 }
 
 
@@ -92,6 +91,8 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     const uint8_t responseMode = cmsg.readuint8(0);
     const uint16_t index = cmsg.readuint16(1);
     const uint8_t subindex = cmsg.readuint8(3);
+
+    deviceTimeoutCounter_ = 0;
 
     if(sdoMsgs_.size() != 0) {
         std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
@@ -144,8 +145,6 @@ bool DeviceCanOpen::checkSdoTimeout() {
         if(sdoSentCounter_ > options->sdoSendTries) {
             printf("Device %s: SDO timeout (COB=%x / index=%x / sub-index=%x / data=%x)\n", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
 
-            sdoMsgs_.pop();
-
             sendNextSdo();
 
             return false;
@@ -162,6 +161,8 @@ bool DeviceCanOpen::checkSdoTimeout() {
 void DeviceCanOpen::sendNextSdo() {
     sdoTimeoutCounter_ = 0;
     sdoSentCounter_ = 0;
+
+    sdoMsgs_.pop();
 
     // put next SDO message(s) into the bus output queue
     while(sdoMsgs_.size() > 0) {
