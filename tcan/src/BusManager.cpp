@@ -43,6 +43,12 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
     }
 }
 
+void BusManager::sendSync(const unsigned int busIndex) {
+    if(busIndex < buses_.size()) {
+        buses_[busIndex]->sendSync();
+    }
+}
+
 
 void BusManager::readMessagesSynchrounous() {
     for(auto bus : buses_) {

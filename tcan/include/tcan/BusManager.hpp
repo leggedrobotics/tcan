@@ -35,6 +35,11 @@ class BusManager {
      */
     void sendSyncOnAllBuses(const bool waitForEmptyQueues=false);
 
+    /*! Send a sync on a single bus
+     * @param busIndex  The index of the bus to send the SYNC message on
+     */
+    void sendSync(const unsigned int busIndex);
+
     /*! Read and parse messages from all buses. Call this function in the control loop if synchronous mode is used.
      */
     void readMessagesSynchrounous();
