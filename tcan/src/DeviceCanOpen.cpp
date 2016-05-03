@@ -57,9 +57,7 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
         return false;
     }
 
-    if(isInitializing() || isMissing()) {
-        configureDevice();
-    }
+    const bool wasMissingOrInitializing = isInitializing() || isMissing();
 
     switch(cmsg.readuint8(0)) {
         case 0x0: // boot up
@@ -82,6 +80,10 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
             printf("Invalid Heartbeat message data from nodeId %x: %x\n", getNodeId(), cmsg.readuint8(0));
             return false;
             break;
+    }
+
+    if(wasMissingOrInitializing) {
+        configureDevice();
     }
 
     return true;
