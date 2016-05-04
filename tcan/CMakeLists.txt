@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(tcan)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  message_logger
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -9,7 +11,7 @@ find_package(catkin REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-#  CATKIN_DEPENDS 
+  CATKIN_DEPENDS message_logger
 #  DEPENDS Boost
 )
 

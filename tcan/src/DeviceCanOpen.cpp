@@ -10,6 +10,8 @@
 #include "tcan/DeviceCanOpen.hpp"
 #include "tcan/Bus.hpp"
 
+#include "message_logger/log/log_messages.hpp"
+
 namespace tcan {
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
@@ -37,7 +39,7 @@ DeviceCanOpen::~DeviceCanOpen()
 bool DeviceCanOpen::sanityCheck() {
     if(!isMissing() && !checkDeviceTimeout()) {
         nmtState_ = NMTStates::missing;
-        printf("Device %s timed out!\n", getName().c_str());
+        MELO_WARN("Device %s timed out!", getName().c_str());
         return false;
     }
 
@@ -53,7 +55,7 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
     deviceTimeoutCounter_ = 0;
 
     if(cmsg.getLength() != 1) {
-        printf("Invalid Heartbeat message length from nodeId %x: %d\n", getNodeId(), cmsg.getLength());
+        MELO_WARN("Invalid Heartbeat message length from nodeId %x: %d", getNodeId(), cmsg.getLength());
         return false;
     }
 
@@ -77,7 +79,7 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
             break;
 
         default:
-            printf("Invalid Heartbeat message data from nodeId %x: %x\n", getNodeId(), cmsg.readuint8(0));
+            MELO_WARN("Invalid Heartbeat message data from nodeId %x: %x", getNodeId(), cmsg.readuint8(0));
             return false;
             break;
     }
@@ -106,7 +108,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
                 handleReadSdoAnswer( dynamic_cast<const SdoMsg&>(cmsg) );
             }else if(responseMode == 0x80) { // error response
                 const int32_t error = cmsg.readint32(4);
-                printf("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x\n", SdoMsg::getErrorName(error).c_str(), cmsg.getCobId(), index, subindex, error);
+                MELO_WARN("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x", SdoMsg::getErrorName(error).c_str(), cmsg.getCobId(), index, subindex, error);
                 // todo: further error handling
             }
 
@@ -116,7 +118,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
         }
     }
 
-    printf("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x\n", cmsg.getCobId(), index, subindex, cmsg.readuint32(4));
+    MELO_WARN("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x", cmsg.getCobId(), index, subindex, cmsg.readuint32(4));
     return false;
 }
 
@@ -145,7 +147,7 @@ bool DeviceCanOpen::checkSdoTimeout() {
         std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent parseSDOAnswer from making changes on sdoMsgs_
         const SdoMsg& msg = sdoMsgs_.front();
         if(sdoSentCounter_ > options->sdoSendTries) {
-            printf("Device %s: SDO timeout (COB=%x / index=%x / sub-index=%x / data=%x)\n", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
+            MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / sub-index=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
 
             sendNextSdo();
 

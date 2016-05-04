@@ -8,4 +8,5 @@
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
   
   <buildtool_depend>catkin</buildtool_depend>
+  <depend>message_logger</depend>
 </package>

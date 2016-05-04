@@ -8,7 +8,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <tcan/CanMsg.hpp>
 #include <unordered_map>
 #include <memory>
 #include <functional>
@@ -20,6 +19,7 @@
 
 #include "tcan/Device.hpp"
 #include "tcan/BusOptions.hpp"
+#include "tcan/CanMsg.hpp"
 
 namespace tcan {
 
@@ -147,17 +147,7 @@ class Bus {
 
     bool processOutputQueue();
 
-    void sendMessageWithoutLock(const CanMsg& cmsg)
-    {
-        if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
-            printf("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
-        }
-        outgoingMsgs_.push( cmsg );	// do not use emplace here. We need a copy of the message in some situations
-        // (SDO queue processing). Declaring another sendMessage(..) which uses move
-        // semantics does not increase performance as CANMsg has only POD members
-
-        condTransmitThread_.notify_all();
-    }
+    void sendMessageWithoutLock(const CanMsg& cmsg);
 
     // thread loop functions
     void receiveWorker();

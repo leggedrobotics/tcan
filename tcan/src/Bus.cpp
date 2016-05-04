@@ -10,6 +10,7 @@
 #include <pthread.h>
 
 #include "tcan/Bus.hpp"
+#include "message_logger/log/log_messages.hpp"
 
 namespace tcan {
 
@@ -73,14 +74,12 @@ bool Bus::initBus() {
         sched_param sched;
         sched.sched_priority = options_->priorityReceiveThread_;
         if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-            printf("Failed to set receive thread priority for bus %s\n", options_->name_.c_str());
-            perror("pthread_setschedparam");
+            MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
 
         sched.sched_priority = options_->priorityTransmitThread_;
         if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-            printf("Failed to set transmit thread priority for bus %s\n", options_->name_.c_str());
-            perror("pthread_setschedparam");
+        	MELO_WARN("Failed to set transmit thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
 
         if(options_->sanityCheckInterval_ > 0) {
@@ -88,8 +87,7 @@ bool Bus::initBus() {
 
             sched.sched_priority = options_->prioritySanityCheckThread_;
             if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-                printf("Failed to set receive thread priority for bus %s\n", options_->name_.c_str());
-                perror("pthread_setschedparam");
+            	MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             }
         }
     }
@@ -106,7 +104,7 @@ void Bus::handleMessage(const CanMsg& cmsg) {
         it->second(cmsg); // call function pointer
     } else {
         auto value = cmsg.getData();
-        printf("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
+        MELO_WARN("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
                cmsg.getCobId(),
                value[1],
                value[0],
@@ -164,13 +162,23 @@ bool Bus::sanityCheck() {
     return allFine;
 }
 
+void Bus::sendMessageWithoutLock(const CanMsg& cmsg) {
+    if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
+    	MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+    }
+    outgoingMsgs_.push( cmsg );	// do not use emplace here. We need a copy of the message in some situations
+    // (SDO queue processing). Declaring another sendMessage(..) which uses move
+    // semantics does not increase performance as CANMsg has only POD members
+
+    condTransmitThread_.notify_all();
+}
 
 void Bus::receiveWorker() {
     while(running_) {
         readMessage();
     }
 
-    printf("receive thread for bus %s terminated\n", options_->name_.c_str());
+    MELO_INFO("receive thread for bus %s terminated", options_->name_.c_str());
 }
 
 void Bus::transmitWorker() {
@@ -178,7 +186,7 @@ void Bus::transmitWorker() {
         processOutputQueue();
     }
 
-    printf("transmit thread for bus %s terminated\n", options_->name_.c_str());
+    MELO_INFO("transmit thread for bus %s terminated", options_->name_.c_str());
 }
 
 void Bus::sanityCheckWorker() {
@@ -191,7 +199,7 @@ void Bus::sanityCheckWorker() {
         std::this_thread::sleep_until(nextLoop);
     }
 
-    printf("sanityCheck thread for bus %s terminated\n", options_->name_.c_str());
+    MELO_INFO("sanityCheck thread for bus %s terminated", options_->name_.c_str());
 }
 
 } /* namespace tcan */

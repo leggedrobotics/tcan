@@ -2,6 +2,12 @@
 
 [![Build Status](http://129.132.38.183:8080/buildStatus/icon?job=tcan)](http://129.132.38.183:8080/view/legged-robotics/job/tcan/)
 
+
+## Dependencies
+
+- [message_logger](https://bitbucket.org/ethz-asl-lr/message_logger)
+
+
 ## Usage ##
 
 See tcan_example for an easy example how to use tcan library.

@@ -16,6 +16,8 @@
 
 #include "tcan/SocketBus.hpp"
 
+#include "message_logger/log/log_messages.hpp"
+
 namespace tcan {
 
 SocketBus::SocketBus(const std::string& interface):
@@ -45,7 +47,7 @@ bool SocketBus::initializeCanBus()
     /* open socket */
     int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if(fd < 0) {
-        printf("Opening CAN channel %s failed: %d\n", interface, fd);
+        MELO_FATAL("Opening CAN channel %s failed: %d", interface, fd);
         return false;
     }
 
@@ -58,22 +60,20 @@ bool SocketBus::initializeCanBus()
     // loopback
     int loopback = options->loopback_;
     if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback)) != 0) {
-        printf("Failed to set loopback mode\n");
+        MELO_WARN("Failed to set loopback mode");
         perror("setsockopt");
     }
 
     // receive own messages
     int recv_own_msgs = 0; /* 0 = disabled (default), 1 = enabled */
     if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &recv_own_msgs, sizeof(recv_own_msgs)) != 0) {
-        printf("Failed to set reception of own messages option\n");
-        perror("setsockopt");
+    	MELO_WARN("Failed to set reception of own messages option:\n  %s", strerror(errno));
     }
 
     // CAN error handling
     can_err_mask_t err_mask = options->canErrorMask_;
     if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_ERR_FILTER, &err_mask, sizeof(err_mask)) != 0) {
-        printf("Failed to set error mask\n");
-        perror("setsockopt");
+    	MELO_WARN("Failed to set error mask:\n  %s", strerror(errno));
     }
 
     // get default bufer sizes
@@ -93,7 +93,9 @@ bool SocketBus::initializeCanBus()
     // https://www.mail-archive.com/socketcan-users@lists.berlios.de/msg00787.html
     // http://socket-can.996257.n3.nabble.com/Solving-ENOBUFS-returned-by-write-td2886.html
     if(options->sndBufLength_ != 0) {
-        setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_));
+        if(!setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_))) {
+        	MELO_WARN("Failed to set sndBuf length:\n  %s", strerror(errno));
+        }
     }
 
     // set read timeout
@@ -101,13 +103,11 @@ bool SocketBus::initializeCanBus()
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
     if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
-        printf("Failed to set read timeout\n");
-        perror("setsockopt");
+        MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
     }
     // set write timeout
     if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
-        printf("Failed to set write timeout\n");
-        perror("setsockopt");
+        MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
     }
 
 
@@ -115,8 +115,7 @@ bool SocketBus::initializeCanBus()
     // set up filters
     if(options->canFilters_.size() != 0) {
         if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters_[0]), sizeof(can_filter)*options->canFilters_.size()) != 0) {
-            printf("Failed to set read timeout\n");
-            perror("setsockopt");
+            MELO_WARN("Failed to set CAN raw filters:\n  %s", strerror(errno));
         }
     }
 
@@ -125,8 +124,7 @@ bool SocketBus::initializeCanBus()
         int flags;
         if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
         if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
-            printf("Failed to set socket nonblocking\n");
-            perror("fcntl");
+            MELO_ERROR("Failed to set socket nonblocking:\n  %s", strerror(errno));
         }
     }
 
@@ -135,16 +133,14 @@ bool SocketBus::initializeCanBus()
     memset(&addr, 0, sizeof(struct sockaddr_can));
     addr.can_family  = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
-    //printf("%s at index %d\n", channelname, ifr.ifr_ifindex);
     if(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        printf("Error in socket %s bind.\n", interface);
-        perror("bind");
+        MELO_FATAL("Error in socket %s bind:\n  %s", interface, strerror(errno));
         return false;
     }
 
     socket_ = {fd, POLLOUT, 0};
 
-    printf("Opened socket %s.\n", interface);
+    MELO_INFO("Opened socket %s.", interface);
 
     return true;
 }
@@ -184,12 +180,11 @@ bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
         const int ret = poll( &socket_, 1, 1000 );
 
         if ( ret == -1 ) {
-            printf("poll failed on bus %s", options_->name_.c_str());
-            perror("poll()");
+            MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             return false;
         }else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
             // poll timed out, without being able to write => raise error
-            printf("polling for socket writeability timed out for bus %s. Socket overflow?", options_->name_.c_str());
+            MELO_WARN("polling for socket writeability timed out for bus %s. Socket overflow?", options_->name_.c_str());
             return false;
         }else{
             // socket ready for write operations => proceed
@@ -203,8 +198,7 @@ bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
 
     int ret;
     if( ( ret = write(socket_.fd, &frame, sizeof(struct can_frame)) ) != sizeof(struct can_frame)) {
-        printf("Error at sending CAN message %x on bus %s : %d\n", cmsg.getCobId(), options_->name_.c_str(), ret);
-        perror("write");
+        MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d):\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, strerror(errno));
         return false;
     }
 
