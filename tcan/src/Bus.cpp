@@ -10,7 +10,7 @@
 #include <pthread.h>
 
 #include "tcan/Bus.hpp"
-#include "message_logger/log/log_messages.hpp"
+#include "message_logger/message_logger.hpp"
 
 namespace tcan {
 

@@ -16,7 +16,7 @@
 
 #include "tcan/SocketBus.hpp"
 
-#include "message_logger/log/log_messages.hpp"
+#include "message_logger/message_logger.hpp"
 
 namespace tcan {
 
