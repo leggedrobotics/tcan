@@ -3,7 +3,7 @@ project(tcan_example)
 
 find_package(catkin REQUIRED COMPONENTS
   tcan
-  m545_utils
+  robot_utils
 )
 
 ###################################
@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES tcan_example
- CATKIN_DEPENDS tcan m545_utils
+ CATKIN_DEPENDS tcan robot_utils
 #  DEPENDS system_lib
 )
 

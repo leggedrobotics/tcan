@@ -12,7 +12,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>tcan</depend>
-  <depend>m545_utils</depend>
+  <depend>robot_utils</depend>
 
   <export>
   </export>
