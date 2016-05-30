@@ -69,8 +69,8 @@ class DeviceCanOpen : public Device {
     virtual bool sanityCheck();
 
     /*! Handle a SDO answer
-     * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests
-     * @param sdoMsg	the SDO response message
+     * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests.
+     * @param sdoMsg	the SDO response message (Note that sdoMsg is not a complete instance of an SdoMsg, only the members defined in CanMsg are initialized)
      */
     virtual void handleReadSdoAnswer(const SdoMsg& sdoMsg) { }
 
