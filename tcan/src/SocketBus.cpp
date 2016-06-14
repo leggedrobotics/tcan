@@ -93,7 +93,7 @@ bool SocketBus::initializeCanBus()
     // https://www.mail-archive.com/socketcan-users@lists.berlios.de/msg00787.html
     // http://socket-can.996257.n3.nabble.com/Solving-ENOBUFS-returned-by-write-td2886.html
     if(options->sndBufLength_ != 0) {
-        if(!setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_))) {
+        if(setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_)) != 0) {
         	MELO_WARN("Failed to set sndBuf length:\n  %s", strerror(errno));
         }
     }
