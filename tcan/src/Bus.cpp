@@ -140,10 +140,9 @@ bool Bus::processOutputQueue() {
 
     writeSuccess = writeCanMessage( cmsg );
 
-    lock.lock();
-
     if(writeSuccess) {
         // only pop the message from the queue if sending was successful
+        lock.lock();
         outgoingMsgs_.pop();
     }
 
