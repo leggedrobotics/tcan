@@ -87,6 +87,9 @@ bool BusManager::sanityCheckSynchronous() {
 
 void BusManager::closeBuses() {
     for(Bus* bus : buses_) {
+        bus->stopThreads(false);
+    }
+    for(Bus* bus : buses_) {
         delete bus;
     }
 

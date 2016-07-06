@@ -126,9 +126,9 @@ class Bus {
 
     inline bool isAsynchronous() const { return options_->asynchronous_; }
 
- protected:
-    void stopThreads();
+    void stopThreads(const bool wait=true);
 
+ protected:
     /*! Initialized the device driver
      * @return true if successful
      */

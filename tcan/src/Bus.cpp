@@ -32,7 +32,7 @@ Bus::Bus(BusOptions* options):
 
 Bus::~Bus()
 {
-    stopThreads();
+    stopThreads(true);
 
     for(Device* device : devices_) {
         delete device;
@@ -41,21 +41,23 @@ Bus::~Bus()
     delete options_;
 }
 
-void Bus::stopThreads() {
+void Bus::stopThreads(const bool wait) {
     running_ = false;
     condTransmitThread_.notify_all();
     condOutputQueueEmpty_.notify_all();
 
-    if(receiveThread_.joinable()) {
-        receiveThread_.join();
-    }
+    if(wait) {
+        if(receiveThread_.joinable()) {
+            receiveThread_.join();
+        }
 
-    if(transmitThread_.joinable()) {
-        transmitThread_.join();
-    }
+        if(transmitThread_.joinable()) {
+            transmitThread_.join();
+        }
 
-    if(sanityCheckThread_.joinable()) {
-        sanityCheckThread_.join();
+        if(sanityCheckThread_.joinable()) {
+            sanityCheckThread_.join();
+        }
     }
 }
 
