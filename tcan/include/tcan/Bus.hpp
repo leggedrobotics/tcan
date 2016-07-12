@@ -16,6 +16,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <utility>
 
 #include "tcan/Device.hpp"
 #include "tcan/BusOptions.hpp"
@@ -38,6 +39,13 @@ class Bus {
      * @return true if init was successfull
      */
     bool initBus();
+
+    template <class C, typename TOptions>
+    std::pair<C*, bool> addDevice(TOptions* options) {
+        C* dev = new C(options);
+        bool success = addDevice(dev);
+        return std::make_pair(dev, success);
+    }
 
     /*! Adds a device to the device vector and calls its initDevice function
      * @param device	Pointer to the device

@@ -66,9 +66,8 @@ public:
 		options->someParameter = 37;
 		options->maxDeviceTimeoutCounter = 1000;
 
-		auto device = new example_can::DeviceExample(options); // or example_can::DeviceExample(nodeId, name);
-		buses_.at(iBus)->addDevice( device );
-		deviceExampleContainer_.insert(std::make_tuple(name, static_cast<unsigned int>(deviceId), deviceId), device);
+		auto ret_pair = buses_.at(iBus)->addDevice<example_can::DeviceExample>( options );
+		deviceExampleContainer_.insert(std::make_tuple(name, static_cast<unsigned int>(deviceId), deviceId), ret_pair.first);
 	}
 
 	void addSocketBus(const BusId busId, const std::string& interface) {
