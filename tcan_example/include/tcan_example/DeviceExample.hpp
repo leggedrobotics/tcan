@@ -56,15 +56,11 @@ public:
 
 	bool parsePdo1(const CanMsg& cmsg);
 
+    void handleReadSdoAnswer(const SdoMsg& sdoMsg);
+
 	float getMeasurement() const { return myMeasurement_; }
 
-	/*! Handle a SDO answer
-	 * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests
-	 * @param index		index of the SDO
-	 * @param subIndex	subIndex of the SDO
-	 * @param data		data of the answer to the read request (4 bytes)
-	 */
-	virtual void handleReadSDOAnswer(const uint16_t index, const uint8_t subIndex, const uint8_t *data);
+
 
 protected:
 	std::atomic<float> myMeasurement_;

@@ -79,12 +79,13 @@ bool DeviceExample::parsePdo1(const CanMsg& cmsg) {
 }
 
 
-void DeviceExample::handleReadSDOAnswer(const uint16_t index, const uint8_t subIndex, const uint8_t *data) {
-	switch(index) {
-	default:
-		printf("received SDO read answer");
-		break;
-	}
+void DeviceExample::handleReadSdoAnswer(const SdoMsg& sdoMsg) {
+    switch(sdoMsg.getIndex()) {
+    default:
+        int data = sdoMsg.readint32(4); // note that the data starts at byte 4 in a sdo message. byte 0-3 contain cmd,index and subindex
+        printf("received SDO read answer: %d", data);
+        break;
+    }
 }
 
 } /* namespace example_can */
