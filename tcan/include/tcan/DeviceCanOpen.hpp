@@ -12,6 +12,7 @@
 #include <queue>
 #include <mutex>
 #include <atomic>
+#include <map>
 
 #include "tcan/Device.hpp"
 #include "tcan/DeviceCanOpenOptions.hpp"
@@ -86,6 +87,12 @@ class DeviceCanOpen : public Device {
      */
     bool parseSDOAnswer(const CanMsg& cmsg);
 
+    /*! Get the SDO answer and erase it from the SDO answer map if it has been received.
+     * @param sdoAnswer SDO answer if it has been found (output parameter).
+     * @return true if SDO answer has been found.
+     */
+    bool getSdoAnswer(SdoMsg& sdoAnswer);
+
     /*! NMT state requests. Send a NMT CAN message to the device.
      * The following functions also clear the sdo queue and set the nmtState_:
      *    setNmtEnterPreOperational(), setNmtResetRemoteCommunication(), setNmtRestartRemoteDevice()
@@ -119,6 +126,13 @@ class DeviceCanOpen : public Device {
 
     void sendNextSdo();
 
+    /*! Get the ID of an SDO answer by index and subIndex.
+     * @param index SDO index.
+     * @param subIndex SDO subIndex.
+     * @return SDO id.
+     */
+    static uint32_t getSdoAnswerId(const uint16_t index, const uint8_t subIndex);
+
  protected:
     //! the can state the device is in
     std::atomic<NMTStates> nmtState_;
@@ -128,6 +142,9 @@ class DeviceCanOpen : public Device {
 
     std::mutex sdoMsgsMutex_;
     std::queue<SdoMsg> sdoMsgs_;
+
+    // Map from SDO answer id to SDO answer.
+    std::map<uint32_t, SdoMsg> sdoAnswerMap_;
 };
 
 } /* namespace tcan */
