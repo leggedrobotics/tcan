@@ -105,7 +105,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
         if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
             if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
-                sdoAnswerMap_.insert({getSdoAnswerId(index, subindex), static_cast<const SdoMsg&>(cmsg)});
+                sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
             }else if(responseMode == 0x80) { // error response
                 const int32_t error = cmsg.readint32(4);

@@ -12,7 +12,7 @@
 #include <queue>
 #include <mutex>
 #include <atomic>
-#include <map>
+#include <unordered_map>
 
 #include "tcan/Device.hpp"
 #include "tcan/DeviceCanOpenOptions.hpp"
@@ -144,7 +144,7 @@ class DeviceCanOpen : public Device {
     std::queue<SdoMsg> sdoMsgs_;
 
     // Map from SDO answer id to SDO answer.
-    std::map<uint32_t, SdoMsg> sdoAnswerMap_;
+    std::unordered_map<uint32_t, SdoMsg> sdoAnswerMap_;
 };
 
 } /* namespace tcan */
