@@ -105,6 +105,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
         if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
             if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
+                sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
             }else if(responseMode == 0x80) { // error response
                 const int32_t error = cmsg.readint32(4);
@@ -122,6 +123,17 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     return false;
 }
 
+bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer)
+{
+    auto it = sdoAnswerMap_.find(getSdoAnswerId(sdoAnswer.getIndex(), sdoAnswer.getSubIndex()));
+    if (it == sdoAnswerMap_.end())
+    {
+        return false;
+    }
+    sdoAnswer = it->second;
+    sdoAnswerMap_.erase(it);
+    return true;
+}
 
 void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
 
@@ -179,6 +191,10 @@ void DeviceCanOpen::sendNextSdo() {
         }
     }
 
+}
+
+uint32_t DeviceCanOpen::getSdoAnswerId(const uint16_t index, const uint8_t subIndex) {
+    return (static_cast<uint32_t>(index) << 8) + static_cast<uint32_t>(subIndex);
 }
 
 void DeviceCanOpen::setNmtEnterPreOperational() {
