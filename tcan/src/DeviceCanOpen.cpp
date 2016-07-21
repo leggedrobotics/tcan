@@ -123,8 +123,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     return false;
 }
 
-bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer)
-{
+bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {
     auto it = sdoAnswerMap_.find(getSdoAnswerId(sdoAnswer.getIndex(), sdoAnswer.getSubIndex()));
     if (it == sdoAnswerMap_.end())
     {
@@ -133,6 +132,10 @@ bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer)
     sdoAnswer = it->second;
     sdoAnswerMap_.erase(it);
     return true;
+}
+
+void DeviceCanOpen::sendPdo(const CanMsg& pdoMsg) {
+    bus_->sendMessage(pdoMsg);
 }
 
 void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {

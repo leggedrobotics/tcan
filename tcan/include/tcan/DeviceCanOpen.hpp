@@ -114,9 +114,14 @@ class DeviceCanOpen : public Device {
     bool isMissing()		const { return (nmtState_ == NMTStates::missing); }
 
  protected:
+    /*! Send a PDO message.
+     * @param pdoMsg Message to be sent.
+     */
+    void sendPdo(const CanMsg& pdoMsg);
+
     /*! Put an SDO at the end of the sdo queue and send automatically on the CAN bus.
      * To receive the answer of read SDO's it is necessary to implement the handleReadSDOAnswer(..) function.
-     * @param sdoMsg	Message to be sent
+     * @param sdoMsg Message to be sent
      */
     void sendSdo(const SdoMsg& sdoMsg);
 
