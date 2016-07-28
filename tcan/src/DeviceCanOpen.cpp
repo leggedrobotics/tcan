@@ -54,10 +54,11 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
 
     deviceTimeoutCounter_ = 0;
 
-    if(cmsg.getLength() != 1) {
-        MELO_WARN("Invalid Heartbeat message length from nodeId %x: %d", getNodeId(), cmsg.getLength());
-        return false;
-    }
+    // fixme: commented out as a workaround for moog_can heartbeat length 8
+//    if(cmsg.getLength() != 1) {
+//        MELO_WARN("Invalid Heartbeat message length from nodeId %x: %d", getNodeId(), cmsg.getLength());
+        //return false;
+//    }
 
     const bool wasMissingOrInitializing = isInitializing() || isMissing();
 
@@ -104,7 +105,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 
         if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
-            if(responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (4, 2 or 1 byte)
+            if(responseMode == 0x42 || responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (unspecified length, 4, 2 or 1 byte)
                 sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
             }else if(responseMode == 0x80) { // error response
