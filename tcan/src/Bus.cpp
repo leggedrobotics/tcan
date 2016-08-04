@@ -8,6 +8,7 @@
 #include <utility>
 #include <chrono>
 #include <pthread.h>
+#include <string.h> // strerror(..)
 
 #include "tcan/Bus.hpp"
 #include "message_logger/message_logger.hpp"
