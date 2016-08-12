@@ -10,9 +10,7 @@
 
 ## Usage ##
 
-See tcan_example for an easy example how to use tcan library.
-
-tcan has two modes: synchronous and asynchronous:
+See tcan_example for an easy example how to use tcan library. tcan has two modes: synchronous and asynchronous:
 
 - In asynchronous mode, the library creates three threads for each bus: a thread that handles incoming CAN messages, one that sends outgoing CAN messages and one that checks if devices/SDOs have timed out (sanityCheck). 
 - In synchronous mode, it is up to the user to call the BusManagers readMessagesSynchrounous(), writeMessagesSynchronous() and sanityCheckSynchronous() functions in his main loop.
