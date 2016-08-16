@@ -8,7 +8,7 @@
 #include "tcan/BusManager.hpp"
 #include "tcan/SocketBus.hpp"
 #include "tcan_example/DeviceExample.hpp"
-#include "robotUtils/containers/MultiKeyContainer.hpp"
+#include "robot_utils/containers/MultiKeyContainer.hpp"
 
 
 //#define USE_SYNCHRONOUS_MODE
@@ -30,8 +30,8 @@ public:
 
 	};
 
-	typedef robotUtils::MultiKeyContainer<Bus*, BusId> BusContainer;
-	typedef robotUtils::MultiKeyContainer<example_can::DeviceExample*, DeviceExampleId> DeviceExampleContainer;
+	typedef robot_utils::MultiKeyContainer<Bus*, BusId> BusContainer;
+	typedef robot_utils::MultiKeyContainer<example_can::DeviceExample*, DeviceExampleId> DeviceExampleContainer;
 
 	CanManager():
 		BusManager(),
