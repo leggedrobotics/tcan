@@ -71,13 +71,13 @@ class Device {
         return initDevice();
     }
 
-    inline uint32_t getNodeId() const { return options_->nodeId; }
-    inline const std::string& getName() const { return options_->name; }
+    inline uint32_t getNodeId() const { return options_->nodeId_; }
+    inline const std::string& getName() const { return options_->name_; }
 
  protected:
     inline bool checkDeviceTimeout()
     {
-        return !(options_->maxDeviceTimeoutCounter != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter) );
+        return !(options_->maxDeviceTimeoutCounter_ != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter_) );
         // deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
     }
 
