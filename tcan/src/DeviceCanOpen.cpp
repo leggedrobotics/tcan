@@ -106,7 +106,10 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
         if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
 
             if(responseMode == 0x42 || responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (unspecified length, 4, 2 or 1 byte)
-                sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
+                {
+                  std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
+                  sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
+                }
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
             }else if(responseMode == 0x80) { // error response
                 const int32_t error = cmsg.readint32(4);
@@ -125,6 +128,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 }
 
 bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {
+    std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
     auto it = sdoAnswerMap_.find(getSdoAnswerId(sdoAnswer.getIndex(), sdoAnswer.getSubIndex()));
     if (it == sdoAnswerMap_.end()) {
         return false;
@@ -149,6 +153,7 @@ void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
 
         if(sdoMsg.getRequiresAnswer()) {
             // if an answer to a previously sent similar sdo has been received but not fetched, erase it to prevent storing outdated data
+            std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
             sdoAnswerMap_.erase(getSdoAnswerId(sdoMsg.getIndex(), sdoMsg.getSubIndex()));
         }else{
             sdoMsgs_.pop();
