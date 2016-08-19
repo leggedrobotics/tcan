@@ -64,7 +64,7 @@ public:
 
 		auto options = new example_can::DeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
 		options->someParameter = 37;
-		options->maxDeviceTimeoutCounter = 1000;
+		options->maxDeviceTimeoutCounter_ = 1000;
 
 		auto ret_pair = buses_.at(iBus)->addDevice<example_can::DeviceExample>( options );
 		deviceExampleContainer_.insert(std::make_tuple(name, static_cast<unsigned int>(deviceId), deviceId), ret_pair.first);
