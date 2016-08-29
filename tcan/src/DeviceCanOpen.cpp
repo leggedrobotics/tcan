@@ -148,6 +148,8 @@ void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
     sdoMsgs_.push(sdoMsg);
 
     if(sdoMsgs_.size() == 1) {
+        sdoTimeoutCounter_ = 0;
+        sdoSentCounter_ = 0;
         // sdo queue was empty before, so put the new message in the bus output queue
         bus_->sendMessage(sdoMsgs_.front());
 
@@ -261,6 +263,7 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
         // swap with an empty queue to clear it
         std::queue<SdoMsg>().swap(sdoMsgs_);
     }
+    deviceTimeoutCounter_ = 0;
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
 
     nmtState_ = NMTStates::initializing;
