@@ -148,9 +148,10 @@ void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
     sdoMsgs_.push(sdoMsg);
 
     if(sdoMsgs_.size() == 1) {
+        // sdo queue was empty before, so put the new message in the bus output queue
         sdoTimeoutCounter_ = 0;
         sdoSentCounter_ = 0;
-        // sdo queue was empty before, so put the new message in the bus output queue
+
         bus_->sendMessage(sdoMsgs_.front());
 
         if(sdoMsg.getRequiresAnswer()) {
