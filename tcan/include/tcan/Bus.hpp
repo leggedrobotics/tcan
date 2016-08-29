@@ -28,7 +28,7 @@ class Bus {
  public:
 
     typedef std::function<bool(const CanMsg&)> CallbackPtr;
-    typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
+    typedef std::unordered_map<uint32_t, std::pair<Device*, CallbackPtr>> CobIdToFunctionMap;
 
     Bus() = delete;
     Bus(BusOptions* options);
@@ -58,13 +58,15 @@ class Bus {
 
     /*! Adds a can message (identified by its cobId) and a function pointer to its parse function
      * to the map, which is used to assign incoming messages to their callbacks.
-     * @param cobId				cobId of the message
-     * @param parseFunction		pointer to the parse function
+     * @param cobId             cobId of the message
+     * @param device            pointer to the device
+     * @param fp                pointer to the parse function
      * @return true if successfull
      */
-    bool addCanMessage(const uint32_t cobId, CallbackPtr&& parseFunction)
+    template <class T>
+    bool addCanMessage(const uint32_t cobId, T* device, bool(T::*fp)(const CanMsg&))
     {
-        return cobIdToFunctionMap_.emplace(cobId, std::move(parseFunction)).second;
+        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
     }
 
     /*! Add a can message to be sent (added to the output queue)

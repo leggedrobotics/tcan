@@ -104,22 +104,12 @@ void Bus::handleMessage(const CanMsg& cmsg) {
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(cmsg.getCobId());
     if (it != cobIdToFunctionMap_.end()) {
 
-        it->second(cmsg); // call function pointer
+        it->second.first->resetDeviceTimeoutCounter();
+        it->second.second(cmsg); // call function pointer
     } else {
         auto value = cmsg.getData();
         MELO_WARN("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
-               cmsg.getCobId(),
-               value[1],
-               value[0],
-               value[0],
-               value[1],
-               value[2],
-               value[3],
-               value[4],
-               value[5],
-               value[6],
-               value[7]
-        );
+               cmsg.getCobId(), value[1], value[0], value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]);
     }
 }
 
