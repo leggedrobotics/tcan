@@ -64,7 +64,7 @@ class Bus {
      * @return true if successfull
      */
     template <class T>
-    bool addCanMessage(const uint32_t cobId, T* device, bool(T::*fp)(const CanMsg&))
+    bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&))
     {
         return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
     }
