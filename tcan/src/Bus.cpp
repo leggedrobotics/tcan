@@ -103,8 +103,9 @@ void Bus::handleMessage(const CanMsg& cmsg) {
     // Check if CAN message is handled.
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(cmsg.getCobId());
     if (it != cobIdToFunctionMap_.end()) {
-
-        it->second.first->resetDeviceTimeoutCounter();
+        if(it->second.first) {
+            it->second.first->resetDeviceTimeoutCounter();
+        }
         it->second.second(cmsg); // call function pointer
     } else {
         auto value = cmsg.getData();

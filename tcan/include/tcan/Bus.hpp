@@ -64,9 +64,14 @@ class Bus {
      * @return true if successfull
      */
     template <class T>
-    bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&))
+    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&))
     {
         return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    inline bool addCanMessage(const uint32_t cobId, CallbackPtr&& parseFunction)
+    {
+        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(nullptr, std::move(parseFunction))).second;
     }
 
     /*! Add a can message to be sent (added to the output queue)
