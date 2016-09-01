@@ -71,6 +71,8 @@ class Device {
         return initDevice();
     }
 
+    inline void resetDeviceTimeoutCounter() { deviceTimeoutCounter_ = 0; }
+
     inline uint32_t getNodeId() const { return options_->nodeId_; }
     inline const std::string& getName() const { return options_->name_; }
 

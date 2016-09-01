@@ -28,7 +28,7 @@ class Bus {
  public:
 
     typedef std::function<bool(const CanMsg&)> CallbackPtr;
-    typedef std::unordered_map<uint32_t, CallbackPtr> CobIdToFunctionMap;
+    typedef std::unordered_map<uint32_t, std::pair<Device*, CallbackPtr>> CobIdToFunctionMap;
 
     Bus() = delete;
     Bus(BusOptions* options);
@@ -36,10 +36,15 @@ class Bus {
     virtual ~Bus();
 
     /*! Initializes the Bus. Sets up threads and calls initializeCanBus(..).
-     * @return true if init was successfull
+     * @return true if init was successful
      */
     bool initBus();
 
+    /*!
+     * in-place construction of a new device
+     * @param options   pointer to the option class of the device
+     * @return true if successful
+     */
     template <class C, typename TOptions>
     std::pair<C*, bool> addDevice(TOptions* options) {
         C* dev = new C(options);
@@ -49,22 +54,35 @@ class Bus {
 
     /*! Adds a device to the device vector and calls its initDevice function
      * @param device	Pointer to the device
-     * @return true if init was successfull
+     * @return true if init was successful
      */
     bool addDevice(Device* device) {
         devices_.push_back(device);
         return device->initDeviceInternal(this);
     }
 
-    /*! Adds a can message (identified by its cobId) and a function pointer to its parse function
-     * to the map, which is used to assign incoming messages to their callbacks.
-     * @param cobId				cobId of the message
-     * @param parseFunction		pointer to the parse function
-     * @return true if successfull
+    /*! Adds a device and callback function for incoming messages identified by its cobId. The timeout counter of the device is
+     *  reset on reception of the message (treated as heartbeat).
+     * @param cobId             cobId of the message
+     * @param device            pointer to the device
+     * @param fp                pointer to the parse function
+     * @return true if successful
      */
-    bool addCanMessage(const uint32_t cobId, CallbackPtr&& parseFunction)
+    template <class T>
+    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&))
     {
-        return cobIdToFunctionMap_.emplace(cobId, std::move(parseFunction)).second;
+        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    /*!
+     * Adds a callback function for incoming messages identified by its cobId.
+     * @param cobId             cobId of the message
+     * @param parseFunction     parse function to be called on reception
+     * @return true if successful
+     */
+    inline bool addCanMessage(const uint32_t cobId, CallbackPtr&& parseFunction)
+    {
+        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(nullptr, std::move(parseFunction))).second;
     }
 
     /*! Add a can message to be sent (added to the output queue)
@@ -134,6 +152,10 @@ class Bus {
 
     inline bool isAsynchronous() const { return options_->asynchronous_; }
 
+    /*!
+     * Stops all threads handled by this bus (send, receive, sanity check)
+     * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
+     */
     void stopThreads(const bool wait=true);
 
  protected:
