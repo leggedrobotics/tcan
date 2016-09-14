@@ -32,6 +32,10 @@ class DeviceCanOpenOptions : public DeviceOptions {
 
     virtual ~DeviceCanOpenOptions() { }
 
+    inline void setSdoTimeoutCounter(const double timeout, const double looprate) {
+        maxSdoTimeoutCounter_ = static_cast<unsigned int>(timeout*looprate);
+    }
+
     //! counter limit at which an SDO is considered as timed out. Set 0 to disable.
     // maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 1Hz by default (see BusOptions))
     unsigned int maxSdoTimeoutCounter_;
