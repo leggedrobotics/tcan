@@ -70,6 +70,17 @@ class DeviceCanOpen : public Device {
      */
     virtual bool sanityCheck();
 
+    /*! Send a PDO message.
+     * @param pdoMsg Message to be sent.
+     */
+    void sendPdo(const CanMsg& pdoMsg);
+
+    /*! Put an SDO at the end of the sdo queue and send automatically on the CAN bus.
+     * To receive the answer of read SDO's it is necessary to implement the handleReadSDOAnswer(..) function.
+     * @param sdoMsg Message to be sent
+     */
+    void sendSdo(const SdoMsg& sdoMsg);
+
     /*! Handle a SDO answer
      * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests.
      * @param sdoMsg	the SDO response message (Note that sdoMsg is not a complete instance of an SdoMsg, only the members defined in CanMsg are initialized)
@@ -114,17 +125,6 @@ class DeviceCanOpen : public Device {
     bool isMissing()		const { return (nmtState_ == NMTStates::missing); }
 
  protected:
-    /*! Send a PDO message.
-     * @param pdoMsg Message to be sent.
-     */
-    void sendPdo(const CanMsg& pdoMsg);
-
-    /*! Put an SDO at the end of the sdo queue and send automatically on the CAN bus.
-     * To receive the answer of read SDO's it is necessary to implement the handleReadSDOAnswer(..) function.
-     * @param sdoMsg Message to be sent
-     */
-    void sendSdo(const SdoMsg& sdoMsg);
-
     /*! Check if the SDO at the front of the SDO queue has timed out. If so, try to resend it a couple of times (see DeviceCanOpenOptions)
      * @return false if no answer was received after a couple of sending attempts.
      */
