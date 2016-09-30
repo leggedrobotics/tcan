@@ -21,13 +21,13 @@
 namespace tcan {
 
 SocketBus::SocketBus(const std::string& interface):
-    Bus(new SocketBusOptions(interface)),
+    CanBus(new SocketBusOptions(interface)),
     socket_()
 {
 }
 
 SocketBus::SocketBus(SocketBusOptions* options):
-    Bus(options),
+    CanBus(options),
     socket_()
 {
 
@@ -39,7 +39,7 @@ SocketBus::~SocketBus()
     close(socket_.fd);
 }
 
-bool SocketBus::initializeCanBus()
+bool SocketBus::initializeInterface()
 {
     const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_);
     const char* interface = options->name_.c_str();
@@ -146,7 +146,7 @@ bool SocketBus::initializeCanBus()
 }
 
 
-bool SocketBus::readCanMessage() {
+bool SocketBus::readData() {
 
     // no need to poll the socket.
     // In synchronous mode, the socket is non-blocking, so this function returns as soon as there is no data available to be read
@@ -169,7 +169,7 @@ bool SocketBus::readCanMessage() {
 }
 
 
-bool SocketBus::writeCanMessage(const CanMsg& cmsg) {
+bool SocketBus::writeData(const CanMsg& cmsg) {
 
     // poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
     // If asynchronous, we set the socket to blocking and have a separate thread writing to it.

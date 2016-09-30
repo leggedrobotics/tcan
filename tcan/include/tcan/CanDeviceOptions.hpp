@@ -8,13 +8,14 @@
 #pragma once
 
 #include <string>
+#include <stdint.h>
 
 namespace tcan {
 
-class DeviceOptions {
+class CanDeviceOptions {
  public:
 
-    DeviceOptions() = delete;
+    CanDeviceOptions() = delete;
 
     /*!
      *
@@ -23,7 +24,7 @@ class DeviceOptions {
      * @param maxDeviceTimeoutCounter   counter limit at which the device is considered as timed out. Set 0 to disable.
      *                                  If no message was received within this time, the device is considered as missing.
      */
-    DeviceOptions(
+    CanDeviceOptions(
         const uint32_t nodeId,
         const std::string& name,
         const unsigned int maxDeviceTimeoutCounter = 20):
@@ -41,17 +42,17 @@ class DeviceOptions {
      * @param timeout   timeout in seconds. If no message was received within this time, the device is considered as missing
      * @param looprate  loop rate [Hz] of the process calling checkSanity(..). In asynchrounous mode this is 10Hz by default (see BusOptions)
      */
-    DeviceOptions(
+    CanDeviceOptions(
         const uint32_t nodeId,
         const std::string& name,
         const double timeout,
         const double looprate):
-        DeviceOptions(nodeId, name, static_cast<unsigned int>(timeout*looprate))
+        CanDeviceOptions(nodeId, name, static_cast<unsigned int>(timeout*looprate))
     {
 
     }
 
-    virtual ~DeviceOptions() { }
+    virtual ~CanDeviceOptions() { }
 
     inline void setDeviceTimeoutCounter(const double timeout, const double looprate) {
         maxDeviceTimeoutCounter_ = static_cast<unsigned int>(timeout*looprate);

@@ -7,11 +7,13 @@
 
 #pragma once
 
-#include "tcan/DeviceOptions.hpp"
+#include <stdint.h>
+
+#include "tcan/CanDeviceOptions.hpp"
 
 namespace tcan {
 
-class DeviceCanOpenOptions : public DeviceOptions {
+class DeviceCanOpenOptions : public CanDeviceOptions {
  public:
 
     DeviceCanOpenOptions() = delete;
@@ -22,7 +24,7 @@ class DeviceCanOpenOptions : public DeviceOptions {
         const unsigned int maxSdoTimeoutCounter = 1,
         const unsigned int maxSdoSentCounter = 10,
         const uint16_t producerHeartBeatTime = 0):
-        DeviceOptions(nodeId, name),
+        CanDeviceOptions(nodeId, name),
         maxSdoTimeoutCounter_(maxSdoTimeoutCounter),
         maxSdoSentCounter_(maxSdoSentCounter),
         producerHeartBeatTime_(producerHeartBeatTime)

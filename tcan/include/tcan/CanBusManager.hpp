@@ -7,24 +7,20 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include "tcan/BusManager.hpp"
 #include "tcan/CanBus.hpp"
+#include "tcan/CanMsg.hpp"
 
 namespace tcan {
 
 //! Container of all CAN buses
-class CanBusManager : public BusManager {
+class CanBusManager : public BusManager<CanMsg> {
  public:
     CanBusManager();
 
     virtual ~CanBusManager();
 
-    // prevent the addition of Buses which are not can buses
-    bool BusManager::addBus(Bus* bus) = delete;
-    bool addBus(CanBus* canBus);
+    CanBus* getCanBus(const unsigned int index) { return static_cast<CanBus*>(buses_[index]); }
 
 
     /*! Send a sync message on all buses

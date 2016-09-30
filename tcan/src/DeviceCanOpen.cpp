@@ -5,8 +5,6 @@
  *      Author: Philipp Leemann
  */
 
-#include <stdio.h>
-
 #include "tcan/DeviceCanOpen.hpp"
 #include "tcan/Bus.hpp"
 
@@ -21,7 +19,7 @@ DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
 }
 
 DeviceCanOpen::DeviceCanOpen(DeviceCanOpenOptions* options):
-    Device(options),
+    CanDevice(options),
     nmtState_(NMTStates::initializing),
     sdoTimeoutCounter_(0),
     sdoSentCounter_(0),

@@ -28,11 +28,10 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/Bus.cpp
-  src/CanBus.cpp
-  src/BusManager.cpp
   src/CanBusManager.cpp
+  src/CanBus.cpp
   src/SocketBus.cpp
+  src/UniversalSerialBus.cpp
   src/DeviceCanOpen.cpp
 )
 target_link_libraries(${PROJECT_NAME}

@@ -18,12 +18,7 @@ CanBusManager::~CanBusManager()
 {
 }
 
-bool CanBusManager::addBus(CanBus* canBus) {
-    buses_.push_back( bus );
-    return bus->initBus();
-}
-
-void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
+void CanBusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
     const unsigned int bussize = buses_.size();
     std::unique_lock<std::mutex> locks[bussize];
 
@@ -40,7 +35,7 @@ void BusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
     }
 }
 
-void BusManager::sendSync(const unsigned int busIndex) {
+void CanBusManager::sendSync(const unsigned int busIndex) {
     if(busIndex < buses_.size()) {
         static_cast<CanBus*>(buses_[busIndex])->sendSync();
     }

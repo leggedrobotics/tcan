@@ -7,18 +7,12 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <unordered_map>
-#include <memory>
-#include <functional>
 #include <queue>
 #include <thread>
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
-#include <utility>
 
-#include "tcan/Device.hpp"
 #include "tcan/BusOptions.hpp"
 
 #include "message_logger/message_logger.hpp"
@@ -51,10 +45,6 @@ class Bus {
     {
         stopThreads(true);
 
-        for(Device* device : devices_) {
-            delete device;
-        }
-
         delete options_;
     }
 
@@ -63,7 +53,7 @@ class Bus {
      */
     bool initBus() {
 
-        if(!initializeHardware()) {
+        if(!initializeInterface()) {
             return false;
         }
 
@@ -95,27 +85,6 @@ class Bus {
         }
 
         return true;
-    }
-
-    /*!
-     * in-place construction of a new device
-     * @param options   pointer to the option class of the device
-     * @return true if successful
-     */
-    template <class C, typename TOptions>
-    std::pair<C*, bool> addDevice(TOptions* options) {
-        C* dev = new C(options);
-        bool success = addDevice(dev);
-        return std::make_pair(dev, success);
-    }
-
-    /*! Adds a device to the device vector and calls its initDevice function
-     * @param device	Pointer to the device
-     * @return true if init was successful
-     */
-    bool addDevice(Device* device) {
-        devices_.push_back(device);
-        return device->initDeviceInternal(this);
     }
 
     /*! Add a can message to be sent (added to the output queue)
@@ -157,20 +126,6 @@ class Bus {
         return readData();
     }
 
-    /*! Do a sanity check of all devices on this bus.
-     */
-    bool sanityCheck() {
-        bool allFine = true;
-        for(auto device : devices_) {
-            if(!device->sanityCheck()) {
-                allFine = false;
-            }
-        }
-
-        isOperational_ = allFine;
-        return allFine;
-    }
-
     inline void setOperational(const bool operational) { isOperational_ = operational; }
     inline bool getOperational() const { return isOperational_; }
 
@@ -180,7 +135,7 @@ class Bus {
      * Stops all threads handled by this bus (send, receive, sanity check)
      * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
      */
-    void stopThreads(const bool wait) {
+    void stopThreads(const bool wait=true) {
         running_ = false;
         condTransmitThread_.notify_all();
         condOutputQueueEmpty_.notify_all();
@@ -207,12 +162,16 @@ class Bus {
      */
     virtual void handleMessage(const Msg& msg) = 0;
 
+    /*! Do a sanity check of the bus.
+     */
+    virtual bool sanityCheck() = 0;
+
 
  protected:
     /*! Initialized the device driver
      * @return true if successful
      */
-    virtual bool initializeHardware() = 0;
+    virtual bool initializeInterface() = 0;
 
     /*! read CAN message from the device driver
      * @return true if a message was successfully read and parsed
@@ -222,7 +181,7 @@ class Bus {
     /*! write CAN message to the device driver
      * @return true if the message was successfully written
      */
-    virtual bool writeData(const CanMsg& cmsg) = 0;
+    virtual bool writeData(const Msg& msg) = 0;
 
 
     bool processOutputQueue() {
@@ -295,13 +254,10 @@ class Bus {
     }
 
  protected:
-    // state of the bus. True if all devices are operational.
+    // state of the bus
     bool isOperational_;
 
     const BusOptions* options_;
-
-    // vector containing all devices
-    std::vector<Device*> devices_;
 
     // output queue containing all messages to be sent by the transmitThread_
     std::mutex outgointMsgsMutex_;

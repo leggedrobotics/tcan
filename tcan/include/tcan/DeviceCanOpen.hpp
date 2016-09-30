@@ -8,19 +8,21 @@
 #pragma once
 
 #include <stdint.h>
-#include <tcan/SdoMsg.hpp>
 #include <queue>
 #include <mutex>
 #include <atomic>
 #include <unordered_map>
 
-#include "tcan/Device.hpp"
 #include "tcan/DeviceCanOpenOptions.hpp"
+#include "tcan/CanDevice.hpp"
+#include "tcan/CanBus.hpp"
+#include "tcan/SdoMsg.hpp"
+
 
 namespace tcan {
 //! A CANOpen device that is connected via CAN.
 
-class DeviceCanOpen : public Device {
+class DeviceCanOpen : public CanDevice {
  public:
     static constexpr int TxEmcyId = 0x80;
     static constexpr int TxPDO1Id = 0x180;
@@ -50,7 +52,7 @@ class DeviceCanOpen : public Device {
      * @param name		name of the device
      */
     DeviceCanOpen(const uint32_t nodeId, const std::string& name);
-    DeviceCanOpen(DeviceOptions* options) = delete;
+    DeviceCanOpen(CanDeviceOptions* options) = delete;
     DeviceCanOpen(DeviceCanOpenOptions* options);
 
     //! Destructor

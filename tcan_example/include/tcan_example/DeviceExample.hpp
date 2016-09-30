@@ -11,9 +11,9 @@
 #pragma once
 
 #include <stdint.h>
+#include <tcan/DeviceCanOpen.hpp>
 #include <atomic>
 
-#include "tcan/DeviceCanOpen.hpp"
 
 namespace tcan {
 
