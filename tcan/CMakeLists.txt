@@ -29,7 +29,9 @@ include_directories(
 
 add_library(${PROJECT_NAME}
   src/Bus.cpp
+  src/CanBus.cpp
   src/BusManager.cpp
+  src/CanBusManager.cpp
   src/SocketBus.cpp
   src/DeviceCanOpen.cpp
 )

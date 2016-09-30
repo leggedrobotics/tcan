@@ -10,12 +10,12 @@
 #include <pthread.h>
 #include <string.h> // strerror(..)
 
-#include "tcan/Bus.hpp"
+#include "tcan/CanBus.hpp"
 #include "message_logger/message_logger.hpp"
 
 namespace tcan {
 
-Bus::Bus(BusOptions* options):
+CanBus::CanBus(CanBusOptions* options):
     isOperational_(false),
     options_(options),
     cobIdToFunctionMap_(),
@@ -31,7 +31,7 @@ Bus::Bus(BusOptions* options):
 
 }
 
-Bus::~Bus()
+CanBus::~CanBus()
 {
     stopThreads(true);
 
@@ -42,7 +42,7 @@ Bus::~Bus()
     delete options_;
 }
 
-void Bus::stopThreads(const bool wait) {
+void CanBus::stopThreads(const bool wait) {
     running_ = false;
     condTransmitThread_.notify_all();
     condOutputQueueEmpty_.notify_all();
@@ -62,7 +62,7 @@ void Bus::stopThreads(const bool wait) {
     }
 }
 
-bool Bus::initBus() {
+bool CanBus::initBus() {
 
     if(!initializeCanBus()) {
         return false;
@@ -98,7 +98,7 @@ bool Bus::initBus() {
     return true;
 }
 
-void Bus::handleMessage(const CanMsg& cmsg) {
+void CanBus::handleMessage(const CanMsg& cmsg) {
 
     // Check if CAN message is handled.
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(cmsg.getCobId());
@@ -115,7 +115,7 @@ void Bus::handleMessage(const CanMsg& cmsg) {
 }
 
 
-bool Bus::processOutputQueue() {
+bool CanBus::processOutputQueue() {
     bool writeSuccess = false;
     std::unique_lock<std::mutex> lock(outgointMsgsMutex_);
 
@@ -143,7 +143,7 @@ bool Bus::processOutputQueue() {
     return writeSuccess;
 }
 
-bool Bus::sanityCheck() {
+bool CanBus::sanityCheck() {
     bool allFine = true;
     for(auto device : devices_) {
         if(!device->sanityCheck()) {
@@ -155,7 +155,7 @@ bool Bus::sanityCheck() {
     return allFine;
 }
 
-void Bus::sendMessageWithoutLock(const CanMsg& cmsg) {
+void CanBus::sendMessageWithoutLock(const CanMsg& cmsg) {
     if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
     	MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
     }
@@ -166,7 +166,7 @@ void Bus::sendMessageWithoutLock(const CanMsg& cmsg) {
     condTransmitThread_.notify_all();
 }
 
-void Bus::receiveWorker() {
+void CanBus::receiveWorker() {
     while(running_) {
         readMessage();
     }
@@ -174,7 +174,7 @@ void Bus::receiveWorker() {
     MELO_INFO("receive thread for bus %s terminated", options_->name_.c_str());
 }
 
-void Bus::transmitWorker() {
+void CanBus::transmitWorker() {
     while(running_) {
         processOutputQueue();
     }
@@ -182,7 +182,7 @@ void Bus::transmitWorker() {
     MELO_INFO("transmit thread for bus %s terminated", options_->name_.c_str());
 }
 
-void Bus::sanityCheckWorker() {
+void CanBus::sanityCheckWorker() {
     auto nextLoop = std::chrono::steady_clock::now();
 
     while(running_) {
