@@ -29,6 +29,7 @@ include_directories(
 
 add_library(${PROJECT_NAME}
   src/CanBusManager.cpp
+  src/UniversalSerialBusManager.cpp
   src/CanBus.cpp
   src/SocketBus.cpp
   src/UniversalSerialBus.cpp

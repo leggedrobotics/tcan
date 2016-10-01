@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#include "tcan_example/DeviceExample.hpp"
+#include "tcan_example/CanDeviceExample.hpp"
 #include "tcan/Bus.hpp"
 #include "tcan/canopen_sdos.hpp"
 
@@ -18,21 +18,21 @@ namespace tcan {
 
 namespace example_can {
 
-DeviceExample::DeviceExample(const uint32_t nodeId, const std::string& name):
-	DeviceExample(new DeviceExampleOptions(nodeId, name))
+CanDeviceExample::CanDeviceExample(const uint32_t nodeId, const std::string& name):
+	CanDeviceExample(new CanDeviceExampleOptions(nodeId, name))
 
 {
 
 }
 
-DeviceExample::DeviceExample(DeviceExampleOptions* options):
+CanDeviceExample::CanDeviceExample(CanDeviceExampleOptions* options):
 	DeviceCanOpen(options),
 	myMeasurement_(0.f)
 {
 
 }
 
-DeviceExample::~DeviceExample()
+CanDeviceExample::~CanDeviceExample()
 {
 
 }
@@ -45,32 +45,32 @@ public:
 	}
 };
 
-bool DeviceExample::initDevice() {
+bool CanDeviceExample::initDevice() {
 
 	bus_->addCanMessage(DeviceCanOpen::TxSDOId + getNodeId(), std::bind(&DeviceCanOpen::parseSDOAnswer, this, std::placeholders::_1));
 	bus_->addCanMessage(DeviceCanOpen::TxNMTId + getNodeId(), std::bind(&DeviceCanOpen::parseHeartBeat, this, std::placeholders::_1));
-	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), std::bind(&DeviceExample::parsePdo1, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), std::bind(&CanDeviceExample::parsePdo1, this, std::placeholders::_1));
 
 	setNmtRestartRemoteDevice();
 	return true;
 }
 
-void DeviceExample::configureDevice() {
+void CanDeviceExample::configureDevice() {
 	// device is in pre-operational state when this function is called
 	printf("configureDevice called\n");
 	setNmtEnterPreOperational();
-	sendSdo(mySdo(getNodeId(), static_cast<const DeviceExampleOptions*>(options_)->someParameter));
+	sendSdo(mySdo(getNodeId(), static_cast<const CanDeviceExampleOptions*>(options_)->someParameter));
 	setNmtStartRemoteDevice();
 }
 
-void DeviceExample::setCommand(const float value) {
+void CanDeviceExample::setCommand(const float value) {
 	CanMsg cmsg(DeviceCanOpen::RxPDO1Id + getNodeId());
 	cmsg.write(static_cast<uint32_t>(value), 0);
 
 	bus_->sendMessage(cmsg);
 }
 
-bool DeviceExample::parsePdo1(const CanMsg& cmsg) {
+bool CanDeviceExample::parsePdo1(const CanMsg& cmsg) {
 	// variable is atomic - no need for mutexes
 	myMeasurement_ = cmsg.readint32(0);
 
@@ -79,7 +79,7 @@ bool DeviceExample::parsePdo1(const CanMsg& cmsg) {
 }
 
 
-void DeviceExample::handleReadSdoAnswer(const SdoMsg& sdoMsg) {
+void CanDeviceExample::handleReadSdoAnswer(const SdoMsg& sdoMsg) {
     switch(sdoMsg.getIndex()) {
     default:
         int data = sdoMsg.readint32(4); // note that the data starts at byte 4 in a sdo message. byte 0-3 contain cmd,index and subindex

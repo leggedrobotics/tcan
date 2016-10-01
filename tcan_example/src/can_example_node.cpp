@@ -7,9 +7,10 @@
 
 #include "tcan/CanBusManager.hpp"
 #include "tcan/SocketBus.hpp"
-#include "tcan_example/DeviceExample.hpp"
+
 #include "robot_utils/containers/MultiKeyContainer.hpp"
 
+#include "tcan_example/CanDeviceExample.hpp"
 
 //#define USE_SYNCHRONOUS_MODE
 
@@ -31,7 +32,7 @@ public:
 	};
 
 	typedef robot_utils::MultiKeyContainer<CanBus*, BusId> BusContainer;
-	typedef robot_utils::MultiKeyContainer<example_can::DeviceExample*, DeviceExampleId> DeviceExampleContainer;
+	typedef robot_utils::MultiKeyContainer<example_can::CanDeviceExample*, DeviceExampleId> DeviceExampleContainer;
 
 	CanManager():
 		CanBusManager(),
@@ -62,11 +63,11 @@ public:
 		const unsigned int iBus = static_cast<unsigned int>(busId);
 		const std::string name = "EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId));
 
-		auto options = new example_can::DeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
+		auto options = new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
 		options->someParameter = 37;
 		options->maxDeviceTimeoutCounter_ = 1000;
 
-		auto ret_pair = getCanBus(iBus)->addDevice<example_can::DeviceExample>( options );
+		auto ret_pair = getCanBus(iBus)->addDevice<example_can::CanDeviceExample>( options );
 		deviceExampleContainer_.insert(std::make_tuple(name, static_cast<unsigned int>(deviceId), deviceId), ret_pair.first);
 	}
 

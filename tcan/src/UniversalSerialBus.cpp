@@ -9,6 +9,7 @@
 #include <termios.h> // tcgettatr
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <poll.h>
 
 #include "tcan/UniversalSerialBus.hpp"
 #include "message_logger/message_logger.hpp"
@@ -38,7 +39,7 @@ bool UniversalSerialBus::sanityCheck() {
 
 
 bool UniversalSerialBus::initializeInterface() {
-    fileDescriptor_ = open(options_->name_.c_str(), O_RDWR | O_NDELAY); // open for read and write
+    fileDescriptor_ = open(options_->name_.c_str(), O_RDWR | O_NOCTTY | O_NDELAY); // open for read and write
     if (fileDescriptor_ < 0) {
         MELO_ERROR("Failed to open USB device: %s", options_->name_.c_str());
         return false;
@@ -49,18 +50,65 @@ bool UniversalSerialBus::initializeInterface() {
 
     configureInterface();
 
+    // set nonblocking
+    int flags = fcntl(fileDescriptor_, F_GETFL, 0);
+    fcntl(fileDescriptor_, F_SETFL, flags | O_NONBLOCK);
+
     return true;
 }
 
 bool UniversalSerialBus::readData() {
+    pollfd fds = {fileDescriptor_, POLLIN, 0};
+
+    const int ret = poll( &fds, 1, 1000 );
+
+    if ( ret == -1 ) {
+        MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+        return false;
+    }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
+        // poll timed out, without being able to read => raise error
+        MELO_WARN("polling for fileDescriptor writeability timed out for bus %s. Overflow?", options_->name_.c_str());
+        return false;
+    }else{
+        const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_)->bufferSize;
+        char buf[bufSize];
+        const int bytes_read = read( fileDescriptor_, &buf, bufSize);
+        //  printf("CanManager_ bytes read: %i\n", bytes_read);
+
+        if(bytes_read<=0) {
+            // failed to read something even with poll(..) reporting availabe data
+            MELO_ERROR("read failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            return false;
+        } else {
+            handleMessage( UsbMsg(bytes_read, buf) );
+        }
+    }
+
     return true;
 }
 
 bool UniversalSerialBus::writeData(const UsbMsg& msg) {
+    pollfd fds = {fileDescriptor_, POLLOUT, 0};
+
+    int ret = poll( &fds, 1, 1000 );
+
+    if ( ret == -1 ) {
+        MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+        return false;
+    }else if ( ret == 0 || !(fds.revents & POLLOUT) ) {
+        // poll timed out, without being able to read => return silently
+        return false;
+    }else{
+        if( ( ret = write(fileDescriptor_, msg.getData(), msg.getLength()) ) != static_cast<int>(msg.getLength())) {
+            MELO_ERROR("Error at sending USB message on bus %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
+            return false;
+        }
+    }
     return true;
 }
 
 
+/** code from CuteCom */
 void UniversalSerialBus::configureInterface()
 {
     const UniversalSerialBusOptions* options = static_cast<const UniversalSerialBusOptions*>(options_);
@@ -166,7 +214,8 @@ void UniversalSerialBus::configureInterface()
 
     /* We generate mark and space parity ourself. */
     int databits = options->databits;
-    if (databits == 7 && (options->parity=="Mark" || options->parity == "Space"))
+    if (databits == 7 && (options->parity == UniversalSerialBusOptions::Parity::Mark ||
+                          options->parity == UniversalSerialBusOptions::Parity::Space))
     {
         databits = 8;
     }
@@ -190,11 +239,11 @@ void UniversalSerialBus::configureInterface()
 
     //parity
     newtio.c_cflag &= ~(PARENB | PARODD);
-    if (options->parity == "Even")
+    if (options->parity == UniversalSerialBusOptions::Parity::Even)
     {
         newtio.c_cflag |= PARENB;
     }
-    else if (options->parity== "Odd")
+    else if (options->parity == UniversalSerialBusOptions::Parity::Odd)
     {
         newtio.c_cflag |= (PARENB | PARODD);
     }
@@ -230,11 +279,11 @@ void UniversalSerialBus::configureInterface()
         newtio.c_iflag &= ~(IXON|IXOFF|IXANY);
     }
 
-    newtio.c_lflag=0;
-    newtio.c_oflag=0;
-
-    newtio.c_cc[VTIME]=1;
-    newtio.c_cc[VMIN]=60;
+//    newtio.c_lflag=0;// set non-canonical mode
+//    newtio.c_oflag=0;
+//
+//    newtio.c_cc[VTIME]=10;// timeout in tenths of a second
+//    newtio.c_cc[VMIN]=60;
 
     //   tcflush(m_fd, TCIFLUSH);
     if (tcsetattr(fileDescriptor_, TCSANOW, &newtio)!=0)
@@ -244,7 +293,9 @@ void UniversalSerialBus::configureInterface()
 
     int mcs=0;
     ioctl(fileDescriptor_, TIOCMGET, &mcs);
-    mcs |= TIOCM_RTS;
+
+    //mcs |= TIOCM_RTS;
+    mcs &= ~TIOCM_RTS;
     ioctl(fileDescriptor_, TIOCMSET, &mcs);
 
     if (tcgetattr(fileDescriptor_, &newtio)!=0)

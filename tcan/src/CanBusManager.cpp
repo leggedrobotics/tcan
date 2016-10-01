@@ -10,7 +10,7 @@
 namespace tcan {
 
 CanBusManager::CanBusManager():
-    BusManager()
+    BusManager<CanMsg>()
 {
 }
 

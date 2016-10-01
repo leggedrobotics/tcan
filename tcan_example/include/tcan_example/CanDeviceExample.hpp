@@ -20,10 +20,10 @@ namespace tcan {
 namespace example_can {
 //! An example device that is connected via CAN.
 
-class DeviceExampleOptions : public DeviceCanOpenOptions {
+class CanDeviceExampleOptions : public DeviceCanOpenOptions {
 public:
-	DeviceExampleOptions() = delete;
-	DeviceExampleOptions(const uint32_t nodeId, const std::string& name):
+	CanDeviceExampleOptions() = delete;
+	CanDeviceExampleOptions(const uint32_t nodeId, const std::string& name):
 		DeviceCanOpenOptions(nodeId, name),
 		someParameter(0)
 	{
@@ -34,19 +34,19 @@ public:
 };
 
 
-class DeviceExample : public DeviceCanOpen {
+class CanDeviceExample : public DeviceCanOpen {
 public:
 
 	/*! Constructors
 	 * @param nodeId	ID of CAN node
 	 * @param name		name of the device
 	 */
-	DeviceExample() = delete;
-	DeviceExample(const uint32_t nodeId, const std::string& name);
-	DeviceExample(DeviceExampleOptions* options);
+	CanDeviceExample() = delete;
+	CanDeviceExample(const uint32_t nodeId, const std::string& name);
+	CanDeviceExample(CanDeviceExampleOptions* options);
 
 	//! Destructor
-	virtual ~DeviceExample();
+	virtual ~CanDeviceExample();
 
 	virtual bool initDevice();
 
