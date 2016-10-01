@@ -22,7 +22,7 @@ public:
 	    tcan::UniversalSerialBusManager(),
 		usbContainer_()
 	{
-		addUsb(UsbId::XBEE1, "/dev/ttyUSB0");
+		addUsb(UsbId::XBEE1, "/dev/ttyUSB1");
 	}
 
 	virtual ~UsbManager()
@@ -77,7 +77,7 @@ int main() {
 #endif
 		for(auto xbee : usbManager_.getUsbContainer()) {
 //			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
-//		    xbee->sendMessage(tcan::UsbMsg("hi"));
+		    xbee->sendMessage(tcan::UsbMsg("hi"));
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		usbManager_.writeMessagesSynchronous();
@@ -85,7 +85,7 @@ int main() {
 
 //		std::cout << "sleeping..\n\n";
 //		sleep(5);
-		nextStep += std::chrono::microseconds(10000);
+		nextStep += std::chrono::microseconds(1000000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;

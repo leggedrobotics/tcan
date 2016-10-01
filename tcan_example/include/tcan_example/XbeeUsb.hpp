@@ -23,10 +23,6 @@ class XbeeUsb : public tcan::UniversalSerialBus {
      */
     virtual void handleMessage(const tcan::UsbMsg& msg);
 
-    void sendMessage(const tcan::UsbMsg& msg) {
-        writeData(msg);
-    }
-
  private:
 
 };

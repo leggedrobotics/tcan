@@ -48,8 +48,17 @@ class UsbMsg {
         }
     }
 
-    unsigned int getLength() const { return length_; }
-    const char* getData() const { return data_; }
+    inline void operator=(const UsbMsg& other) {
+        if(data_) {
+            delete[] data_;
+        }
+        length_ = other.length_;
+        data_ = new char[length_];
+        std::copy(&other.data_[0], &other.data_[length_], data_);
+    }
+
+    inline unsigned int getLength() const { return length_; }
+    inline const char* getData() const { return data_; }
 
  private:
     unsigned int length_;

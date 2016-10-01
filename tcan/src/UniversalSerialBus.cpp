@@ -66,20 +66,20 @@ bool UniversalSerialBus::readData() {
         MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
         return false;
     }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
-        // poll timed out, without being able to read => raise error
-        MELO_WARN("polling for fileDescriptor writeability timed out for bus %s. Overflow?", options_->name_.c_str());
+        // poll timed out, without being able to read => return silently
         return false;
     }else{
         const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_)->bufferSize;
-        char buf[bufSize];
+        char buf[bufSize+1]; // +1 to have space for terminating \0
         const int bytes_read = read( fileDescriptor_, &buf, bufSize);
         //  printf("CanManager_ bytes read: %i\n", bytes_read);
 
         if(bytes_read<=0) {
-            // failed to read something even with poll(..) reporting availabe data
+            // failed to read something even with poll(..) reporting availabe data => raise error
             MELO_ERROR("read failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             return false;
         } else {
+            buf[bytes_read] = '\0';
             handleMessage( UsbMsg(bytes_read, buf) );
         }
     }
@@ -96,7 +96,8 @@ bool UniversalSerialBus::writeData(const UsbMsg& msg) {
         MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
         return false;
     }else if ( ret == 0 || !(fds.revents & POLLOUT) ) {
-        // poll timed out, without being able to read => return silently
+        // poll timed out, without being able to read => raise error
+        MELO_WARN("polling for fileDescriptor writeability timed out for bus %s. Overflow?", options_->name_.c_str());
         return false;
     }else{
         if( ( ret = write(fileDescriptor_, msg.getData(), msg.getLength()) ) != static_cast<int>(msg.getLength())) {
