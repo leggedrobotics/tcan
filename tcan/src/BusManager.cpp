@@ -76,14 +76,20 @@ void BusManager::writeMessagesSynchronous() {
 bool BusManager::sanityCheckSynchronous() {
     bool allFine = true;
     for(auto bus : buses_) {
-        if(!bus->sanityCheck()) {
-            allFine = false;
-        }
+        allFine &= bus->sanityCheck();
     }
 
     return allFine;
 }
 
+bool BusManager::allBusesOperational() const {
+    bool allOperational = true;
+    for(auto bus : buses_) {
+        allOperational &= bus->getOperational();
+    }
+
+    return allOperational;
+}
 
 void BusManager::closeBuses() {
     for(Bus* bus : buses_) {

@@ -52,6 +52,12 @@ class BusManager {
      */
     bool sanityCheckSynchronous();
 
+    /*!
+     * Check operational state of all buses.
+     * @return  True if all devices on all buses are operational
+     */
+    bool allBusesOperational() const;
+
     void closeBuses();
 
  protected:

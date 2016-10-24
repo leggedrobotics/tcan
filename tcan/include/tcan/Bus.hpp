@@ -147,6 +147,10 @@ class Bus {
      */
     void handleMessage(const CanMsg& cmsg);
 
+    /*!
+     * Get operational status of the bus. True if all devices on this bus are operational.
+     * @param operational
+     */
     inline void setOperational(const bool operational) { isOperational_ = operational; }
     inline bool getOperational() const { return isOperational_; }
 
