@@ -16,7 +16,8 @@
 namespace tcan {
 
 Bus::Bus(BusOptions* options):
-    isOperational_(false),
+    isMissingDevice_(false),
+    allDevicesActive_(false),
     options_(options),
     cobIdToFunctionMap_(),
     outgointMsgsMutex_(),
@@ -144,15 +145,16 @@ bool Bus::processOutputQueue() {
 }
 
 bool Bus::sanityCheck() {
-    bool allFine = true;
+    bool noneMissing = true;
+    bool allActive = true;
     for(auto device : devices_) {
-        if(!device->sanityCheck()) {
-            allFine = false;
-        }
+        noneMissing &= device->sanityCheck();
+        allActive &= device->isActive();
     }
 
-    isOperational_ = allFine;
-    return allFine;
+    isMissingDevice_ = !noneMissing;
+    allDevicesActive_ = allActive;
+    return noneMissing;
 }
 
 void Bus::sendMessageWithoutLock(const CanMsg& cmsg) {

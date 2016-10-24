@@ -53,10 +53,16 @@ class BusManager {
     bool sanityCheckSynchronous();
 
     /*!
-     * Check operational state of all buses.
-     * @return  True if all devices on all buses are operational
+     * Check if no device timed out
+     * @return  True if at least one device is missing
      */
-    bool allBusesOperational() const;
+    bool isMissingDevice() const;
+
+    /*!
+     * check if we received a message from all devices within timeout
+     * @return True if all devices are active
+     */
+    bool allDevicesActive() const;
 
     void closeBuses();
 

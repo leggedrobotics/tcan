@@ -82,13 +82,20 @@ bool BusManager::sanityCheckSynchronous() {
     return allFine;
 }
 
-bool BusManager::allBusesOperational() const {
-    bool allOperational = true;
+bool BusManager::isMissingDevice() const {
+    bool noneMissing = true;
     for(auto bus : buses_) {
-        allOperational &= bus->getOperational();
+        noneMissing &= bus->isMissingDevice();
     }
+    return noneMissing;
+}
 
-    return allOperational;
+bool BusManager::allDevicesActive() const {
+    bool allActive = true;
+    for(auto bus : buses_) {
+        allActive &= bus->allDevicesActive();
+    }
+    return allActive;
 }
 
 void BusManager::closeBuses() {

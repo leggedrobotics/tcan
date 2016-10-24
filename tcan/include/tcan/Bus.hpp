@@ -148,11 +148,15 @@ class Bus {
     void handleMessage(const CanMsg& cmsg);
 
     /*!
-     * Get operational status of the bus. True if all devices on this bus are operational.
-     * @param operational
+     * @return true if no device timed out
      */
-    inline void setOperational(const bool operational) { isOperational_ = operational; }
-    inline bool getOperational() const { return isOperational_; }
+    inline bool isMissingDevice() const { return isMissingDevice_; }
+
+    /*!
+     * @return true if we received a message from all devices within timeout
+     */
+    inline bool allDevicesActive() const { return allDevicesActive_; }
+
 
     inline bool isAsynchronous() const { return options_->asynchronous_; }
 
@@ -189,8 +193,11 @@ class Bus {
     void sanityCheckWorker();
 
  protected:
-    // state of the bus. True if all devices are operational.
-    bool isOperational_;
+    // true if a device timed out. Devices in 'initializing' state are not considered as missing.
+    std::atomic<bool> isMissingDevice_;
+
+    // true if all devices are in active state (we received a message within the timeout)
+    std::atomic<bool> allDevicesActive_;
 
     const BusOptions* options_;
 

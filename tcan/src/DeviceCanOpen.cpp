@@ -22,7 +22,7 @@ DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
 
 DeviceCanOpen::DeviceCanOpen(DeviceCanOpenOptions* options):
     Device(options),
-    nmtState_(NMTStates::initializing),
+    nmtState_(NMTStates::preOperational),
     sdoTimeoutCounter_(0),
     sdoSentCounter_(0),
     sdoMsgsMutex_(),
@@ -37,30 +37,24 @@ DeviceCanOpen::~DeviceCanOpen()
 }
 
 bool DeviceCanOpen::sanityCheck() {
-    if(!isMissing() && !checkDeviceTimeout()) {
-        nmtState_ = NMTStates::missing;
+    const bool notTimedOut = checkDeviceTimeout();
+    if(!isMissing() && !notTimedOut) {
+        state_ = Missing;
         MELO_WARN("Device %s timed out!", getName().c_str());
         return false;
     }
 
-    if(!checkSdoTimeout()) {
-
-    }
-    return true;
+    checkSdoTimeout();
+    return notTimedOut;
 }
 
 
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
-
-    deviceTimeoutCounter_ = 0;
-
     // fixme: commented out as a workaround for moog_can heartbeat length 8
 //    if(cmsg.getLength() != 1) {
 //        MELO_WARN("Invalid Heartbeat message length from nodeId %x: %d", getNodeId(), cmsg.getLength());
         //return false;
 //    }
-
-    const bool wasMissingOrInitializing = isInitializing() || isMissing();
 
     switch(cmsg.readuint8(0)) {
         case 0x0: // boot up
@@ -83,10 +77,6 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
             MELO_WARN("Invalid Heartbeat message data from nodeId %x: %x", getNodeId(), cmsg.readuint8(0));
             return false;
             break;
-    }
-
-    if(wasMissingOrInitializing) {
-        configureDevice();
     }
 
     return true;
@@ -164,6 +154,11 @@ void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
     }
 }
 
+void DeviceCanOpen::handleTimedoutSdo(const SdoMsg& msg) {
+    MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / subindex=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
+}
+
+
 bool DeviceCanOpen::checkSdoTimeout() {
     const DeviceCanOpenOptions* options = static_cast<const DeviceCanOpenOptions*>(options_);
 
@@ -173,7 +168,8 @@ bool DeviceCanOpen::checkSdoTimeout() {
         std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent parseSDOAnswer from making changes on sdoMsgs_
         const SdoMsg& msg = sdoMsgs_.front();
         if(sdoSentCounter_ > options->maxSdoSentCounter_) {
-            MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / subindex=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
+
+            handleTimedoutSdo(msg);
 
             sendNextSdo();
 
@@ -255,7 +251,7 @@ void DeviceCanOpen::setNmtResetRemoteCommunication() {
     }
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
 
-    nmtState_ = NMTStates::initializing;
+    state_ = Initializing;
 }
 
 void DeviceCanOpen::setNmtRestartRemoteDevice() {
@@ -267,7 +263,7 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
     deviceTimeoutCounter_ = 0;
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
 
-    nmtState_ = NMTStates::initializing;
+    state_ = Initializing;
 }
 
 } /* namespace tcan */
