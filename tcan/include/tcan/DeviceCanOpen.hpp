@@ -84,18 +84,6 @@ class DeviceCanOpen : public Device {
      */
     virtual void handleTimedoutSdo(const SdoMsg& msg);
 
-
-    /*! Parse a heartbeat message
-     * @param cmsg   reference to the received message
-     */
-    bool parseHeartBeat(const CanMsg& cmsg);
-
-    /*! Parse a SDO answer
-     * This function removes the SDO from the queue and calls handleReadSDOAnswer() if the SDO is a read response.
-     * @param cmsg   reference to the received message
-     */
-    bool parseSDOAnswer(const CanMsg& cmsg);
-
     /*! Get the SDO answer and erase it from the SDO answer map if it has been received.
      * @param sdoAnswer SDO answer if it has been found (output parameter).
      * @return true if SDO answer has been found.
@@ -118,6 +106,18 @@ class DeviceCanOpen : public Device {
     bool isStopped()		const { return isActive() && (nmtState_ == NMTStates::stopped); }
     bool isPreOperational()	const { return isActive() && (nmtState_ == NMTStates::preOperational); }
     bool isOperational()	const { return isActive() && (nmtState_ == NMTStates::operational); }
+
+ public: /// Internal functions
+    /*! Parse a heartbeat message
+     * @param cmsg   reference to the received message
+     */
+    bool parseHeartBeat(const CanMsg& cmsg);
+
+    /*! Parse a SDO answer
+     * This function removes the SDO from the queue and calls handleReadSDOAnswer() if the SDO is a read response.
+     * @param cmsg   reference to the received message
+     */
+    bool parseSDOAnswer(const CanMsg& cmsg);
 
  protected:
     /*! Check if the SDO at the front of the SDO queue has timed out. If so, try to resend it a couple of times (see DeviceCanOpenOptions)

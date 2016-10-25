@@ -48,6 +48,105 @@ bool DeviceCanOpen::sanityCheck() {
     return notTimedOut;
 }
 
+void DeviceCanOpen::sendPdo(const CanMsg& pdoMsg) {
+    bus_->sendMessage(pdoMsg);
+}
+
+void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
+
+    std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+    sdoMsgs_.push(sdoMsg);
+
+    if(sdoMsgs_.size() == 1) {
+        // sdo queue was empty before, so put the new message in the bus output queue
+        sdoTimeoutCounter_ = 0;
+        sdoSentCounter_ = 0;
+
+        bus_->sendMessage(sdoMsgs_.front());
+
+        if(sdoMsg.getRequiresAnswer()) {
+            // if an answer to a previously sent similar sdo has been received but not fetched, erase it to prevent storing outdated data
+            std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
+            sdoAnswerMap_.erase(getSdoAnswerId(sdoMsg.getIndex(), sdoMsg.getSubIndex()));
+        }else{
+            sdoMsgs_.pop();
+        }
+    }
+}
+
+void DeviceCanOpen::handleTimedoutSdo(const SdoMsg& msg) {
+    MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / subindex=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
+}
+
+bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {
+    std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
+    auto it = sdoAnswerMap_.find(getSdoAnswerId(sdoAnswer.getIndex(), sdoAnswer.getSubIndex()));
+    if (it == sdoAnswerMap_.end()) {
+        return false;
+    }
+    sdoAnswer = it->second;
+    sdoAnswerMap_.erase(it);
+    return true;
+}
+
+void DeviceCanOpen::setNmtEnterPreOperational() {
+    {
+        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+        // swap with an empty queue to clear it
+        std::queue<SdoMsg>().swap(sdoMsgs_);
+    }
+    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
+    // todo: wait some time?
+
+    // the remote device will not tell us in which state it is if heartbeat message is disabled
+    //   => assume that the state switch will be successful
+    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
+        nmtState_ = NMTStates::preOperational;
+    }
+}
+
+void DeviceCanOpen::setNmtStartRemoteDevice() {
+    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x1) );
+
+    // the remote device will not tell us in which state it is if heartbeat message is disabled
+    //   => assume that the state switch will be successful
+    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
+        nmtState_ = NMTStates::operational;
+    }
+}
+
+void DeviceCanOpen::setNmtStopRemoteDevice() {
+    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x2) );
+
+    // the remote device will not tell us in which state it is if heartbeat message is disabled
+    //   => assume that the state switch will be successful
+    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
+        nmtState_ = NMTStates::stopped;
+    }
+}
+
+void DeviceCanOpen::setNmtResetRemoteCommunication() {
+    {
+        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+        // swap with an empty queue to clear it
+        std::queue<SdoMsg>().swap(sdoMsgs_);
+    }
+    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
+
+    state_ = Initializing;
+}
+
+void DeviceCanOpen::setNmtRestartRemoteDevice() {
+    {
+        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+        // swap with an empty queue to clear it
+        std::queue<SdoMsg>().swap(sdoMsgs_);
+    }
+    deviceTimeoutCounter_ = 0;
+    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
+
+    state_ = Initializing;
+}
 
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
     // fixme: commented out as a workaround for moog_can heartbeat length 8
@@ -117,47 +216,6 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     return false;
 }
 
-bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {
-    std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
-    auto it = sdoAnswerMap_.find(getSdoAnswerId(sdoAnswer.getIndex(), sdoAnswer.getSubIndex()));
-    if (it == sdoAnswerMap_.end()) {
-        return false;
-    }
-    sdoAnswer = it->second;
-    sdoAnswerMap_.erase(it);
-    return true;
-}
-
-void DeviceCanOpen::sendPdo(const CanMsg& pdoMsg) {
-    bus_->sendMessage(pdoMsg);
-}
-
-void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
-
-    std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-    sdoMsgs_.push(sdoMsg);
-
-    if(sdoMsgs_.size() == 1) {
-        // sdo queue was empty before, so put the new message in the bus output queue
-        sdoTimeoutCounter_ = 0;
-        sdoSentCounter_ = 0;
-
-        bus_->sendMessage(sdoMsgs_.front());
-
-        if(sdoMsg.getRequiresAnswer()) {
-            // if an answer to a previously sent similar sdo has been received but not fetched, erase it to prevent storing outdated data
-            std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
-            sdoAnswerMap_.erase(getSdoAnswerId(sdoMsg.getIndex(), sdoMsg.getSubIndex()));
-        }else{
-            sdoMsgs_.pop();
-        }
-    }
-}
-
-void DeviceCanOpen::handleTimedoutSdo(const SdoMsg& msg) {
-    MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / subindex=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
-}
-
 
 bool DeviceCanOpen::checkSdoTimeout() {
     const DeviceCanOpenOptions* options = static_cast<const DeviceCanOpenOptions*>(options_);
@@ -205,65 +263,6 @@ void DeviceCanOpen::sendNextSdo() {
 
 uint32_t DeviceCanOpen::getSdoAnswerId(const uint16_t index, const uint8_t subIndex) {
     return (static_cast<uint32_t>(index) << 8) + static_cast<uint32_t>(subIndex);
-}
-
-void DeviceCanOpen::setNmtEnterPreOperational() {
-    {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-        // swap with an empty queue to clear it
-        std::queue<SdoMsg>().swap(sdoMsgs_);
-    }
-    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
-    // todo: wait some time?
-
-    // the remote device will not tell us in which state it is if heartbeat message is disabled
-    //   => assume that the state switch will be successful
-    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
-        nmtState_ = NMTStates::preOperational;
-    }
-}
-
-void DeviceCanOpen::setNmtStartRemoteDevice() {
-    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x1) );
-
-    // the remote device will not tell us in which state it is if heartbeat message is disabled
-    //   => assume that the state switch will be successful
-    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
-        nmtState_ = NMTStates::operational;
-    }
-}
-
-void DeviceCanOpen::setNmtStopRemoteDevice() {
-    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x2) );
-
-    // the remote device will not tell us in which state it is if heartbeat message is disabled
-    //   => assume that the state switch will be successful
-    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
-        nmtState_ = NMTStates::stopped;
-    }
-}
-
-void DeviceCanOpen::setNmtResetRemoteCommunication() {
-    {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-        // swap with an empty queue to clear it
-        std::queue<SdoMsg>().swap(sdoMsgs_);
-    }
-    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
-
-    state_ = Initializing;
-}
-
-void DeviceCanOpen::setNmtRestartRemoteDevice() {
-    {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-        // swap with an empty queue to clear it
-        std::queue<SdoMsg>().swap(sdoMsgs_);
-    }
-    deviceTimeoutCounter_ = 0;
-    sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
-
-    state_ = Initializing;
 }
 
 } /* namespace tcan */

@@ -62,7 +62,7 @@ class Device {
 
     /*! Configure the device
      * This function is automatically called after reception of a
-     * the bootup message. (or more general: After reception of any message if the device device was missing)
+     * bootup message. (or more general: After reception of any message if the device was missing)
      */
     virtual void configureDevice() = 0;
 
@@ -79,6 +79,15 @@ class Device {
         return active;
     }
 
+    inline uint32_t getNodeId() const { return options_->nodeId_; }
+    inline const std::string& getName() const { return options_->name_; }
+
+    inline bool isInitializing() const { return (state_ == Initializing); }
+    inline bool isActive() const { return (state_ == Active); }
+    inline bool isMissing() const { return (state_ == Missing); }
+
+
+ public: /// Internal functions
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
      * Calls the initDevice() function.
      */
@@ -94,13 +103,6 @@ class Device {
         }
         deviceTimeoutCounter_ = 0;
     }
-
-    inline uint32_t getNodeId() const { return options_->nodeId_; }
-    inline const std::string& getName() const { return options_->name_; }
-
-    inline bool isInitializing() const { return (state_ == Initializing); }
-    inline bool isActive() const { return (state_ == Active); }
-    inline bool isMissing() const { return (state_ == Missing); }
 
  protected:
     /*!

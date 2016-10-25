@@ -64,6 +64,9 @@ class BusManager {
      */
     bool allDevicesActive() const;
 
+    /*!
+     * Stops all threads of all buses (if any) and destructs the buses. This function is automatically called by the destructor.
+     */
     void closeBuses();
 
  protected:

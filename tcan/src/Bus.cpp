@@ -43,26 +43,6 @@ Bus::~Bus()
     delete options_;
 }
 
-void Bus::stopThreads(const bool wait) {
-    running_ = false;
-    condTransmitThread_.notify_all();
-    condOutputQueueEmpty_.notify_all();
-
-    if(wait) {
-        if(receiveThread_.joinable()) {
-            receiveThread_.join();
-        }
-
-        if(transmitThread_.joinable()) {
-            transmitThread_.join();
-        }
-
-        if(sanityCheckThread_.joinable()) {
-            sanityCheckThread_.join();
-        }
-    }
-}
-
 bool Bus::initBus() {
 
     if(!initializeCanBus()) {
@@ -83,7 +63,7 @@ bool Bus::initBus() {
 
         sched.sched_priority = options_->priorityTransmitThread_;
         if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-        	MELO_WARN("Failed to set transmit thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            MELO_WARN("Failed to set transmit thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
 
         if(options_->sanityCheckInterval_ > 0) {
@@ -91,12 +71,45 @@ bool Bus::initBus() {
 
             sched.sched_priority = options_->prioritySanityCheckThread_;
             if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-            	MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+                MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             }
         }
     }
 
     return true;
+}
+
+bool Bus::sanityCheck() {
+    bool noneMissing = true;
+    bool allActive = true;
+    for(auto device : devices_) {
+        noneMissing &= device->sanityCheck();
+        allActive &= device->isActive();
+    }
+
+    isMissingDevice_ = !noneMissing;
+    allDevicesActive_ = allActive;
+    return noneMissing;
+}
+
+void Bus::stopThreads(const bool wait) {
+    running_ = false;
+    condTransmitThread_.notify_all();
+    condOutputQueueEmpty_.notify_all();
+
+    if(wait) {
+        if(receiveThread_.joinable()) {
+            receiveThread_.join();
+        }
+
+        if(transmitThread_.joinable()) {
+            transmitThread_.join();
+        }
+
+        if(sanityCheckThread_.joinable()) {
+            sanityCheckThread_.join();
+        }
+    }
 }
 
 void Bus::handleMessage(const CanMsg& cmsg) {
@@ -114,7 +127,6 @@ void Bus::handleMessage(const CanMsg& cmsg) {
                cmsg.getCobId(), value[1], value[0], value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]);
     }
 }
-
 
 bool Bus::processOutputQueue() {
     bool writeSuccess = false;
@@ -142,19 +154,6 @@ bool Bus::processOutputQueue() {
     }
 
     return writeSuccess;
-}
-
-bool Bus::sanityCheck() {
-    bool noneMissing = true;
-    bool allActive = true;
-    for(auto device : devices_) {
-        noneMissing &= device->sanityCheck();
-        allActive &= device->isActive();
-    }
-
-    isMissingDevice_ = !noneMissing;
-    allDevicesActive_ = allActive;
-    return noneMissing;
 }
 
 void Bus::sendMessageWithoutLock(const CanMsg& cmsg) {
