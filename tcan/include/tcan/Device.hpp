@@ -72,11 +72,11 @@ class Device {
      * @return true if everything is ok.
      */
     virtual bool sanityCheck() {
-        const bool active = checkDeviceTimeout();
-        if(!active) {
+        const bool timedOut = isTimedOut();
+        if(timedOut) {
             state_ = Missing;
         }
-        return active;
+        return !timedOut;
     }
 
     inline uint32_t getNodeId() const { return options_->nodeId_; }
@@ -106,11 +106,11 @@ class Device {
 
  protected:
     /*!
-     * @return False if the device timed out
+     * @return True if the device timed out
      */
-    inline bool checkDeviceTimeout()
+    inline bool isTimedOut()
     {
-        return !(options_->maxDeviceTimeoutCounter_ != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter_) );
+        return (options_->maxDeviceTimeoutCounter_ != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter_) );
         // deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
     }
 
