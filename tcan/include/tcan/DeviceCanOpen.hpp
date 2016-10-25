@@ -38,11 +38,9 @@ class DeviceCanOpen : public Device {
     static constexpr int RxSDOId = 0x600;
 
     enum class NMTStates : uint8_t {
-        initializing = 0,
-        stopped = 1,
-        preOperational = 2,
-        operational = 3,
-        missing = 4 // state to enter if no life sign from the node after a certain time
+        stopped = 0,
+        preOperational,
+        operational
     };
 
     /*! Constructors
@@ -55,13 +53,6 @@ class DeviceCanOpen : public Device {
 
     //! Destructor
     virtual ~DeviceCanOpen();
-
-    /*! Configure the device (send SDOs)
-     * This function is automatically called after reception of a
-     * the bootup message. (or more general: After reception of any heartbeat message if the device is
-     * in nmt-state initializing or missing)
-     */
-    virtual void configureDevice() = 0;
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
@@ -87,17 +78,11 @@ class DeviceCanOpen : public Device {
      */
     virtual void handleReadSdoAnswer(const SdoMsg& sdoMsg) { }
 
-
-    /*! Parse a heartbeat message
-     * @param cmsg   reference to the received message
+    /*!
+     * This function is automatically called by sanityCheck(..) if a sdo message exceeded the timeout and the number of retries.
+     * @param sdoMsg    the SDO message that failed
      */
-    bool parseHeartBeat(const CanMsg& cmsg);
-
-    /*! Parse a SDO answer
-     * This function removes the SDO from the queue and calls handleReadSDOAnswer() if the SDO is a read response.
-     * @param cmsg   reference to the received message
-     */
-    bool parseSDOAnswer(const CanMsg& cmsg);
+    virtual void handleTimedoutSdo(const SdoMsg& msg);
 
     /*! Get the SDO answer and erase it from the SDO answer map if it has been received.
      * @param sdoAnswer SDO answer if it has been found (output parameter).
@@ -118,11 +103,21 @@ class DeviceCanOpen : public Device {
 
     /*! CANState accessors
      */
-    bool isInitializing()	const { return (nmtState_ == NMTStates::initializing); }
-    bool isStopped()		const { return (nmtState_ == NMTStates::stopped); }
-    bool isPreOperational()	const { return (nmtState_ == NMTStates::preOperational); }
-    bool isOperational()	const { return (nmtState_ == NMTStates::operational); }
-    bool isMissing()		const { return (nmtState_ == NMTStates::missing); }
+    bool isStopped()		const { return isActive() && (nmtState_ == NMTStates::stopped); }
+    bool isPreOperational()	const { return isActive() && (nmtState_ == NMTStates::preOperational); }
+    bool isOperational()	const { return isActive() && (nmtState_ == NMTStates::operational); }
+
+ public: /// Internal functions
+    /*! Parse a heartbeat message
+     * @param cmsg   reference to the received message
+     */
+    bool parseHeartBeat(const CanMsg& cmsg);
+
+    /*! Parse a SDO answer
+     * This function removes the SDO from the queue and calls handleReadSDOAnswer() if the SDO is a read response.
+     * @param cmsg   reference to the received message
+     */
+    bool parseSDOAnswer(const CanMsg& cmsg);
 
  protected:
     /*! Check if the SDO at the front of the SDO queue has timed out. If so, try to resend it a couple of times (see DeviceCanOpenOptions)

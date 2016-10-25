@@ -88,31 +88,42 @@ class Bus {
     /*! Add a can message to be sent (added to the output queue)
      * @param cmsg	reference to the can message
      */
-    void sendMessage(const CanMsg& cmsg) {
+    inline void sendMessage(const CanMsg& cmsg) {
         std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
         sendMessageWithoutLock(cmsg);
     }
 
     /*! Send a sync message on the bus. Is called by BusManager::sendSyncOnAllBuses or directly.
      */
-    void sendSync() {
+    inline void sendSync() {
         sendMessage(CanMsg(0x80, 0, nullptr));
     }
 
-    /*! Send a sync message on the bus without locking the queue.
-     * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
+    /*! Do a sanity check of all devices on this bus.
      */
-    void sendSyncWithoutLock() {
-        sendMessageWithoutLock(CanMsg(0x80, 0, nullptr));
-    }
+    bool sanityCheck();
 
-    /*! Waits until the output queue is empty, locks the queue and returns the lock
+    /*!
+     * @return true if no device timed out
      */
-    void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
-    {
-        lock = std::unique_lock<std::mutex>(outgointMsgsMutex_);
-        condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
-    }
+    inline bool isMissingDevice() const { return isMissingDevice_; }
+
+    /*!
+     * @return true if we received a message from all devices within timeout
+     */
+    inline bool allDevicesActive() const { return allDevicesActive_; }
+
+
+    inline bool isAsynchronous() const { return options_->asynchronous_; }
+
+    /*!
+     * Stops all threads handled by this bus (send, receive, sanity check)
+     * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
+     */
+    void stopThreads(const bool wait=true);
+
+
+ public: /// Internal functions
 
     /*! write the message at the front of the queue to the CAN bus
      * @return true if a message was successfully written to the bus
@@ -137,30 +148,26 @@ class Bus {
         return readCanMessage();
     }
 
-    /*! Do a sanity check of all devices on this bus.
-     */
-    bool sanityCheck();
-
     /*! Internal function. Is called after reception of a message.
      * Routes the message to the callback.
-     * @param cmsg	reference to the can message
+     * @param cmsg  reference to the can message
      */
     void handleMessage(const CanMsg& cmsg);
 
-    /*!
-     * Get operational status of the bus. True if all devices on this bus are operational.
-     * @param operational
+    /*! Send a sync message on the bus without locking the queue.
+     * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
      */
-    inline void setOperational(const bool operational) { isOperational_ = operational; }
-    inline bool getOperational() const { return isOperational_; }
+    inline void sendSyncWithoutLock() {
+        sendMessageWithoutLock(CanMsg(0x80, 0, nullptr));
+    }
 
-    inline bool isAsynchronous() const { return options_->asynchronous_; }
-
-    /*!
-     * Stops all threads handled by this bus (send, receive, sanity check)
-     * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
+    /*! Waits until the output queue is empty, locks the queue and returns the lock
      */
-    void stopThreads(const bool wait=true);
+    inline void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
+    {
+        lock = std::unique_lock<std::mutex>(outgointMsgsMutex_);
+        condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
+    }
 
  protected:
     /*! Initialized the device driver
@@ -189,8 +196,11 @@ class Bus {
     void sanityCheckWorker();
 
  protected:
-    // state of the bus. True if all devices are operational.
-    bool isOperational_;
+    // true if a device timed out. Devices in 'initializing' state are not considered as missing.
+    std::atomic<bool> isMissingDevice_;
+
+    // true if all devices are in active state (we received a message within the timeout)
+    std::atomic<bool> allDevicesActive_;
 
     const BusOptions* options_;
 
