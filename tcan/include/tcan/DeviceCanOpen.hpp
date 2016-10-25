@@ -84,6 +84,13 @@ class DeviceCanOpen : public Device {
      */
     virtual void handleTimedoutSdo(const SdoMsg& msg);
 
+    /*!
+     * This function is called upon reception of a SDO error.
+     * @param request   The message sent to the device ..
+     * @param answer    .. the answer received
+     */
+    virtual void handleSdoError(const SdoMsg& request, const SdoMsg& answer);
+
     /*! Get the SDO answer and erase it from the SDO answer map if it has been received.
      * @param sdoAnswer SDO answer if it has been found (output parameter).
      * @return true if SDO answer has been found.

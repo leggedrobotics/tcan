@@ -78,6 +78,11 @@ void DeviceCanOpen::handleTimedoutSdo(const SdoMsg& msg) {
     MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / subindex=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
 }
 
+void DeviceCanOpen::handleSdoError(const SdoMsg& request, const SdoMsg& answer) {
+    const int32_t error = answer.readint32(4);
+    MELO_WARN("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x / sent data=%x", SdoMsg::getErrorName(error).c_str(), answer.getCobId(), answer.getIndex(), answer.getSubIndex(), error, request.readint32(4));
+}
+
 bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {
     std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
     auto it = sdoAnswerMap_.find(getSdoAnswerId(sdoAnswer.getIndex(), sdoAnswer.getSubIndex()));
@@ -96,7 +101,6 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
         std::queue<SdoMsg>().swap(sdoMsgs_);
     }
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
-    // todo: wait some time?
 
     // the remote device will not tell us in which state it is if heartbeat message is disabled
     //   => assume that the state switch will be successful
@@ -189,7 +193,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     deviceTimeoutCounter_ = 0;
 
     if(sdoMsgs_.size() != 0) {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
+        std::unique_lock<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
         const SdoMsg& sdo = sdoMsgs_.front();
 
         if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
@@ -201,9 +205,9 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
                 }
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
             }else if(responseMode == 0x80) { // error response
-                const int32_t error = cmsg.readint32(4);
-                MELO_WARN("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x", SdoMsg::getErrorName(error).c_str(), cmsg.getCobId(), index, subindex, error);
-                // todo: further error handling
+                guard.unlock(); // unlock guard here, otherwise the user will not be able to put any sdo in the sdo ouput queue
+                handleSdoError(sdo, static_cast<const SdoMsg&>(cmsg));
+                guard.lock();
             }
 
             sendNextSdo();
