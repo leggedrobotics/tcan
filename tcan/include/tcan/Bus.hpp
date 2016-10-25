@@ -68,7 +68,13 @@ class Bus {
      * @param fp                pointer to the parse function
      * @return true if successful
      */
-    template <class T>
+    template <class T, typename Enable=void>
+    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&))
+    {
+        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    template <class T, typename std::enable_if<std::is_base_of<Device, T>::value>::type>
     inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&))
     {
         return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;

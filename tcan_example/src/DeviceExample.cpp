@@ -47,9 +47,9 @@ public:
 
 bool DeviceExample::initDevice() {
 
-	bus_->addCanMessage(DeviceCanOpen::TxSDOId + getNodeId(), std::bind(&DeviceCanOpen::parseSDOAnswer, this, std::placeholders::_1));
-	bus_->addCanMessage(DeviceCanOpen::TxNMTId + getNodeId(), std::bind(&DeviceCanOpen::parseHeartBeat, this, std::placeholders::_1));
-	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), std::bind(&DeviceExample::parsePdo1, this, std::placeholders::_1));
+	bus_->addCanMessage(DeviceCanOpen::TxSDOId + getNodeId(), this, &DeviceCanOpen::parseSDOAnswer);
+	bus_->addCanMessage(DeviceCanOpen::TxNMTId + getNodeId(), this, &DeviceCanOpen::parseHeartBeat);
+	bus_->addCanMessage(DeviceCanOpen::TxPDO1Id + getNodeId(), this, &DeviceExample::parsePdo1);
 
 	setNmtRestartRemoteDevice();
 	return true;
