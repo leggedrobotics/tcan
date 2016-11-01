@@ -27,6 +27,7 @@ class Bus {
     Bus() = delete;
     Bus(BusOptions* options):
         isMissingDevice_(false),
+        allDevicesActive_(false),
         options_(options),
         outgointMsgsMutex_(),
         outgoingMsgs_(),
@@ -86,57 +87,13 @@ class Bus {
         return true;
     }
 
-    /*!
-     * in-place construction of a new device
-     * @param options   pointer to the option class of the device
-     * @return true if successful
-     */
-    template <class C, typename TOptions>
-    std::pair<C*, bool> addDevice(TOptions* options) {
-        C* dev = new C(options);
-        bool success = addDevice(dev);
-        return std::make_pair(dev, success);
-    }
-
-    /*! Adds a device to the device vector and calls its initDevice function
-     * @param device	Pointer to the device
-     * @return true if init was successful
-     */
-    bool addDevice(Device* device) {
-        devices_.push_back(device);
-        return device->initDeviceInternal(this);
-    }
-
-    /*! Adds a device and callback function for incoming messages identified by its cobId. The timeout counter of the device is
-     *  reset on reception of the message (treated as heartbeat).
-     * @param cobId             cobId of the message
-     * @param device            pointer to the device
-     * @param fp                pointer to the parse function
-     * @return true if successful
-     */
-    template <class T>
-    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<!std::is_base_of<Device, T>::value>::type* = 0)
-    {
-        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
-    }
-
-    template <class T>
-    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<std::is_base_of<Device, T>::value>::type* = 0)
-    {
-        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
-    }
-
     /*! Add a can message to be sent (added to the output queue)
      * @param cmsg	reference to the can message
      */
     void sendMessage(const Msg& msg) {
         std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-        sendMessageWithoutLock(cmsg);
+        sendMessageWithoutLock(msg);
     }
-
-    /*! Do a sanity check of all devices on this bus.
-     */
-    bool sanityCheck();
 
     /*!
      * @return true if no device timed out
@@ -148,15 +105,7 @@ class Bus {
      */
     inline bool allDevicesActive() const { return allDevicesActive_; }
 
-
     inline bool isAsynchronous() const { return options_->asynchronous_; }
-
-    /*!
-     * Stops all threads handled by this bus (send, receive, sanity check)
-     * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
-     */
-    void stopThreads(const bool wait=true);
-
 
  public: /// Internal functions
 
@@ -186,17 +135,6 @@ class Bus {
     /*! Do a sanity check of the bus.
      */
     virtual bool sanityCheck() = 0;
-
-    /*! Internal function. Is called after reception of a message.
-     * Routes the message to the callback.
-     * @param cmsg	reference to the can message
-     */
-    void handleMessage(const CanMsg& cmsg);
-
-    inline void setOperational(const bool operational) { isOperational_ = operational; }
-    inline bool getOperational() const { return isOperational_; }
-
-    inline bool isAsynchronous() const { return options_->asynchronous_; }
 
     /*!
      * Stops all threads handled by this bus (send, receive, sanity check)
@@ -246,6 +184,12 @@ class Bus {
      */
     virtual bool writeData(const Msg& msg) = 0;
 
+    /*! Internal function. Is called after reception of a message.
+     * Routes the message to the callback.
+     * @param cmsg  reference to the can message
+     */
+    virtual void handleMessage(const Msg& msg) = 0;
+
 
     bool processOutputQueue() {
         bool writeSuccess = false;
@@ -275,7 +219,7 @@ class Bus {
         return writeSuccess;
     }
 
-void sendMessageWithoutLock(const Msg& msg) {
+    void sendMessageWithoutLock(const Msg& msg) {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
             MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
         }

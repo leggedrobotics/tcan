@@ -41,15 +41,16 @@ void CanBus::handleMessage(const CanMsg& msg) {
 }
 
 bool CanBus::sanityCheck() {
-    bool allFine = true;
+    bool noneMissing = true;
+    bool allActive = true;
     for(auto device : devices_) {
-        if(!device->sanityCheck()) {
-            allFine = false;
-        }
+        noneMissing &= device->sanityCheck();
+        allActive &= device->isActive();
     }
 
-    isOperational_ = allFine;
-    return allFine;
+    isMissingDevice_ = !noneMissing;
+    allDevicesActive_ = allActive;
+    return noneMissing;
 }
 
 } /* namespace tcan */

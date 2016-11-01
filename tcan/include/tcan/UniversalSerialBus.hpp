@@ -35,6 +35,7 @@ class UniversalSerialBus : public Bus<UsbMsg> {
     bool writeData(const UsbMsg& msg);
 
 
+ private:
     void configureInterface();
 
  private:

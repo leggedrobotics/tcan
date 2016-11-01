@@ -188,8 +188,6 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     const uint16_t index = cmsg.readuint16(1);
     const uint8_t subindex = cmsg.readuint8(3);
 
-    deviceTimeoutCounter_ = 0;
-
     if(sdoMsgs_.size() != 0) {
         std::unique_lock<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
         const SdoMsg& sdo = sdoMsgs_.front();
@@ -260,7 +258,6 @@ void DeviceCanOpen::sendNextSdo() {
             break; // if SDO requires answer, wait for it
         }
     }
-
 }
 
 uint32_t DeviceCanOpen::getSdoAnswerId(const uint16_t index, const uint8_t subIndex) {

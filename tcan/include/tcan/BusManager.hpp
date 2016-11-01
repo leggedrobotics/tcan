@@ -67,9 +67,7 @@ class BusManager {
     bool sanityCheckSynchronous() {
         bool allFine = true;
         for(auto bus : buses_) {
-            if(!bus->sanityCheck()) {
-                allFine = false;
-            }
+            allFine &= bus->sanityCheck();
         }
 
         return allFine;
@@ -79,13 +77,27 @@ class BusManager {
      * Check if no device timed out
      * @return  True if at least one device is missing
      */
-    bool isMissingDevice() const;
+    bool isMissingDevice() const {
+        for(auto bus : buses_) {
+            if(bus->isMissingDevice()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /*!
      * check if we received a message from all devices within timeout
      * @return True if all devices are active
      */
-    bool allDevicesActive() const;
+    bool allDevicesActive() const {
+        for(auto bus : buses_) {
+            if(!(bus->allDevicesActive())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 
     void closeBuses() {

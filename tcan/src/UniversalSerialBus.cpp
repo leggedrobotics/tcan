@@ -33,7 +33,8 @@ bool UniversalSerialBus::sanityCheck() {
 
     // todo: check timeouts
 
-    isOperational_ = allFine;
+    isMissingDevice_ = !allFine;
+    allDevicesActive_ = allFine;
     return allFine;
 }
 
