@@ -8,8 +8,9 @@
 #pragma once
 
 #include <stdint.h>
-#include <tcan/CanMsg.hpp>
 #include <string>
+
+#include "tcan/CanMsg.hpp"
 
 
 namespace tcan {

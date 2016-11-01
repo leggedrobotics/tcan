@@ -7,19 +7,18 @@
 
 #pragma once
 
-#include <string>
 #include <stdint.h>
-#include <tcan/CanMsg.hpp>
+#include <string>
 #include <atomic>
 
-#include "tcan/DeviceOptions.hpp"
+#include "tcan/CanMsg.hpp"
+#include "tcan/CanDeviceOptions.hpp"
 
 namespace tcan {
-class Bus;
-
+class CanBus;
 
 //! A device that is connected via CAN.
-class Device {
+class CanDevice {
  public:
     enum State {
         Initializing=0,
@@ -31,14 +30,14 @@ class Device {
      * @param nodeId	ID of CAN node
      * @param name		human-readable name of the device
      */
-    Device() = delete;
+    CanDevice() = delete;
 
-    Device(const uint32_t nodeId, const std::string& name):
-        Device(new DeviceOptions(nodeId, name))
+    CanDevice(const uint32_t nodeId, const std::string& name):
+        CanDevice(new CanDeviceOptions(nodeId, name))
     {
     }
 
-    Device(DeviceOptions* options):
+    CanDevice(CanDeviceOptions* options):
         options_(options),
         deviceTimeoutCounter_(0),
         state_(Initializing),
@@ -47,7 +46,7 @@ class Device {
     }
 
     //! Destructor
-    virtual ~Device()
+    virtual ~CanDevice()
     {
         delete options_;
     }
@@ -91,7 +90,7 @@ class Device {
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
      * Calls the initDevice() function.
      */
-    bool initDeviceInternal(Bus* bus) {
+    bool initDeviceInternal(CanBus* bus) {
         bus_ = bus;
         return initDevice();
     }
@@ -115,14 +114,14 @@ class Device {
     }
 
  protected:
-    const DeviceOptions* options_;
+    const CanDeviceOptions* options_;
 
     std::atomic<unsigned int> deviceTimeoutCounter_;
 
     std::atomic<State> state_;
 
     //!  reference to the CAN bus the device is connected to
-    Bus* bus_;
+    CanBus* bus_;
 };
 
 } /* namespace tcan */

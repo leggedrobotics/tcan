@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES tcan_example
  CATKIN_DEPENDS tcan robot_utils
 #  DEPENDS system_lib
 )
@@ -30,12 +29,19 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(tcan_example_node
-  src/DeviceExample.cpp
-  src/tcan_example_node.cpp
+add_executable(can_example_node
+  src/CanDeviceExample.cpp
+  src/can_example_node.cpp
+)
+target_link_libraries(can_example_node
+  ${catkin_LIBRARIES}
 )
 
-target_link_libraries(tcan_example_node
+add_executable(usb_example_node
+  src/XbeeUsb.cpp
+  src/usb_example_node.cpp
+)
+target_link_libraries(usb_example_node
   ${catkin_LIBRARIES}
 )
 
@@ -44,7 +50,7 @@ target_link_libraries(tcan_example_node
 #############
 
 
-install(TARGETS tcan_example_node
+install(TARGETS can_example_node usb_example_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

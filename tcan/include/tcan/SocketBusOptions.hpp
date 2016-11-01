@@ -8,13 +8,13 @@
 #pragma once
 
 #include <vector>
-#include <linux/can.h>
+#include <linux/can.h> // for can_filter
 
 #include "tcan/BusOptions.hpp"
 
 namespace tcan {
 
-struct SocketBusOptions : public BusOptions {
+struct SocketBusOptions : public CanBusOptions {
     SocketBusOptions():
         SocketBusOptions(std::string())
     {
@@ -22,7 +22,7 @@ struct SocketBusOptions : public BusOptions {
     }
 
     SocketBusOptions(const std::string& interface_name):
-        BusOptions(interface_name),
+        CanBusOptions(interface_name),
         loopback_(false),
         sndBufLength_(0),
         canErrorMask_(CAN_ERR_MASK),

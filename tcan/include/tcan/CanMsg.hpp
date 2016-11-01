@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <algorithm>
+#include <algorithm> // std::copy
 #include <stdint.h>
 #include <initializer_list>
 

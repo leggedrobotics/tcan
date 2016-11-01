@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
 
 #include "tcan/Bus.hpp"
@@ -15,62 +14,105 @@
 namespace tcan {
 
 //! Container of all CAN buses
+template <class Msg>
 class BusManager {
  public:
-    BusManager();
+    BusManager():
+        buses_()
+    {
+    }
 
-    virtual ~BusManager();
+    virtual ~BusManager()
+    {
+        closeBuses();
+    }
 
-    bool addBus(Bus* bus);
-
+    bool addBus(Bus<Msg>* bus) {
+        buses_.push_back( bus );
+        return bus->initBus();
+    }
     /*! Gets the number of buses
      * @return	number of buses
      */
     unsigned int getSize() const { return buses_.size(); }
 
-    /*! Send a sync message on all buses
-     * @param	wheter the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
-     * 			ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
-     * 			Only useful in asynchronous mode.
-     */
-    void sendSyncOnAllBuses(const bool waitForEmptyQueues=false);
-
-    /*! Send a sync on a single bus
-     * @param busIndex  The index of the bus to send the SYNC message on
-     */
-    void sendSync(const unsigned int busIndex);
-
     /*! Read and parse messages from all buses. Call this function in the control loop if synchronous mode is used.
      */
-    void readMessagesSynchrounous();
-
+    void readMessagesSynchrounous() {
+        for(auto bus : buses_) {
+            if(!bus->isAsynchronous()) {
+                while(bus->readMessage()) {
+                }
+            }
+        }
+    }
     /*! Send the messages in the output queue on all buses. Call this function in the control loop if synchronous mode is used.
      */
-    void writeMessagesSynchronous();
+    void writeMessagesSynchronous() {
+        bool sendingData = true;
+
+        while(sendingData) {
+            sendingData = false;
+
+            for(auto bus : buses_) {
+                if(!bus->isAsynchronous()) {
+                    sendingData |= bus->writeMessage();
+                }
+            }
+        }
+    }
 
     /*! Call sanityCheck(..) on all buses. Call this function in the control loop if synchronous mode is used.
      */
-    bool sanityCheckSynchronous();
+    bool sanityCheckSynchronous() {
+        bool allFine = true;
+        for(auto bus : buses_) {
+            allFine &= bus->sanityCheck();
+        }
+
+        return allFine;
+    }
 
     /*!
      * Check if no device timed out
      * @return  True if at least one device is missing
      */
-    bool isMissingDevice() const;
+    bool isMissingDevice() const {
+        for(auto bus : buses_) {
+            if(bus->isMissingDevice()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /*!
      * check if we received a message from all devices within timeout
      * @return True if all devices are active
      */
-    bool allDevicesActive() const;
+    bool allDevicesActive() const {
+        for(auto bus : buses_) {
+            if(!(bus->allDevicesActive())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    /*!
-     * Stops all threads of all buses (if any) and destructs the buses. This function is automatically called by the destructor.
-     */
-    void closeBuses();
+
+    void closeBuses() {
+        for(Bus<Msg>* bus : buses_) {
+            bus->stopThreads(false);
+        }
+        for(Bus<Msg>* bus : buses_) {
+            delete bus;
+        }
+
+        buses_.clear();
+    }
 
  protected:
-    std::vector<Bus*> buses_;
+    std::vector<Bus<Msg>*> buses_;
 
 };
 
