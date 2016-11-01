@@ -6,7 +6,6 @@
  */
 
 #include <fcntl.h> // open(..) etc.
-#include <termios.h> // tcgettatr
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <poll.h>
@@ -26,6 +25,11 @@ UniversalSerialBus::UniversalSerialBus(UniversalSerialBusOptions* options):
 
 UniversalSerialBus::~UniversalSerialBus()
 {
+    stopThreads(true);
+
+    if( !(static_cast<const UniversalSerialBusOptions*>(options_)->skipConfiguration) ) {
+        tcsetattr (fileDescriptor_, TCSANOW, &savedAttributes_);
+    }
     close(fileDescriptor_);
 }
 
@@ -69,7 +73,7 @@ bool UniversalSerialBus::readData() {
         return false;
     }else{
         const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_)->bufferSize;
-        char buf[bufSize+1]; // +1 to have space for terminating \0
+        uint8_t buf[bufSize+1]; // +1 to have space for terminating \0
         const int bytes_read = read( fileDescriptor_, &buf, bufSize);
         //  printf("CanManager_ bytes read: %i\n", bytes_read);
 
@@ -112,7 +116,7 @@ bool UniversalSerialBus::writeData(const UsbMsg& msg) {
 void UniversalSerialBus::configureInterface()
 {
     const UniversalSerialBusOptions* options = static_cast<const UniversalSerialBusOptions*>(options_);
-    if( !(options->skipConfiguration) ) {
+    if( options->skipConfiguration ) {
         return;
     }
 
@@ -121,6 +125,8 @@ void UniversalSerialBus::configureInterface()
     if (tcgetattr(fileDescriptor_, &newtio)!=0) {
         MELO_ERROR("tcgetattr() 3 failed");
     }
+
+    savedAttributes_ = newtio;
 
     speed_t _baud=0;
     switch (options->baudrate)
@@ -252,10 +258,6 @@ void UniversalSerialBus::configureInterface()
     }
 
     //hardware handshake
-    /*   if (hardwareHandshake)
-     newtio.c_cflag |= CRTSCTS;
-     else
-     newtio.c_cflag &= ~CRTSCTS;*/
     newtio.c_cflag &= ~CRTSCTS;
 
     //stopbits
@@ -282,11 +284,17 @@ void UniversalSerialBus::configureInterface()
         newtio.c_iflag &= ~(IXON|IXOFF|IXANY);
     }
 
-//    newtio.c_lflag=0;// set non-canonical mode
-//    newtio.c_oflag=0;
-//
-//    newtio.c_cc[VTIME]=10;// timeout in tenths of a second
-//    newtio.c_cc[VMIN]=60;
+    if(options->minMessageLength != 0) {
+        // see https://linux.die.net/man/3/tcsetattr
+        newtio.c_lflag &= ~ICANON;// set non-canonical mode
+//        newtio.c_oflag=0;
+
+        newtio.c_cc[VTIME] = 1;// timeout in tenths of a second
+        newtio.c_cc[VMIN] = options->bufferSize;
+    }else{
+        // todo: set ICANON?
+        newtio.c_lflag |= ICANON;
+    }
 
     //   tcflush(m_fd, TCIFLUSH);
     if (tcsetattr(fileDescriptor_, TCSANOW, &newtio)!=0)
@@ -315,10 +323,6 @@ void UniversalSerialBus::configureInterface()
     {
         newtio.c_cflag &= ~CRTSCTS;
     }
-    /*  if (on)
-     newtio.c_cflag |= CRTSCTS;
-  else
-     newtio.c_cflag &= ~CRTSCTS;*/
     if (tcsetattr(fileDescriptor_, TCSANOW, &newtio)!=0)
     {
         MELO_ERROR("tcsetattr() 2 failed");

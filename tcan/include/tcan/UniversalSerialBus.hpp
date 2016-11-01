@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <termios.h> // tcgettatr
+
 #include "tcan/Bus.hpp"
 #include "tcan/UniversalSerialBusOptions.hpp"
 #include "tcan/UsbMsg.hpp"
@@ -34,12 +36,13 @@ class UniversalSerialBus : public Bus<UsbMsg> {
     bool readData();
     bool writeData(const UsbMsg& msg);
 
-
  private:
     void configureInterface();
 
  private:
     int fileDescriptor_;
+
+    termios savedAttributes_;
 
     unsigned int deviceTimeoutCounter_;
 };

@@ -30,6 +30,7 @@ struct UniversalSerialBusOptions : public BusOptions {
         BusOptions(name),
         maxDeviceTimeoutCounter(20),
         bufferSize(bufSize),
+        minMessageLength(0),
         baudrate(115200),
         databits(8),
         parity(Parity::None),
@@ -44,7 +45,10 @@ struct UniversalSerialBusOptions : public BusOptions {
     virtual ~UniversalSerialBusOptions() { }
 
     unsigned int maxDeviceTimeoutCounter;
+
+
     unsigned int bufferSize;
+    unsigned int minMessageLength; // the minimum number of bytes to read from the serial interface. Setting this to != 0 sets non-canonical serial mode
     int baudrate;
     int databits;
     Parity parity;
