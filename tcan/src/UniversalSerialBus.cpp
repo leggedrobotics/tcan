@@ -18,7 +18,8 @@ namespace tcan {
 
 UniversalSerialBus::UniversalSerialBus(UniversalSerialBusOptions* options):
     Bus<UsbMsg>(options),
-    fileDescriptor_(0)
+    fileDescriptor_(0),
+    deviceTimeoutCounter_(0)
 {
 
 }
@@ -29,13 +30,10 @@ UniversalSerialBus::~UniversalSerialBus()
 }
 
 bool UniversalSerialBus::sanityCheck() {
-    bool allFine = true;
-
-    // todo: check timeouts
-
-    isMissingDevice_ = !allFine;
-    allDevicesActive_ = allFine;
-    return allFine;
+    const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_)->maxDeviceTimeoutCounter;
+    isMissingDevice_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
+    allDevicesActive_ = !isMissingDevice_;
+    return allDevicesActive_;
 }
 
 
@@ -114,6 +112,9 @@ bool UniversalSerialBus::writeData(const UsbMsg& msg) {
 void UniversalSerialBus::configureInterface()
 {
     const UniversalSerialBusOptions* options = static_cast<const UniversalSerialBusOptions*>(options_);
+    if( !(options->skipConfiguration) ) {
+        return;
+    }
 
     struct termios newtio;
     //   memset(&newtio, 0, sizeof(newtio));

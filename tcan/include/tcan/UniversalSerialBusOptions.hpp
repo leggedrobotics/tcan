@@ -28,19 +28,22 @@ struct UniversalSerialBusOptions : public BusOptions {
 
     UniversalSerialBusOptions(const std::string& name, const unsigned int bufSize=1024):
         BusOptions(name),
+        maxDeviceTimeoutCounter(20),
         bufferSize(bufSize),
         baudrate(115200),
         databits(8),
         parity(Parity::None),
         stopbits(1),
         softwareHandshake(false),
-        hardwareHandshake(false)
+        hardwareHandshake(false),
+        skipConfiguration(false)
     {
 
     }
 
     virtual ~UniversalSerialBusOptions() { }
 
+    unsigned int maxDeviceTimeoutCounter;
     unsigned int bufferSize;
     int baudrate;
     int databits;
@@ -48,6 +51,7 @@ struct UniversalSerialBusOptions : public BusOptions {
     unsigned int stopbits;
     bool softwareHandshake;
     bool hardwareHandshake;
+    bool skipConfiguration;
 };
 
 } /* namespace tcan */

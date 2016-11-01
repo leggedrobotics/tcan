@@ -40,6 +40,8 @@ class UniversalSerialBus : public Bus<UsbMsg> {
 
  private:
     int fileDescriptor_;
+
+    unsigned int deviceTimeoutCounter_;
 };
 
 } /* namespace tcan */
