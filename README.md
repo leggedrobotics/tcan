@@ -1,6 +1,6 @@
 # Threaded CAN library #
 
-[![Build Status](http://129.132.38.183:8080/buildStatus/icon?job=tcan)](http://129.132.38.183:8080/view/legged-robotics/job/tcan/)
+[![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=tcan)](http://rsl-ci.ethz.ch/job/tcan/)
 
 
 ## Dependencies
