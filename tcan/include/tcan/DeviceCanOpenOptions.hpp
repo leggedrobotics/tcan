@@ -23,8 +23,9 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
         const std::string name,
         const unsigned int maxSdoTimeoutCounter = 1,
         const unsigned int maxSdoSentCounter = 10,
-        const uint16_t producerHeartBeatTime = 0):
-        CanDeviceOptions(nodeId, name),
+        const uint16_t producerHeartBeatTime = 0,
+        const unsigned int maxDeviceTimeoutCounter = 20):
+        CanDeviceOptions(nodeId, name, maxDeviceTimeoutCounter),
         maxSdoTimeoutCounter_(maxSdoTimeoutCounter),
         maxSdoSentCounter_(maxSdoSentCounter),
         producerHeartBeatTime_(producerHeartBeatTime)

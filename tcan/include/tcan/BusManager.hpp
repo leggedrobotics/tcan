@@ -61,6 +61,7 @@ class BusManager {
             }
         }
     }
+
     /*! Call sanityCheck(..) on all buses. Call this function in the control loop if synchronous mode is used.
      */
     bool sanityCheckSynchronous() {
@@ -74,6 +75,19 @@ class BusManager {
         return allFine;
     }
 
+    /*!
+     * Check if no device timed out
+     * @return  True if at least one device is missing
+     */
+    bool isMissingDevice() const;
+
+    /*!
+     * check if we received a message from all devices within timeout
+     * @return True if all devices are active
+     */
+    bool allDevicesActive() const;
+
+
     void closeBuses() {
         for(Bus<Msg>* bus : buses_) {
             bus->stopThreads(false);
@@ -84,6 +98,7 @@ class BusManager {
 
         buses_.clear();
     }
+
  protected:
     std::vector<Bus<Msg>*> buses_;
 
