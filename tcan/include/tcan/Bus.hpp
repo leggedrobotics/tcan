@@ -231,7 +231,6 @@ class Bus {
     }
 
     // thread loop functions
-    // thread loop functions
     void receiveWorker() {
         while(running_) {
             readMessage();

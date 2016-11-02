@@ -77,6 +77,7 @@ class CanBus : public Bus<CanMsg> {
         sendMessage(CanMsg(0x80, 0, nullptr));
     }
 
+ public:/// INTERNAL FUNCTIONS
     /*! Send a sync message on the bus without locking the queue.
      * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
      */
