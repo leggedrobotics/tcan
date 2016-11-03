@@ -34,16 +34,15 @@ DeviceCanOpen::~DeviceCanOpen()
 
 }
 
-bool DeviceCanOpen::sanityCheck() {
-    const bool timedOut = isTimedOut();
-    if(!isMissing() && timedOut) {
-        state_ = Missing;
-        MELO_WARN("Device %s timed out!", getName().c_str());
-        return false;
+void DeviceCanOpen::sanityCheck() {
+    if(!isMissing()) {
+        if(isTimedOut()) {
+            state_ = Missing;
+            MELO_WARN("Device %s timed out!", getName().c_str());
+        }else{
+            checkSdoTimeout();
+        }
     }
-
-    checkSdoTimeout();
-    return !timedOut;
 }
 
 void DeviceCanOpen::sendPdo(const CanMsg& pdoMsg) {

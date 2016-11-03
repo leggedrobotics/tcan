@@ -71,12 +71,10 @@ class CanDevice {
      * This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0
      * @return true if everything is ok.
      */
-    virtual bool sanityCheck() {
-        const bool timedOut = isTimedOut();
-        if(timedOut) {
+    virtual void sanityCheck() {
+        if(isTimedOut()) {
             state_ = Missing;
         }
-        return !timedOut;
     }
 
     inline uint32_t getNodeId() const { return options_->nodeId_; }

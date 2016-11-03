@@ -61,7 +61,7 @@ class DeviceCanOpen : public CanDevice {
      * This function is automatically called if the Bus has sanityCheckInterval > 0
      * @return true if everything is ok.
      */
-    virtual bool sanityCheck();
+    virtual void sanityCheck();
 
     /*! Send a PDO message.
      * @param pdoMsg Message to be sent.

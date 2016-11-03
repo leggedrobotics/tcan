@@ -134,7 +134,7 @@ class Bus {
 
     /*! Do a sanity check of the bus.
      */
-    virtual bool sanityCheck() = 0;
+    virtual void sanityCheck() = 0;
 
     /*!
      * Stops all threads handled by this bus (send, receive, sanity check)

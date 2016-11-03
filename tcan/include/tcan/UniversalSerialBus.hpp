@@ -29,7 +29,7 @@ class UniversalSerialBus : public Bus<UsbMsg> {
 
     /*! Do a sanity check of all devices on this bus.
      */
-    bool sanityCheck();
+    void sanityCheck();
 
  protected:
     bool initializeInterface();
