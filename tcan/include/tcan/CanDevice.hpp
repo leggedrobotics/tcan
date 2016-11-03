@@ -82,6 +82,7 @@ class CanDevice {
 
     inline bool isInitializing() const { return (state_ == Initializing); }
     inline bool isActive() const { return (state_ == Active); }
+    inline bool hasError() const { return (state_ == Error); }
     inline bool isMissing() const { return (state_ == Missing); }
 
 
