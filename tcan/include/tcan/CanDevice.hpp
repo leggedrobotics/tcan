@@ -95,7 +95,7 @@ class CanDevice {
     }
 
     inline void resetDeviceTimeoutCounter() {
-        if(state_ != Active) {
+        if(state_ != Active && state_ != Error) {
             configureDevice();
             state_ = Active;
         }
