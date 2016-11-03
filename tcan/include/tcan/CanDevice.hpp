@@ -23,6 +23,7 @@ class CanDevice {
     enum State {
         Initializing=0,
         Active,
+        Error,
         Missing
     };
 
