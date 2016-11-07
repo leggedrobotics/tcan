@@ -138,8 +138,6 @@ int main() {
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		canManager_.writeMessagesSynchronous();
-#endif
-#ifdef USE_SYNCHRONOUS_MODE
 		canManager_.sendSyncOnAllBuses();
 		canManager_.writeMessagesSynchronous();
 #else

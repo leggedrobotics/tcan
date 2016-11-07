@@ -34,16 +34,15 @@ DeviceCanOpen::~DeviceCanOpen()
 
 }
 
-bool DeviceCanOpen::sanityCheck() {
-    const bool timedOut = isTimedOut();
-    if(!isMissing() && timedOut) {
-        state_ = Missing;
-        MELO_WARN("Device %s timed out!", getName().c_str());
-        return false;
+void DeviceCanOpen::sanityCheck() {
+    if(!isMissing()) {
+        if(isTimedOut()) {
+            state_ = Missing;
+            MELO_WARN("Device %s timed out!", getName().c_str());
+        }else{
+            checkSdoTimeout();
+        }
     }
-
-    checkSdoTimeout();
-    return !timedOut;
 }
 
 void DeviceCanOpen::sendPdo(const CanMsg& pdoMsg) {
@@ -74,11 +73,18 @@ void DeviceCanOpen::sendSdo(const SdoMsg& sdoMsg) {
 
 void DeviceCanOpen::handleTimedoutSdo(const SdoMsg& msg) {
     MELO_WARN("Device %s: SDO timeout (COB=%x / index=%x / subindex=%x / data=%x)", getName().c_str(), msg.getCobId(), msg.getIndex(), msg.getSubIndex(), msg.readuint32(4));
+    if(state_ == Active) {
+        // only set state to 'error' if state is 'active', to prevent overriding a 'Missing' state
+        setNmtStopRemoteDevice();
+        state_ = Error;
+    }
 }
 
 void DeviceCanOpen::handleSdoError(const SdoMsg& request, const SdoMsg& answer) {
     const int32_t error = answer.readint32(4);
     MELO_WARN("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x / sent data=%x", SdoMsg::getErrorName(error).c_str(), answer.getCobId(), answer.getIndex(), answer.getSubIndex(), error, request.readint32(4));
+    setNmtStopRemoteDevice();
+    state_ = Error;
 }
 
 bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {

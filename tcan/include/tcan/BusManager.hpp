@@ -67,7 +67,8 @@ class BusManager {
     bool sanityCheckSynchronous() {
         bool allFine = true;
         for(auto bus : buses_) {
-            allFine &= bus->sanityCheck();
+            bus->sanityCheck();
+            allFine &= bus->allDevicesActive();
         }
 
         return allFine;

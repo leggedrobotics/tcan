@@ -33,11 +33,10 @@ UniversalSerialBus::~UniversalSerialBus()
     close(fileDescriptor_);
 }
 
-bool UniversalSerialBus::sanityCheck() {
+void UniversalSerialBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_)->maxDeviceTimeoutCounter;
     isMissingDevice_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDevice_;
-    return allDevicesActive_;
 }
 
 

@@ -93,7 +93,7 @@ class CanBus : public Bus<CanMsg> {
 
     /*! Do a sanity check of all devices on this bus.
      */
-    bool sanityCheck();
+    void sanityCheck();
 
  protected:
     // vector containing all devices

@@ -23,6 +23,7 @@ class CanDevice {
     enum State {
         Initializing=0,
         Active,
+        Error,
         Missing
     };
 
@@ -70,12 +71,10 @@ class CanDevice {
      * This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0
      * @return true if everything is ok.
      */
-    virtual bool sanityCheck() {
-        const bool timedOut = isTimedOut();
-        if(timedOut) {
+    virtual void sanityCheck() {
+        if(isTimedOut()) {
             state_ = Missing;
         }
-        return !timedOut;
     }
 
     inline uint32_t getNodeId() const { return options_->nodeId_; }
@@ -83,6 +82,7 @@ class CanDevice {
 
     inline bool isInitializing() const { return (state_ == Initializing); }
     inline bool isActive() const { return (state_ == Active); }
+    inline bool hasError() const { return (state_ == Error); }
     inline bool isMissing() const { return (state_ == Missing); }
 
 
@@ -96,7 +96,7 @@ class CanDevice {
     }
 
     inline void resetDeviceTimeoutCounter() {
-        if(state_ != Active) {
+        if(state_ != Active && state_ != Error) {
             configureDevice();
             state_ = Active;
         }
