@@ -251,10 +251,10 @@ class Bus {
         auto nextLoop = std::chrono::steady_clock::now();
 
         while(running_) {
-            sanityCheck();
-
             nextLoop += std::chrono::milliseconds(options_->sanityCheckInterval_);
             std::this_thread::sleep_until(nextLoop);
+
+            sanityCheck();
         }
 
         MELO_INFO("sanityCheck thread for bus %s terminated", options_->name_.c_str());
