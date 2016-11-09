@@ -21,3 +21,41 @@ To prevent overflow of the output buffer of the SocketCAN driver (which is used 
 - Set the output queue length to a value which is large enough to hold the messages of one cycle:
     ```sudo ip link set can0 txqueuelen 100```
 - Setting the SocketBusOptions::sndBufLength_ to 1 (or any other small value > 0). This sets the socket buffer size to its minimal value and will make the socket blocking if this buffer is full (which is NOT the same as the buffer of the underlying netdevice)
+
+## Setting up the interface
+
+### CAN-USB Adapter
+
+Use the ```canusb.sh``` script provided in ```tcan/scripts```:
+
+```
+#!bash
+
+rosrun tcan canusb.sh {start|stop|restart} [<dev>] <name> [<can_rate>]
+```
+e.g.:
+```
+#!bash
+
+rosrun tcan canusb.sh start /dev/ttyUSB0 can0 -s8
+
+rosrun tcan canusb.sh stop can0
+```
+where ```-s8``` sets the can baud rate according to the following table:
+
+
+| flag | bitrate |
+|---|---|
+| -s0 | 10kbit |
+| -s1 | 20Kbit |
+| -s2 | 50Kbit |
+| -s3 | 100Kbit |
+| -s4 | 125Kbit |
+| -s5 | 250Kbit |
+| -s6 | 500Kbit |
+| -s7 | 800Kbit |
+| -s8 | 1Mbit |
+
+
+
+### Peak PCIe card
