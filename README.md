@@ -59,3 +59,64 @@ where ```-s8``` sets the can baud rate according to the following table:
 
 
 ### Peak PCIe card
+
+The linux kernel >= 2.6.25 supports Socketcan natively. To setup the interface, you can use
+
+
+```
+#!bash
+
+sudo ip link set can0 type can bitrate 1000000 berr-reporting on
+sudo ip link set can0 up
+```
+
+However the performance of the standard linux kernel driver may be bad (large gaps between can frames). Peak provides their own Socketcan driver, which can be downloaded from http://www.peak-system.com/fileadmin/media/linux/index.htm. Unpack the archive and install it with
+
+
+```
+#!bash
+
+make clean
+make –C driver NET=NETDEV_SUPPORT
+sudo make install
+```
+
+The driver can be uninstalled with
+
+```
+#!bash
+
+sudo make uninstall
+```
+
+To set the baudrate, the above ```ip``` command cannot be used, do the following instead:
+
+```
+#!bash
+
+echo "i 0x001C" > /dev/pcan0
+```
+
+where ```0x001C``` is a hex representation of the baudrate, which can be taken from the following table: 
+
+| hex | bitrate |
+|---|---|
+| 0x7F7F | 5kbit |
+| 0x672F | 10kbit |
+| 0x532F | 20Kbit |
+| 0x472F | 50Kbit |
+| 0x432F | 100Kbit |
+| 0x031C | 125Kbit |
+| 0x011C | 250Kbit |
+| 0x001C | 500Kbit |
+| 0x0014 | 1Mbit |
+
+#define CAN_BAUD_1M 0x0014 // 1 Mbit/s
+#define CAN_BAUD_500K 0x001C // 500 kBit/s
+#define CAN_BAUD_250K 0x011C // 250 kBit/s
+#define CAN_BAUD_125K 0x031C // 125 kBit/s
+#define CAN_BAUD_100K 0x432F // 100 kBit/s
+#define CAN_BAUD_50K 0x472F // 50 kBit/s
+#define CAN_BAUD_20K 0x532F // 20 kBit/s
+#define CAN_BAUD_10K 0x672F // 10 kBit/s
+#define CAN_BAUD_5K 0x7F7F // 5 kBit/s
