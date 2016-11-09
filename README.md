@@ -31,7 +31,7 @@ Use the ```vcan.sh``` script provided in ```tcan/scripts```:
 ```
 #!bash
 
-rosrun m545_utils vcan.sh {start|stop|restart} <name>
+rosrun tcan vcan.sh {start|stop|restart} <name>
 ```
 e.g.
 
@@ -39,7 +39,7 @@ e.g.
 ```
 #!bash
 
-rosrun m545_utils vcan.sh start can0
+rosrun tcan vcan.sh start can0
 ```
 
 ### CAN-USB Adapter
