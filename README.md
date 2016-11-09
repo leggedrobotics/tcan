@@ -110,13 +110,3 @@ where ```0x001C``` is a hex representation of the baudrate, which can be taken f
 | 0x011C | 250Kbit |
 | 0x001C | 500Kbit |
 | 0x0014 | 1Mbit |
-
-#define CAN_BAUD_1M 0x0014 // 1 Mbit/s
-#define CAN_BAUD_500K 0x001C // 500 kBit/s
-#define CAN_BAUD_250K 0x011C // 250 kBit/s
-#define CAN_BAUD_125K 0x031C // 125 kBit/s
-#define CAN_BAUD_100K 0x432F // 100 kBit/s
-#define CAN_BAUD_50K 0x472F // 50 kBit/s
-#define CAN_BAUD_20K 0x532F // 20 kBit/s
-#define CAN_BAUD_10K 0x672F // 10 kBit/s
-#define CAN_BAUD_5K 0x7F7F // 5 kBit/s
