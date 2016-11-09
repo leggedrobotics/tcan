@@ -24,6 +24,24 @@ To prevent overflow of the output buffer of the SocketCAN driver (which is used 
 
 ## Setting up the interface
 
+### Virtual can interface
+
+Use the ```vcan.sh``` script provided in ```tcan/scripts```:
+
+```
+#!bash
+
+rosrun m545_utils vcan.sh {start|stop|restart} <name>
+```
+e.g.
+
+
+```
+#!bash
+
+rosrun m545_utils vcan.sh start can0
+```
+
 ### CAN-USB Adapter
 
 Use the ```canusb.sh``` script provided in ```tcan/scripts```:
