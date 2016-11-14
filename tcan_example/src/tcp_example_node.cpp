@@ -34,11 +34,10 @@ public:
 	void addDevice(const IpId ipId, const std::string& host, const unsigned int port) {
 		const unsigned int iBus = static_cast<unsigned int>(ipId);
 
-		tcan::IpBusOptions* options = new tcan::IpBusOptions();
+		tcan::IpBusOptions* options = new tcan::IpBusOptions(host, port);
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
-		options->name_ = host;
 
 		auto device = new TcpDevice(options);
 		if(!addBus( device )) {

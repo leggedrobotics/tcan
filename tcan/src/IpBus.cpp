@@ -47,7 +47,6 @@ bool IpBus::initializeInterface() {
 
 	const IpBusOptions* options = static_cast<const IpBusOptions*>(options_);
 	const char* interface = options->name_.c_str();
-	const char* host = options->host_.c_str();
 
 	/* open socket */
 	socket_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -58,13 +57,13 @@ bool IpBus::initializeInterface() {
 
 	sockaddr_in server;
 
-    server.sin_addr.s_addr = inet_addr(host);
+    server.sin_addr.s_addr = inet_addr(interface);
     server.sin_family = AF_INET;
     server.sin_port = htons( options->port_ );
 
     //Connect to remote server
     if (connect(socket_ , (struct sockaddr *)&server , sizeof(server)) < 0) {
-    	MELO_ERROR("Failed to connect to host %s:%d: %s", host, options->port_, strerror(errno));
+    	MELO_ERROR("Failed to connect to host %s:%d: %s", interface, options->port_, strerror(errno));
         return false;
     }
 

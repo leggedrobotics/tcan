@@ -22,7 +22,6 @@ struct IpBusOptions : public BusOptions {
 
     IpBusOptions(const std::string& name, const uint16_t port):
         BusOptions(name),
-		host_(name),
 		port_(port),
         maxDeviceTimeoutCounter_(20)
     {
@@ -31,7 +30,6 @@ struct IpBusOptions : public BusOptions {
 
     virtual ~IpBusOptions() { }
 
-    std::string host_;
     uint16_t port_;
 
     unsigned int maxDeviceTimeoutCounter_;
