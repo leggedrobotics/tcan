@@ -45,12 +45,21 @@ target_link_libraries(usb_example_node
   ${catkin_LIBRARIES}
 )
 
+
+add_executable(tcp_example_node
+  src/TcpDevice.cpp
+  src/tcp_example_node.cpp
+)
+target_link_libraries(tcp_example_node
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
 
 
-install(TARGETS can_example_node usb_example_node
+install(TARGETS can_example_node usb_example_node tcp_example_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
