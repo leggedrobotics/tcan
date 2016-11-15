@@ -14,6 +14,11 @@ namespace tcan {
 
 struct IpBusOptions : public BusOptions {
 
+	enum class ConnectionType : unsigned int {
+		TCP
+		//UDP
+	};
+
     IpBusOptions():
     	IpBusOptions(std::string(), 9999)
     {
@@ -22,6 +27,7 @@ struct IpBusOptions : public BusOptions {
 
     IpBusOptions(const std::string& name, const uint16_t port):
         BusOptions(name),
+		connectionType_(ConnectionType::TCP),
 		port_(port),
         maxDeviceTimeoutCounter_(20)
     {
@@ -29,6 +35,8 @@ struct IpBusOptions : public BusOptions {
     }
 
     virtual ~IpBusOptions() { }
+
+    ConnectionType connectionType_;
 
     uint16_t port_;
 
