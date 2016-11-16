@@ -95,7 +95,7 @@ However the performance of the standard linux kernel driver may be bad (large ga
 #!bash
 
 make clean
-make –C driver NET=NETDEV_SUPPORT
+make -C driver NET=NETDEV_SUPPORT
 sudo make install
 ```
 
