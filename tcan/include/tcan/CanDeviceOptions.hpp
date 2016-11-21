@@ -54,7 +54,12 @@ class CanDeviceOptions {
 
     virtual ~CanDeviceOptions() { }
 
-    inline void setDeviceTimeoutCounter(const double timeout, const double looprate) {
+    /*!
+     * set the maxDeviceTimeoutCounter_
+     * @param timeout   timout in seconds
+     * @param looprate  looprate at which the sanityCheck(..) function is called [Hz].
+     */
+    inline void setDeviceTimeoutCounter(const double timeout, const double looprate=10.0) {
         maxDeviceTimeoutCounter_ = static_cast<unsigned int>(timeout*looprate);
     }
 

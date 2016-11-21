@@ -24,7 +24,8 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
         const unsigned int maxSdoTimeoutCounter = 1,
         const unsigned int maxSdoSentCounter = 10,
         const uint16_t producerHeartBeatTime = 0,
-        const unsigned int maxDeviceTimeoutCounter = 20):
+        const unsigned int maxDeviceTimeoutCounter = 20)
+    :
         CanDeviceOptions(nodeId, name, maxDeviceTimeoutCounter),
         maxSdoTimeoutCounter_(maxSdoTimeoutCounter),
         maxSdoSentCounter_(maxSdoSentCounter),
@@ -35,12 +36,17 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
 
     virtual ~DeviceCanOpenOptions() { }
 
-    inline void setSdoTimeoutCounter(const double timeout, const double looprate) {
+    /*!
+     * Set the maxSdoTimeoutCounter_
+     * @param timeout   timeout in seconds
+     * @param looprate  looprate at which the sanityCheck(..) function is called [Hz].
+     */
+    inline void setSdoTimeoutCounter(const double timeout, const double looprate=10.0) {
         maxSdoTimeoutCounter_ = static_cast<unsigned int>(timeout*looprate);
     }
 
     //! counter limit at which an SDO is considered as timed out. Set 0 to disable.
-    // maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 1Hz by default (see BusOptions))
+    // maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 10Hz by default (see BusOptions))
     unsigned int maxSdoTimeoutCounter_;
 
     //! number of tries of an SDO transmission

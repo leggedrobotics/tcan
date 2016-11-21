@@ -45,9 +45,8 @@ struct BusOptions {
     //! max size of the output queue
     unsigned int maxQueueSize_;
 
+    //! name of the interface
     std::string name_;
-
-
 };
 
 } /* namespace tcan */
