@@ -96,6 +96,9 @@ class CanBus : public Bus<CanMsg> {
     void sanityCheck();
 
  protected:
+    virtual void handleBusError(const CanMsg& msg) = 0;
+
+ protected:
     // vector containing all devices
     std::vector<CanDevice*> devices_;
 
