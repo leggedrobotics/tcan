@@ -205,6 +205,8 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
 }
 
 void SocketBus::handleBusError(const CanMsg& msg) {
+    busErrorFlag_ = true;
+    
     const auto& cob = msg.getCobId();
     const auto value = msg.getData();
 

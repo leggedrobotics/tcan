@@ -13,7 +13,8 @@ namespace tcan {
 CanBus::CanBus(CanBusOptions* options):
     Bus<CanMsg>(options),
     devices_(),
-    cobIdToFunctionMap_()
+    cobIdToFunctionMap_(),
+    busErrorFlag_(false)
 {
 
 }

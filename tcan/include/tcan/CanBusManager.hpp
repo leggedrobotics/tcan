@@ -35,6 +35,16 @@ class CanBusManager : public BusManager<CanMsg> {
      */
     void sendSync(const unsigned int busIndex);
 
+    /*! Checks if a bus error message was received on one of the buses.
+     * @return true if a bus error message was received
+     */
+    bool hadBusError() const;
+
+    /*! Checks if a bus error message was received on one of the buses and resets the flag.
+     * @return true if a bus error message was received
+     */
+    bool resetBusError();
+
 };
 
 } /* namespace tcan */

@@ -41,4 +41,23 @@ void CanBusManager::sendSync(const unsigned int busIndex) {
     }
 }
 
+bool CanBusManager::hadBusError() const {
+    for(auto bus : buses_) {
+        if(static_cast<CanBus*>(bus)->hadBusError()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CanBusManager::resetBusError() {
+    bool hadBusError = false;
+    for(auto bus : buses_) {
+        if(static_cast<CanBus*>(bus)->resetBusError()) {
+            hadBusError = true;
+        }
+    }
+    return hadBusError;
+}
+
 } /* namespace tcan */
