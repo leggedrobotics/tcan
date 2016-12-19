@@ -12,7 +12,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>tcan</depend>
-  <depend>robot_utils</depend>
 
   <export>
   </export>

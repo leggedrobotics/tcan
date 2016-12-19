@@ -4,11 +4,10 @@
 #include <functional>
 #include <chrono>
 #include <signal.h>
+#include <unordered_map>
 
 #include "tcan/CanBusManager.hpp"
 #include "tcan/SocketBus.hpp"
-
-#include "robot_utils/containers/MultiKeyContainer.hpp"
 
 #include "tcan_example/CanDeviceExample.hpp"
 
@@ -31,23 +30,29 @@ public:
 
 	};
 
-	typedef robot_utils::MultiKeyContainer<CanBus*, BusId> BusContainer;
-	typedef robot_utils::MultiKeyContainer<example_can::CanDeviceExample*, DeviceExampleId> DeviceExampleContainer;
+	typedef std::unordered_map<unsigned int, CanBus*> BusContainer;
+	typedef std::unordered_map<unsigned int, example_can::CanDeviceExample*> DeviceExampleContainer;
 
 	CanManager():
 		CanBusManager(),
 		busContainer_(),
 		deviceExampleContainer_()
 	{
+	    // add a CAN bus
 		addSocketBus(BusId::BUS1, "can0");
-		getCanBus(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSync);
 
+		// add some devices to the bus
 		for(unsigned int i=0; i<30; i++) {
 			addDeviceExample(BusId::BUS1, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
 		}
 
+		// add a custom callback function
+        getCanBus(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSync);
+
+		// add a second bus
 		addSocketBus(BusId::BUS2, "can1");
 
+		// add some devices to the second bus
 		for(unsigned int i=30; i<40; i++) {
 			addDeviceExample(BusId::BUS2, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
 		}
@@ -60,20 +65,17 @@ public:
 	}
 
 	void addDeviceExample(const BusId busId, const DeviceExampleId deviceId, const NodeId nodeId) {
-		const unsigned int iBus = static_cast<unsigned int>(busId);
 		const std::string name = "EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId));
 
 		auto options = new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
 		options->someParameter = 37;
 		options->maxDeviceTimeoutCounter_ = 1000;
 
-		auto ret_pair = getCanBus(iBus)->addDevice<example_can::CanDeviceExample>( options );
-		deviceExampleContainer_.insert(std::make_tuple(name, static_cast<unsigned int>(deviceId), deviceId), ret_pair.first);
+		auto ret_pair = getCanBus(static_cast<unsigned int>(busId))->addDevice<example_can::CanDeviceExample>( options );
+		deviceExampleContainer_.insert({static_cast<unsigned int>(deviceId), ret_pair.first});
 	}
 
 	void addSocketBus(const BusId busId, const std::string& interface) {
-		const unsigned int iBus = static_cast<unsigned int>(busId);
-
 		SocketBusOptions* options = new SocketBusOptions();
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
@@ -91,12 +93,12 @@ public:
 			exit(-1);
 		}
 
-		busContainer_.insert(std::make_tuple("BUS" + std::to_string(iBus), iBus, busId), bus);
+		busContainer_.insert({static_cast<unsigned int>(busId), bus});
 	}
 
 	bool parseIncomingSync(const CanMsg& cmsg) {
 		for(auto device : deviceExampleContainer_) {
-			device->setCommand(0.f);
+			device.second->setCommand(0.f);
 		}
 
 //		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
@@ -133,20 +135,17 @@ int main() {
 		canManager_.sanityCheckSynchronous();
 #endif
 		for(auto device : canManager_.getDeviceExampleContainer()) {
-//			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
-			device->setCommand(0.f);
+			std::cout << "Measurement=" << device.second->getMeasurement() << std::endl;
+			device.second->setCommand(0.f);
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		canManager_.writeMessagesSynchronous();
-		canManager_.sendSyncOnAllBuses();
+      canManager_.sendSyncOnAllBuses();
 		canManager_.writeMessagesSynchronous();
 #else
 		canManager_.sendSyncOnAllBuses(true);
 #endif
 
-
-//		std::cout << "sleeping..\n\n";
-//		sleep(5);
 		nextStep += std::chrono::microseconds(10000);
 		std::this_thread::sleep_until( nextStep );
 	}

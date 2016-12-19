@@ -3,7 +3,6 @@ project(tcan_example)
 
 find_package(catkin REQUIRED COMPONENTS
   tcan
-  robot_utils
 )
 
 ###################################
@@ -12,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
  INCLUDE_DIRS include
- CATKIN_DEPENDS tcan robot_utils
+ CATKIN_DEPENDS tcan
 #  DEPENDS system_lib
 )
 
