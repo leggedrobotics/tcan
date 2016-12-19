@@ -1,6 +1,5 @@
 #include <signal.h>
-
-#include "robot_utils/containers/MultiKeyContainer.hpp"
+#include <unordered_map>
 
 #include "tcan/UniversalSerialBusManager.hpp"
 #include "tcan/UniversalSerialBusOptions.hpp"
@@ -16,7 +15,7 @@ public:
 		XBEE1=0
 	};
 
-	typedef robot_utils::MultiKeyContainer<XbeeUsb*, UsbId> UsbContainer;
+	typedef std::unordered_map<unsigned int, XbeeUsb*> UsbContainer;
 
 	UsbManager():
 	    tcan::UniversalSerialBusManager(),
@@ -32,8 +31,6 @@ public:
 	}
 
 	void addUsb(const UsbId usbId, const std::string& interface) {
-		const unsigned int iBus = static_cast<unsigned int>(usbId);
-
 		tcan::UniversalSerialBusOptions* options = new tcan::UniversalSerialBusOptions();
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
@@ -46,7 +43,7 @@ public:
 			exit(-1);
 		}
 
-		usbContainer_.insert(std::make_tuple("BUS" + std::to_string(iBus), iBus, usbId), bus);
+		usbContainer_.insert({static_cast<unsigned int>(usbId), bus});
 	}
 
 	UsbContainer getUsbContainer() { return usbContainer_; }
@@ -76,15 +73,12 @@ int main() {
 	    usbManager_.sanityCheckSynchronous();
 #endif
 		for(auto xbee : usbManager_.getUsbContainer()) {
-//			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
-		    xbee->sendMessage(tcan::UsbMsg("hi"));
+		    xbee.second->sendMessage(tcan::UsbMsg("hi"));
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		usbManager_.writeMessagesSynchronous();
 #endif
 
-//		std::cout << "sleeping..\n\n";
-//		sleep(5);
 		nextStep += std::chrono::microseconds(1000000);
 		std::this_thread::sleep_until( nextStep );
 	}

@@ -1,6 +1,5 @@
 #include <signal.h>
-
-#include "robot_utils/containers/MultiKeyContainer.hpp"
+#include <unordered_map>
 
 #include "tcan/IpBusManager.hpp"
 #include "tcan/IpBusOptions.hpp"
@@ -16,7 +15,7 @@ public:
 		DEVICE1=0
 	};
 
-	typedef robot_utils::MultiKeyContainer<TcpDevice*, IpId> DeviceContainer;
+	typedef std::unordered_map<unsigned int, TcpDevice*> DeviceContainer;
 
 	TcpManager():
 	    tcan::IpBusManager(),
@@ -32,8 +31,6 @@ public:
 	}
 
 	void addDevice(const IpId ipId, const std::string& host, const unsigned int port) {
-		const unsigned int iBus = static_cast<unsigned int>(ipId);
-
 		tcan::IpBusOptions* options = new tcan::IpBusOptions(host, port);
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
@@ -45,7 +42,7 @@ public:
 			exit(-1);
 		}
 
-		deviceContainer_.insert(std::make_tuple("BUS" + std::to_string(iBus), iBus, ipId), device);
+		deviceContainer_.insert({static_cast<unsigned int>(ipId), device});
 	}
 
 	DeviceContainer getDeviceContainer() { return deviceContainer_; }
@@ -75,15 +72,12 @@ int main() {
 		myManager_.sanityCheckSynchronous();
 #endif
 		for(auto device : myManager_.getDeviceContainer()) {
-//			std::cout << "Measurement=" << device->getMeasurement() << std::endl;
-			device->sendMessage(tcan::IpMsg("hi"));
+			device.second->sendMessage(tcan::IpMsg("hi"));
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		myManager_.writeMessagesSynchronous();
 #endif
 
-//		std::cout << "sleeping..\n\n";
-//		sleep(5);
 		nextStep += std::chrono::microseconds(1000000);
 		std::this_thread::sleep_until( nextStep );
 	}
