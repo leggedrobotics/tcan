@@ -18,7 +18,6 @@ struct SocketBusOptions : public CanBusOptions {
     SocketBusOptions():
         SocketBusOptions(std::string())
     {
-
     }
 
     SocketBusOptions(const std::string& interface_name):
@@ -28,7 +27,6 @@ struct SocketBusOptions : public CanBusOptions {
         canErrorMask_(CAN_ERR_MASK),
         canFilters_()
     {
-
     }
 
     virtual ~SocketBusOptions() { }

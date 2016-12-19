@@ -28,6 +28,8 @@ class SocketBus : public CanBus {
     bool readData();
     bool writeData(const CanMsg& cmsg);
 
+    void handleBusError(const CanMsg& msg);
+
  protected:
     pollfd socket_;
 };

@@ -15,16 +15,16 @@ struct CanBusOptions : public BusOptions {
     CanBusOptions():
         CanBusOptions(std::string())
     {
-
     }
 
     CanBusOptions(const std::string& name):
         BusOptions(name)
     {
-
     }
 
-    virtual ~CanBusOptions() { }
+    virtual ~CanBusOptions()
+    {
+    }
 };
 
 } /* namespace tcan */
