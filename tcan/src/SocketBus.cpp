@@ -205,10 +205,16 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
 }
 
 void SocketBus::handleBusError(const CanMsg& msg) {
-    busErrorFlag_ = true;
     
     const auto& cob = msg.getCobId();
     const auto value = msg.getData();
+
+    // todo: really ignore arbitration lost?
+    if(cob & CAN_ERR_LOSTARB) {
+        return;
+    }
+
+    busErrorFlag_ = true;
 
     MELO_ERROR("received bus error frame:");
     // cob id
