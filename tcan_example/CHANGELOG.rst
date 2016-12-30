@@ -2,8 +2,18 @@
 Changelog for package tcan_example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.0.1 (2016-08-11)
-------------------
+Forthcoming
+-----------
+* removed robot_utils dependency
+* fixed wronk IP interface name
+* implemented tcp connections
+* sleeping before first executing first sanity check (to prevent checking an empty device list)
+* implemented binding of message callbacks for non-Device based classes
+* working example with usb
+* compiling usb example
+* compilable, implemented structure for USB
+* fixed tcan_example
+* added changelogs
 * renamed robotUtils to robot_utils (resolves install space issues)
 * added TxEmcyId
 * fixed wrong handleReadSdoAnswer function definition in example
