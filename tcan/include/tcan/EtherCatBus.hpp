@@ -12,7 +12,8 @@
 #include <memory>
 #include <functional>
 #include <vector>
-#include <atomic>
+#include <algorithm> // copy(..)
+
 
 #include "tcan/Bus.hpp"
 #include "tcan/EtherCatBusOptions.hpp"
@@ -21,12 +22,27 @@
 
 namespace tcan {
 
+using EthernetFrame = GenericMsg;
+
 class Datagram {
  public:
+    inline void resize(const uint16_t length) {
+        uint8_t* oldData = data_;
+        data_ = new uint8_t[length];
+        std::copy(&oldData[0], &oldData[header_.len_], data_);
+        header_.len_ = length;
+        delete[] oldData;
+    }
 
-    const uint16_t getLength() const { return header_.len_; }
-    const uint8_t* getData() const { return data_; }
-    const uint16_t getWorkingCounter() const { return workingCounter_; }
+    template <typename T>
+    inline void write(const uint16_t memoryPosition, const T& data) {
+        // check if memoryPosition lies within data_?
+        std::copy(&data_[memoryPosition], &data_[memoryPosition + sizeof(T)], &data);
+    }
+
+    inline const uint16_t getLength() const { return header_.len_; }
+    inline const uint8_t* getData() const { return data_; }
+    inline const uint16_t getWorkingCounter() const { return workingCounter_; }
 
  private:
 
@@ -59,14 +75,16 @@ class Datagram {
         uint16_t irq_;
 
         DatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), len_(0), reserved_(0), circulating_(0), more_(0), irq_(0) { }
-    };
+    } __attribute__((packed)); // prevent structure padding
 
     DatagramHeader header_;
     uint8_t* data_;
     uint16_t workingCounter_;
+
+    // have a map of (name string => memory address) to have human-readable access to the fields in data_? would need to update this on resize(..) calls..
 };
 
-class EtherCatBus : public Bus<GenericMsg> {
+class EtherCatBus : public Bus<EthernetFrame> {
  public:
     typedef std::function<bool(const CanMsg&)> CallbackPtr;
     typedef std::unordered_map<uint32_t, std::pair<CanDevice*, CallbackPtr>> AddressToFunctionMap;
@@ -93,13 +111,13 @@ class EtherCatBus : public Bus<GenericMsg> {
      * @return true if init was successful
      */
     inline bool addDevice(CanDevice* device) {
-        // asssign the device some id to calculate the offset in ethernet frame
+        // asssign the device some id to calculate the offset in ethernet frame address
         devices_.push_back(device);
         return device->initDeviceInternal(this);
     }
 
     template <class T>
-    inline std::shared_ptr<Datagram> addReadDatagram(Datagram&& datagram, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&)) {
+    inline std::shared_ptr<Datagram> addReadDatagram(Datagram&& datagram, T* device, bool(std::common_type<T>::type::*fp)()) {
         // add a datagram linked with a callback to addressToFunctionMap_, use datagram address as key
         return addDatagram(std::forward<Datagram>(datagram));
     }
@@ -123,17 +141,25 @@ class EtherCatBus : public Bus<GenericMsg> {
             // copy members from datagramPtr to data
         }
 
+        // compute expected working counter
+
         // other option:
-        GenericMsg msg;
+        EthernetFrame msg;
         msg.emplaceData(len, data);
         sendMessage(msg, true);
+    }
+
+    void discoverDevices() {
+        // do not add the devices by hand but get the topology and memory from the connected devices?
     }
 
  public:/// INTERNAL FUNCTIONS
     /*! Is called after reception of a message. Routes the message to the callback.
      * @param cmsg	reference to the can message
      */
-    void handleMessage(const GenericMsg& msg) {
+    void handleMessage(const EthernetFrame& msg) {
+        // check time the frame took to travel through the physical bus
+        // check working counters
         // extract datagrams from ethernet frame and map datagrams to device callback
     }
 
@@ -156,7 +182,7 @@ class EtherCatBus : public Bus<GenericMsg> {
     /*! write CAN message to the device driver
      * @return true if the message was successfully written
      */
-    virtual bool writeData(const GenericMsg& msg) {
+    virtual bool writeData(const EthernetFrame& msg) {
         // write to socket (see IpBus)
         return true;
     }
@@ -177,6 +203,7 @@ class EtherCatBus : public Bus<GenericMsg> {
     }
 protected:
     inline std::shared_ptr<Datagram> addDatagram(Datagram&& datagram) {
+        // put the datagram at apropriate position to replicate the physical structure of the bus in the datagram order?
         auto ptr = std::make_shared<Datagram>(std::forward<Datagram>(datagram));
         datagrams_.push_back(ptr);
         return ptr;
