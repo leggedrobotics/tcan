@@ -73,7 +73,8 @@ int main() {
 	    usbManager_.sanityCheckSynchronous();
 #endif
 		for(auto xbee : usbManager_.getUsbContainer()) {
-		    xbee.second->sendMessage(tcan::UsbMsg("hi"));
+		    xbee.second->emplaceMessage(tcan::UsbMsg("hi"));
+		    // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		usbManager_.writeMessagesSynchronous();
