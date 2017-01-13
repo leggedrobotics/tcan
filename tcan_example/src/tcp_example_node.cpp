@@ -4,7 +4,7 @@
 #include "tcan/IpBusManager.hpp"
 #include "tcan/IpBusOptions.hpp"
 
-#include "tcan_example/TcpDevice.hpp"
+#include "tcan_example/TcpConnection.hpp"
 
 //#define USE_SYNCHRONOUS_MODE
 
@@ -15,13 +15,13 @@ public:
 		DEVICE1=0
 	};
 
-	typedef std::unordered_map<unsigned int, TcpDevice*> DeviceContainer;
+	typedef std::unordered_map<unsigned int, TcpConnection*> ConnectionContainer;
 
 	TcpManager():
 	    tcan::IpBusManager(),
-		deviceContainer_()
+	    connectionContainer_()
 	{
-		addDevice(IpId::DEVICE1, "192.168.0.100", 9999);
+		addConnection(IpId::DEVICE1, "192.168.0.100", 9999);
 	}
 
 	virtual ~TcpManager()
@@ -30,25 +30,25 @@ public:
 		closeBuses();
 	}
 
-	void addDevice(const IpId ipId, const std::string& host, const unsigned int port) {
+	void addConnection(const IpId ipId, const std::string& host, const unsigned int port) {
 		tcan::IpBusOptions* options = new tcan::IpBusOptions(host, port);
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
 
-		auto device = new TcpDevice(options);
-		if(!addBus( device )) {
+		auto connection = new TcpConnection(options);
+		if(!addBus( connection )) {
 			std::cout << "failed to add Bus " << host << std::endl;
 			exit(-1);
 		}
 
-		deviceContainer_.insert({static_cast<unsigned int>(ipId), device});
+		connectionContainer_.insert({static_cast<unsigned int>(ipId), connection});
 	}
 
-	DeviceContainer getDeviceContainer() { return deviceContainer_; }
+	ConnectionContainer getConnectionContainer() { return connectionContainer_; }
 
 protected:
-	DeviceContainer deviceContainer_;
+	ConnectionContainer connectionContainer_;
 };
 
 } // namespace tcan_example
@@ -71,8 +71,9 @@ int main() {
 
 		myManager_.sanityCheckSynchronous();
 #endif
-		for(auto device : myManager_.getDeviceContainer()) {
-			device.second->sendMessage(tcan::IpMsg("hi"));
+		for(auto device : myManager_.getConnectionContainer()) {
+			device.second->emplaceMessage(tcan::IpMsg("hi"));
+			// as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
 		}
 #ifdef USE_SYNCHRONOUS_MODE
 		myManager_.writeMessagesSynchronous();

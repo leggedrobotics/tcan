@@ -11,12 +11,12 @@
 
 namespace tcan_example {
 
-class TcpDevice : public tcan::IpBus {
+class TcpConnection : public tcan::IpBus {
  public:
-	TcpDevice() = delete;
-	TcpDevice(tcan::IpBusOptions* options);
+    TcpConnection() = delete;
+    TcpConnection(tcan::IpBusOptions* options);
 
-    virtual ~TcpDevice();
+    virtual ~TcpConnection();
 
     /*! Callback called after reception of a message.
      * @param msg	reference to the usb message

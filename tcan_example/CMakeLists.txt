@@ -46,7 +46,7 @@ target_link_libraries(usb_example_node
 
 
 add_executable(tcp_example_node
-  src/TcpDevice.cpp
+  src/TcpConnection.cpp
   src/tcp_example_node.cpp
 )
 target_link_libraries(tcp_example_node

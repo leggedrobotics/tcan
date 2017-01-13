@@ -87,12 +87,21 @@ class Bus {
         return true;
     }
 
-    /*! Add a can message to be sent (added to the output queue)
-     * @param cmsg	reference to the can message
+    /*! Copy a message to be sent to the output queue
+     * @param msg	const reference to the message to be sent
      */
-    void sendMessage(const Msg& msg) {
+    inline void sendMessage(const Msg& msg) {
         std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
         sendMessageWithoutLock(msg);
+    }
+
+    /*!
+     * Move a massage to be sent to the output queue
+     * @param msg   message to be sent
+     */
+    inline void emplaceMessage(Msg&& msg) {
+        std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
+        emplaceMessageWithoutLock(std::forward<Msg>(msg));
     }
 
     /*!
@@ -219,14 +228,21 @@ class Bus {
         return writeSuccess;
     }
 
-    void sendMessageWithoutLock(const Msg& msg) {
+    inline void checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
             MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
         }
-        outgoingMsgs_.push( msg ); // do not use emplace here. We need a copy of the message in some situations
-        // (SDO queue processing). Declaring another sendMessage(..) which uses move
-        // semantics does not increase performance as CANMsg has only POD members
+    }
 
+    inline void sendMessageWithoutLock(const Msg& msg) {
+        checkOutgoingMsgsSize();
+        outgoingMsgs_.push( msg );
+        condTransmitThread_.notify_all();
+    }
+
+    inline void emplaceMessageWithoutLock(Msg&& msg) {
+        checkOutgoingMsgsSize();
+        outgoingMsgs_.emplace( std::forward<Msg>(msg) );
         condTransmitThread_.notify_all();
     }
 
