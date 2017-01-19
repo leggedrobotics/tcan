@@ -22,9 +22,9 @@ class CanDevice {
  public:
     enum State {
         Initializing=0,
-        Active,
-        Error,
-        Missing
+        Active=1,
+        Error=-2,
+        Missing=-1
     };
 
     /*! Constructor

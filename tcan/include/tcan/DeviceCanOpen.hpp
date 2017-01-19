@@ -40,9 +40,9 @@ class DeviceCanOpen : public CanDevice {
     static constexpr int RxSDOId = 0x600;
 
     enum class NMTStates : uint8_t {
-        stopped = 0,
-        preOperational,
-        operational
+        stopped = 1,
+        preOperational = 2,
+        operational = 3
     };
 
     /*! Constructors
