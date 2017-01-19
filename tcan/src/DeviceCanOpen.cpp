@@ -202,7 +202,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 
             if(responseMode == 0x42 || responseMode == 0x43 || responseMode == 0x4B || responseMode == 0x4F) { // read responses (unspecified length, 4, 2 or 1 byte)
                 {
-                  std::lock_guard<std::mutex> guard(sdoAnswerMapMutex_);
+                  std::lock_guard<std::mutex> mapGuard(sdoAnswerMapMutex_);
                   sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
                 }
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
@@ -229,12 +229,12 @@ bool DeviceCanOpen::checkSdoTimeout() {
     if(options->maxSdoTimeoutCounter_ != 0 && sdoMsgs_.size() != 0 && (sdoTimeoutCounter_++ > options->maxSdoTimeoutCounter_) ) {
         // sdoTimeoutCounter_ is only increased if options_->maxSdoTimeoutCounter != 0 and sdoMsgs_.size() != 0
 
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent parseSDOAnswer from making changes on sdoMsgs_
+        std::unique_lock<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent parseSDOAnswer from making changes on sdoMsgs_
         const SdoMsg& msg = sdoMsgs_.front();
         if(sdoSentCounter_ > options->maxSdoSentCounter_) {
-
+            guard.unlock(); // unlock guard here, otherwise the user will not be able to put any sdo in the sdo ouput queue
             handleTimedoutSdo(msg);
-
+            guard.lock();
             sendNextSdo();
 
             return false;

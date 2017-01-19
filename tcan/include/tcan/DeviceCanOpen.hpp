@@ -134,6 +134,10 @@ class DeviceCanOpen : public CanDevice {
      */
     bool checkSdoTimeout();
 
+    /*!
+     * put the next SDO from the sdo queue into the bus output queue.
+     * WARNING: This function does not lock the sdoMsgsMutex_, so its up to the caller to do so.
+     */
     void sendNextSdo();
 
     /*! Get the ID of an SDO answer by index and subIndex.
