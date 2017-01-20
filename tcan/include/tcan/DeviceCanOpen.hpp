@@ -140,12 +140,19 @@ class DeviceCanOpen : public CanDevice {
      */
     void sendNextSdo();
 
+    /*!
+     * Acquires lock on the sdo queue mutex and clears the queue
+     */
+    void clearSdoQueue();
+
+
     /*! Get the ID of an SDO answer by index and subIndex.
      * @param index SDO index.
      * @param subIndex SDO subIndex.
      * @return SDO id.
      */
     static uint32_t getSdoAnswerId(const uint16_t index, const uint8_t subIndex);
+
 
  protected:
     //! the can state the device is in

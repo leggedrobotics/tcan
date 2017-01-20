@@ -39,6 +39,8 @@ void DeviceCanOpen::sanityCheck() {
         if(isTimedOut()) {
             state_ = Missing;
             MELO_WARN("Device %s timed out!", getName().c_str());
+
+            clearSdoQueue();
         }else{
             checkSdoTimeout();
         }
@@ -99,11 +101,6 @@ bool DeviceCanOpen::getSdoAnswer(SdoMsg& sdoAnswer) {
 }
 
 void DeviceCanOpen::setNmtEnterPreOperational() {
-    {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-        // swap with an empty queue to clear it
-        std::queue<SdoMsg>().swap(sdoMsgs_);
-    }
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x80) );
 
     // the remote device will not tell us in which state it is if heartbeat message is disabled
@@ -134,22 +131,14 @@ void DeviceCanOpen::setNmtStopRemoteDevice() {
 }
 
 void DeviceCanOpen::setNmtResetRemoteCommunication() {
-    {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-        // swap with an empty queue to clear it
-        std::queue<SdoMsg>().swap(sdoMsgs_);
-    }
+    clearSdoQueue();
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x82) );
 
     state_ = Initializing;
 }
 
 void DeviceCanOpen::setNmtRestartRemoteDevice() {
-    {
-        std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
-        // swap with an empty queue to clear it
-        std::queue<SdoMsg>().swap(sdoMsgs_);
-    }
+    clearSdoQueue();
     deviceTimeoutCounter_ = 0;
     sendSdo( SdoMsg(static_cast<uint8_t>(getNodeId()), 0x81) );
 
@@ -264,6 +253,12 @@ void DeviceCanOpen::sendNextSdo() {
             break; // if SDO requires answer, wait for it
         }
     }
+}
+
+void DeviceCanOpen::clearSdoQueue() {
+    std::lock_guard<std::mutex> guard(sdoMsgsMutex_);
+    // swap with an empty queue to clear it
+    std::queue<SdoMsg>().swap(sdoMsgs_);
 }
 
 uint32_t DeviceCanOpen::getSdoAnswerId(const uint16_t index, const uint8_t subIndex) {
