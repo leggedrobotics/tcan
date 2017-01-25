@@ -216,7 +216,7 @@ void SocketBus::handleBusError(const CanMsg& msg) {
 
     busErrorFlag_ = true;
 
-    MELO_ERROR("received bus error frame:");
+    MELO_ERROR("received bus error frame on bus %s:", options_->name_.c_str());
     // cob id
     if(cob & CAN_ERR_TX_TIMEOUT) {
         MELO_ERROR("  TX timeout (by netdevice driver)");
