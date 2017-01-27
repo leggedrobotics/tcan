@@ -159,9 +159,13 @@ bool SocketBus::readData() {
         //		printf("read nothing\n");
         return false;
     } else {
-        //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+//		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-        handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
+        if(msg.getCobId() > CAN_ERR_FLAG && msg.getCobId() < CAN_RTR_FLAG) {
+            handleBusError( frame );
+        }else{
+            handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
+        }
     }
 
     return true;
@@ -204,13 +208,10 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
     return true;
 }
 
-void SocketBus::handleBusError(const CanMsg& msg) {
-    
-    const auto& cob = msg.getCobId();
-    const auto value = msg.getData();
+void SocketBus::handleBusError(const can_frame& msg) {
 
     // todo: really ignore arbitration lost?
-    if(cob & CAN_ERR_LOSTARB) {
+    if(msg.can_id & CAN_ERR_LOSTARB) {
         return;
     }
 
@@ -218,39 +219,39 @@ void SocketBus::handleBusError(const CanMsg& msg) {
 
     MELO_ERROR("received bus error frame on bus %s:", options_->name_.c_str());
     // cob id
-    if(cob & CAN_ERR_TX_TIMEOUT) {
+    if(msg.can_id & CAN_ERR_TX_TIMEOUT) {
         MELO_ERROR("  TX timeout (by netdevice driver)");
     }
-    if(cob & CAN_ERR_LOSTARB) {
+    if(msg.can_id & CAN_ERR_LOSTARB) {
         MELO_ERROR("  lost arbitration");
     }
-    if(cob & CAN_ERR_CRTL) {
+    if(msg.can_id & CAN_ERR_CRTL) {
         MELO_ERROR("  controller problems");
     }
-    if(cob & CAN_ERR_PROT) {
+    if(msg.can_id & CAN_ERR_PROT) {
         MELO_ERROR("  protocol violations");
     }
-    if(cob & CAN_ERR_TRX) {
+    if(msg.can_id & CAN_ERR_TRX) {
         MELO_ERROR("  transceiver status");
     }
-    if(cob & CAN_ERR_ACK) {
+    if(msg.can_id & CAN_ERR_ACK) {
         MELO_ERROR("  received no ACK on transmission");
     }
-    if(cob & CAN_ERR_BUSOFF) {
+    if(msg.can_id & CAN_ERR_BUSOFF) {
         MELO_ERROR("  bus off");
     }
-    if(cob & CAN_ERR_BUSOFF) {
+    if(msg.can_id & CAN_ERR_BUSOFF) {
         MELO_ERROR("  bus error (may flood!)");
     }
-    if(cob & CAN_ERR_RESTARTED) {
+    if(msg.can_id & CAN_ERR_RESTARTED) {
         MELO_ERROR("  controller restarted");
     }
 
     // bit 0
-    MELO_ERROR("    bit number in bitstream: %d", value[0]);
+    MELO_ERROR("    bit number in bitstream: %d", msg.data[0]);
 
     // bit 1
-    switch(value[1]) {
+    switch(msg.data[1]) {
         default: // fall-through!
         case CAN_ERR_CRTL_UNSPEC:
             MELO_ERROR("    error status of CAN-controller: unspecified");
@@ -282,7 +283,7 @@ void SocketBus::handleBusError(const CanMsg& msg) {
     }
 
     // bit 2
-    switch(value[2]) {
+    switch(msg.data[2]) {
         default: // fall-through!
         case CAN_ERR_PROT_UNSPEC:
             MELO_ERROR("    error in CAN protocol (type): unspecified");
@@ -322,7 +323,7 @@ void SocketBus::handleBusError(const CanMsg& msg) {
     }
 
     // bit 3
-    switch(value[3]) {
+    switch(msg.data[3]) {
         default:
         case CAN_ERR_PROT_LOC_UNSPEC:
             MELO_ERROR("    error in CAN protocol (location): unspecified");
@@ -406,7 +407,7 @@ void SocketBus::handleBusError(const CanMsg& msg) {
     }
 
     // bit 4
-    switch(value[4]) {
+    switch(msg.data[4]) {
         default:
         case CAN_ERR_TRX_UNSPEC:
             MELO_ERROR("    error status of CAN-transceiver: CAN_ERR_TRX_UNSPEC");
@@ -450,7 +451,7 @@ void SocketBus::handleBusError(const CanMsg& msg) {
     }
 
     // bit 5-7
-    MELO_ERROR("    controller specific additional information: %x, %x, %x", value[5], value[6], value[7]);
+    MELO_ERROR("    controller specific additional information: %x, %x, %x", msg.data[5], msg.data[6], msg.data[7]);
 }
 
 } /* namespace tcan */

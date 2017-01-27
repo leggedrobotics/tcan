@@ -111,13 +111,6 @@ class CanBus : public Bus<CanMsg> {
     void sanityCheck();
 
  protected:
-    /*!
-     * Is called on reception of a bus error message. Sets the flag
-     * @param cmsg  reference to the bus error message
-     */
-    virtual void handleBusError(const CanMsg& msg) = 0;
-
- protected:
     // vector containing all devices
     std::vector<CanDevice*> devices_;
 
