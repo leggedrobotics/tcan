@@ -161,7 +161,7 @@ bool SocketBus::readData() {
     } else {
 //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-        if(msg.getCobId() > CAN_ERR_FLAG && msg.getCobId() < CAN_RTR_FLAG) {
+        if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
             handleBusError( frame );
         }else{
             handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
