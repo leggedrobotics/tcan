@@ -60,11 +60,14 @@ class CanDevice {
      */
     virtual bool initDevice() = 0;
 
-    /*! Configure the device
+    /*!
+     * Configure the device
      * This function is automatically called after reception of a
      * bootup message. (or more general: After reception of any message if the device was missing)
+     * @param msg   received message which caused the call of this function
+     * @return      true if device is active
      */
-    virtual void configureDevice() = 0;
+    virtual bool configureDevice(const CanMsg& msg) = 0;
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
@@ -90,16 +93,20 @@ class CanDevice {
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
      * Calls the initDevice() function.
      */
-    bool initDeviceInternal(CanBus* bus) {
+    inline bool initDeviceInternal(CanBus* bus) {
         bus_ = bus;
         return initDevice();
     }
 
-    inline void resetDeviceTimeoutCounter() {
+    inline void configureDeviceInternal(const CanMsg& msg) {
         if(state_ != Active && state_ != Error) {
-            configureDevice();
-            state_ = Active;
+            if(configureDevice(msg)) {
+                state_ = Active;
+            }
         }
+    }
+
+    inline void resetDeviceTimeoutCounter() {
         deviceTimeoutCounter_ = 0;
     }
 
