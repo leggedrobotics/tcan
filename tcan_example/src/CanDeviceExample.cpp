@@ -55,12 +55,20 @@ bool CanDeviceExample::initDevice() {
 	return true;
 }
 
-void CanDeviceExample::configureDevice() {
-	// device is in pre-operational state when this function is called
+bool CanDeviceExample::configureDevice(const CanMsg& msg) {
+    // msg contains the received message which caused the call of this function. You can check if it is an
+    // appropriate "bootup message" of your device
+
+	// canopen device should already be in pre-operational state when this function is called (as per canopen standard)
+    // explicitly set it to preoperational, just to make sure..
 	printf("configureDevice called\n");
 	setNmtEnterPreOperational();
 	sendSdo(mySdo(getNodeId(), static_cast<const CanDeviceExampleOptions*>(options_)->someParameter));
 	setNmtStartRemoteDevice();
+
+	// when returning true, the device is considered as beeing 'active'. return false to leave it in 'missing'
+	// state and wait for another message.
+	return true;
 }
 
 void CanDeviceExample::setCommand(const float value) {

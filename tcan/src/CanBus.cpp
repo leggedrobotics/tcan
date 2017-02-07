@@ -33,6 +33,7 @@ void CanBus::handleMessage(const CanMsg& msg) {
     if (it != cobIdToFunctionMap_.end()) {
         if(it->second.first) {
             it->second.first->resetDeviceTimeoutCounter();
+            it->second.first->configureDeviceInternal(msg);
         }
         it->second.second(msg); // call function pointer
     } else {
