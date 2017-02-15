@@ -230,7 +230,7 @@ class Bus {
 
     inline void checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
-            MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            MELO_WARN_THROTTLE(1.0, "Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
         }
     }
 

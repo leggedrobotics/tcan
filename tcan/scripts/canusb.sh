@@ -3,7 +3,7 @@
 do_start() {
     sudo slcand -o $3 -t hw -S 3000000 $1 $2
     sleep 0.2
-    sudo ip link set $2 txqueuelen 1000
+    sudo ip link set $2 txqueuelen 300
     sudo ip link set $2 up
 }
 
