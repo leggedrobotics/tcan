@@ -105,7 +105,7 @@ class Bus {
     }
 
     /*!
-     * @return true if no device timed out
+     * @return false if no device timed out
      */
     inline bool isMissingDevice() const { return isMissingDevice_; }
 
@@ -119,6 +119,7 @@ class Bus {
  public: /// Internal functions
 
     /*! write the message at the front of the queue to the CAN bus
+     * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked
      * @return true if a message was successfully written to the bus
      */
     inline bool writeMessage()

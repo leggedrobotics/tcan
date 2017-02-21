@@ -28,6 +28,11 @@ CanBus::~CanBus()
 
 void CanBus::handleMessage(const CanMsg& msg) {
 
+    if(busErrorFlag_ && static_cast<const CanBusOptions*>(options_)->autoClearBusError_) {
+        resetBusError();
+        MELO_WARN("Bus %s is active again!", options_->name_.c_str());
+    }
+
     // Check if CAN message is handled.
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
     if (it != cobIdToFunctionMap_.end()) {

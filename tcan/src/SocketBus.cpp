@@ -174,6 +174,10 @@ bool SocketBus::readData() {
 
 bool SocketBus::writeData(const CanMsg& cmsg) {
 
+    if(busErrorFlag_ && static_cast<const CanBusOptions*>(options_)->passivateOnBusError_) {
+        return true;
+    }
+
     // poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
     // If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
@@ -216,6 +220,10 @@ void SocketBus::handleBusError(const can_frame& msg) {
     }
 
     busErrorFlag_ = true;
+
+    if(static_cast<const CanBusOptions*>(options_)->passivateOnBusError_) {
+        MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+    }
 
     MELO_ERROR("received bus error frame on bus %s:", options_->name_.c_str());
     // cob id
