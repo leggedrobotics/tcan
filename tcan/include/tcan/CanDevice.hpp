@@ -14,6 +14,8 @@
 #include "tcan/CanMsg.hpp"
 #include "tcan/CanDeviceOptions.hpp"
 
+#include "message_logger/message_logger.hpp"
+
 namespace tcan {
 class CanBus;
 
