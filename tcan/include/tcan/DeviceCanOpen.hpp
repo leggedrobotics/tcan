@@ -116,6 +116,14 @@ class DeviceCanOpen : public CanDevice {
     bool isPreOperational()	const { return isActive() && (nmtState_ == NMTStates::preOperational); }
     bool isOperational()	const { return isActive() && (nmtState_ == NMTStates::operational); }
 
+    virtual int getStatus() const {
+        if(static_cast<int>(state_.load()) <= 0) {
+            // device is initializing, missing or has an error
+            return static_cast<int>(state_.load());
+        }
+        return static_cast<int>(nmtState_.load());
+    }
+
  public: /// Internal functions
     /*! Parse a heartbeat message
      * @param cmsg   reference to the received message

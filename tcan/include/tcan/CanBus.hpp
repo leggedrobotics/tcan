@@ -24,8 +24,9 @@ namespace tcan {
 class CanBus : public Bus<CanMsg> {
  public:
 
-    typedef std::function<bool(const CanMsg&)> CallbackPtr;
-    typedef std::unordered_map<uint32_t, std::pair<CanDevice*, CallbackPtr>> CobIdToFunctionMap;
+    using CallbackPtr =  std::function<bool(const CanMsg&)>;
+    using CobIdToFunctionMap = std::unordered_map<uint32_t, std::pair<CanDevice*, CallbackPtr>>;
+    using DeviceContainer = std::vector<CanDevice*>;
 
     CanBus() = delete;
     CanBus(CanBusOptions* options);
@@ -93,6 +94,8 @@ class CanBus : public Bus<CanMsg> {
         return tmp;
     }
 
+    const DeviceContainer& getDeviceContainer() const { return devices_; }
+
  public:/// INTERNAL FUNCTIONS
     /*! Send a sync message on the bus without locking the queue.
      * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
@@ -112,7 +115,7 @@ class CanBus : public Bus<CanMsg> {
 
  protected:
     // vector containing all devices
-    std::vector<CanDevice*> devices_;
+    DeviceContainer devices_;
 
     // map mapping COB id to parse functions
     CobIdToFunctionMap cobIdToFunctionMap_;

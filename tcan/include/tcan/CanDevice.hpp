@@ -88,6 +88,7 @@ class CanDevice {
     inline bool hasError() const { return (state_ == Error); }
     inline bool isMissing() const { return (state_ == Missing); }
 
+    virtual int getStatus() const { return static_cast<int>(state_.load()); }
 
  public: /// Internal functions
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
