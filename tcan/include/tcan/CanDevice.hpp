@@ -103,6 +103,9 @@ class CanDevice {
         if(state_ != Active && state_ != Error) {
             if(configureDevice(msg)) {
                 state_ = Active;
+                if(options_->printConfigInfo_) {
+                    MELO_INFO("Device %s configured successfully.", options_->name_.c_str());
+                }
             }
         }
     }
