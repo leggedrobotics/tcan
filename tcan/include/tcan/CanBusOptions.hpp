@@ -20,7 +20,7 @@ struct CanBusOptions : public BusOptions {
     CanBusOptions(const std::string& name):
         BusOptions(name),
         passivateOnBusError_(false),
-        autoClearBusError_(false)
+        passivateIfNoDevices_(false)
     {
     }
 
@@ -28,12 +28,11 @@ struct CanBusOptions : public BusOptions {
     {
     }
 
-    //! If set to true, no message are sent on the bus if the bus error flag is set
+    //! If set to true, bus goes to passive mode (no message are sent on the bus) on reception of bus errors
     bool passivateOnBusError_;
 
-    //! set to true if busErrorFlag_ should be automatically reset on reception of new messages
-    bool autoClearBusError_;
-
+    //! If set to true, bus goes to passive mode (no messages are sent on the bus) if all devices are missing.
+    bool passivateIfNoDevices_;
 };
 
 } /* namespace tcan */
