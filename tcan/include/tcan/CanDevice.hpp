@@ -92,6 +92,8 @@ class CanDevice {
 
     virtual int getStatus() const { return static_cast<int>(state_.load()); }
 
+    virtual void resetDevice() { state_ = Initializing; }
+
  public: /// Internal functions
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
      * Calls the initDevice() function.

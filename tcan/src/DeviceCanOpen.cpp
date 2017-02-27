@@ -145,6 +145,11 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
     state_ = Initializing;
 }
 
+void DeviceCanOpen::resetDevice() {
+    state_ = Initializing;
+    setNmtRestartRemoteDevice();
+}
+
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
     // fixme: commented out as a workaround for moog_can heartbeat length 8
 //    if(cmsg.getLength() != 1) {

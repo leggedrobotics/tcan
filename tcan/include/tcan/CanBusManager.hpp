@@ -45,6 +45,11 @@ class CanBusManager : public BusManager<CanMsg> {
      */
     bool resetBusError();
 
+    /*!
+     *
+     */
+    void resetAllDevices();
+
 };
 
 } /* namespace tcan */

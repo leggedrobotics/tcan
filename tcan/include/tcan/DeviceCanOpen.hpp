@@ -124,6 +124,8 @@ class DeviceCanOpen : public CanDevice {
         return static_cast<int>(nmtState_.load());
     }
 
+    virtual void resetDevice();
+
  public: /// Internal functions
     /*! Parse a heartbeat message
      * @param cmsg   reference to the received message

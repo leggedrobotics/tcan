@@ -96,6 +96,8 @@ class CanBus : public Bus<CanMsg> {
 
     const DeviceContainer& getDeviceContainer() const { return devices_; }
 
+    void resetAllDevices();
+
  public:/// INTERNAL FUNCTIONS
     /*! Send a sync message on the bus without locking the queue.
      * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.

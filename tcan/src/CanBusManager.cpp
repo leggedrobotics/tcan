@@ -60,4 +60,10 @@ bool CanBusManager::resetBusError() {
     return hadBusError;
 }
 
+void CanBusManager::resetAllDevices() {
+    for(auto bus : buses_) {
+        static_cast<CanBus*>(bus)->resetAllDevices();
+    }
+}
+
 } /* namespace tcan */
