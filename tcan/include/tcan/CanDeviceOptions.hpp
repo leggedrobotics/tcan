@@ -30,7 +30,8 @@ class CanDeviceOptions {
         const unsigned int maxDeviceTimeoutCounter = 20):
         nodeId_(nodeId),
         name_(name),
-        maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter)
+        maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter),
+        printConfigInfo_(true)
     {
 
     }
@@ -74,6 +75,8 @@ class CanDeviceOptions {
     // maxDeviceTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 10Hz by default (see BusOptions))
     unsigned int maxDeviceTimeoutCounter_;
 
+    //! if true, a message will be printed to the console if configureDevice returned true
+    bool printConfigInfo_;
 };
 
 } /* namespace tcan */

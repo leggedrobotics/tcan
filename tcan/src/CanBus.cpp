@@ -62,5 +62,11 @@ void CanBus::sanityCheck() {
     allDevicesActive_ = allActive;
 }
 
+void CanBus::resetAllDevices() {
+    for(auto device : devices_) {
+        device->resetDevice();
+    }
+}
+
 } /* namespace tcan */
 

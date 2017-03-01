@@ -84,7 +84,7 @@ void DeviceCanOpen::handleTimedoutSdo(const SdoMsg& msg) {
 
 void DeviceCanOpen::handleSdoError(const SdoMsg& request, const SdoMsg& answer) {
     const int32_t error = answer.readint32(4);
-    MELO_WARN("Received SDO error: %s. COB=%x / index=%x / subindex=%x / error=%x / sent data=%x", SdoMsg::getErrorName(error).c_str(), answer.getCobId(), answer.getIndex(), answer.getSubIndex(), error, request.readint32(4));
+    MELO_WARN("Received SDO error from device %s: %s. COB=%x / index=%x / subindex=%x / error=%x / sent data=%x", options_->name_.c_str(), SdoMsg::getErrorName(error).c_str(), answer.getCobId(), answer.getIndex(), answer.getSubIndex(), error, request.readint32(4));
     setNmtStopRemoteDevice();
     state_ = Error;
 }
@@ -145,6 +145,10 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
     state_ = Initializing;
 }
 
+void DeviceCanOpen::resetDevice() {
+    setNmtRestartRemoteDevice();
+}
+
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
     // fixme: commented out as a workaround for moog_can heartbeat length 8
 //    if(cmsg.getLength() != 1) {
@@ -170,7 +174,7 @@ bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
             break;
 
         default:
-            MELO_WARN("Invalid Heartbeat message data from nodeId %x: %x", getNodeId(), cmsg.readuint8(0));
+            MELO_WARN("Invalid Heartbeat message data from device %s (nodeId %x): %x", options_->name_.c_str(), getNodeId(), cmsg.readuint8(0));
             return false;
             break;
     }
@@ -207,7 +211,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
         }
     }
 
-    MELO_WARN("Received unexpected SDO answer. COB=%x / index=%x / subindex=%x / data=%x", cmsg.getCobId(), index, subindex, cmsg.readuint32(4));
+    MELO_WARN("Received unexpected SDO answer from device %s. COB=%x / index=%x / subindex=%x / data=%x", options_->name_.c_str(), cmsg.getCobId(), index, subindex, cmsg.readuint32(4));
     return false;
 }
 
