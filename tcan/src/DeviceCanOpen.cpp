@@ -146,7 +146,6 @@ void DeviceCanOpen::setNmtRestartRemoteDevice() {
 }
 
 void DeviceCanOpen::resetDevice() {
-    state_ = Initializing;
     setNmtRestartRemoteDevice();
 }
 
