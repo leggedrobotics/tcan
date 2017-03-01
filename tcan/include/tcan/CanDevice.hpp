@@ -14,6 +14,8 @@
 #include "tcan/CanMsg.hpp"
 #include "tcan/CanDeviceOptions.hpp"
 
+#include "message_logger/message_logger.hpp"
+
 namespace tcan {
 class CanBus;
 
@@ -63,7 +65,7 @@ class CanDevice {
     /*!
      * Configure the device
      * This function is automatically called after reception of a
-     * bootup message. (or more general: After reception of any message if the device was missing)
+     * bootup message. (or more general: After reception of any message if the device was in state Missing or Initializing)
      * @param msg   received message which caused the call of this function
      * @return      true if device is active
      */
@@ -90,6 +92,11 @@ class CanDevice {
 
     virtual int getStatus() const { return static_cast<int>(state_.load()); }
 
+    /*!
+     * Resets the device to Initializing state
+     */
+    virtual void resetDevice() { state_ = Initializing; }
+
  public: /// Internal functions
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
      * Calls the initDevice() function.
@@ -103,6 +110,9 @@ class CanDevice {
         if(state_ != Active && state_ != Error) {
             if(configureDevice(msg)) {
                 state_ = Active;
+                if(options_->printConfigInfo_) {
+                    MELO_INFO("Device %s configured successfully.", options_->name_.c_str());
+                }
             }
         }
     }

@@ -124,6 +124,11 @@ class DeviceCanOpen : public CanDevice {
         return static_cast<int>(nmtState_.load());
     }
 
+    /*!
+     * Resets the device to Initializing state and sends the RestartRemoteDevice NMT command.
+     */
+    virtual void resetDevice();
+
  public: /// Internal functions
     /*! Parse a heartbeat message
      * @param cmsg   reference to the received message
