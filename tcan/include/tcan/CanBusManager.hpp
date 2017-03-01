@@ -20,11 +20,15 @@ class CanBusManager : public BusManager<CanMsg> {
 
     virtual ~CanBusManager();
 
+    /*!
+     * @param index     Index of the bus
+     * @return          Pointer to CanBus instance
+     */
     CanBus* getCanBus(const unsigned int index) { return static_cast<CanBus*>(buses_[index]); }
 
 
     /*! Send a sync message on all buses
-     * @param	wheter the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
+     * @param waitForEmptyQueues     wheter the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
      * 			ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
      * 			Only useful in asynchronous mode.
      */
@@ -46,7 +50,7 @@ class CanBusManager : public BusManager<CanMsg> {
     bool resetBusError();
 
     /*!
-     *
+     * Resets all devices handled by all buses to Initializing state and sends appropriate restart commands to the devices
      */
     void resetAllDevices();
 

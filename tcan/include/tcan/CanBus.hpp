@@ -94,8 +94,14 @@ class CanBus : public Bus<CanMsg> {
         return tmp;
     }
 
+    /*!
+     * @return  Container with all devices handled by this bus
+     */
     const DeviceContainer& getDeviceContainer() const { return devices_; }
 
+    /*!
+     * Resets all devices handled by this bus to Initializing state and sends appropriate restart commands to the devices
+     */
     void resetAllDevices();
 
  public:/// INTERNAL FUNCTIONS
