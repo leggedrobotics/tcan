@@ -77,8 +77,11 @@ class CanDevice {
      * @return true if everything is ok.
      */
     virtual void sanityCheck() {
-        if(isTimedOut()) {
-            state_ = Missing;
+        if(!isMissing()) {
+            if(isTimedOut()) {
+                state_ = Missing;
+                MELO_WARN("Device %s timed out!", getName().c_str());
+            }
         }
     }
 
