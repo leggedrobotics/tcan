@@ -212,13 +212,16 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
 void SocketBus::handleBusError(const can_frame& msg) {
 
     // todo: really ignore arbitration lost?
-    if(msg.can_id & CAN_ERR_LOSTARB) {
-        return;
-    }
+    //if(msg.can_id & CAN_ERR_LOSTARB) {
+    //    return;
+    //}
 
     busErrorFlag_ = true;
     std::stringstream errorMsg;
-    errorMsg << "received bus error frame on bus " << options_->name_;
+    errorMsg << "received bus error frame on bus " << options_->name_ << " (";
+    for (int i = 0; i < 8; i++)
+      errorMsg << " " << int(msg.data[i]);
+    errorMsg << ")";
     // cob id
     if(msg.can_id & CAN_ERR_TX_TIMEOUT) {
       errorMsg << "  TX timeout (by netdevice driver)";
