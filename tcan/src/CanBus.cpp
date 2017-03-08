@@ -43,12 +43,12 @@ void CanBus::handleMessage(const CanMsg& msg) {
 }
 
 void CanBus::sanityCheck() {
-    bool isMissing = false;
+    bool isMissingOrError = false;
     bool allMissing = true;
     bool allActive = true;
     for(auto device : devices_) {
         device->sanityCheck();
-        isMissing |= device->isMissing();
+        isMissingOrError |= device->isMissing() | device->hasError();
         allMissing &= device->isMissing();
         allActive &= device->isActive();
     }
@@ -58,7 +58,7 @@ void CanBus::sanityCheck() {
         MELO_WARN("All devices missing on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
     }
 
-    isMissingDevice_ = isMissing;
+    isMissingDeviceOrHasError_ = isMissingOrError;
     allDevicesActive_ = allActive;
 }
 
