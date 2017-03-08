@@ -27,7 +27,6 @@ CanBus::~CanBus()
 }
 
 void CanBus::handleMessage(const CanMsg& msg) {
-
     // Check if CAN message is handled.
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
     if (it != cobIdToFunctionMap_.end()) {
@@ -45,11 +44,18 @@ void CanBus::handleMessage(const CanMsg& msg) {
 
 void CanBus::sanityCheck() {
     bool isMissing = false;
+    bool allMissing = true;
     bool allActive = true;
     for(auto device : devices_) {
         device->sanityCheck();
         isMissing |= device->isMissing();
+        allMissing &= device->isMissing();
         allActive &= device->isActive();
+    }
+
+    if(!isPassive() && allMissing && static_cast<const CanBusOptions*>(options_)->passivateIfNoDevices_) {
+        passivate();
+        MELO_WARN("All devices missing on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
     }
 
     isMissingDevice_ = isMissing;
