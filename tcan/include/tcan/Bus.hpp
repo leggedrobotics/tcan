@@ -26,7 +26,7 @@ class Bus {
 
     Bus() = delete;
     Bus(BusOptions* options):
-        isMissingDevice_(false),
+        isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
         isPassive_(options->startPassive_),
         options_(options),
@@ -127,7 +127,7 @@ class Bus {
     /*!
      * @return false if no device timed out
      */
-    inline bool isMissingDevice() const { return isMissingDevice_; }
+    inline bool isMissingDeviceOrHasError() const { return isMissingDeviceOrHasError_; }
 
     /*!
      * @return true if we received a message from all devices within timeout
@@ -305,8 +305,8 @@ class Bus {
     }
 
  protected:
-    // true if a device timed out. Devices in 'initializing' state are not considered as missing.
-    std::atomic<bool> isMissingDevice_;
+    // true if a device is in 'Missing' or 'Error' state.
+    std::atomic<bool> isMissingDeviceOrHasError_;
 
     // true if all devices are in active state (we received a message within the timeout)
     std::atomic<bool> allDevicesActive_;
