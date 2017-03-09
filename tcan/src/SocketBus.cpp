@@ -458,7 +458,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
     // bit 5-7
     errorMsg << "    controller specific additional information: " << msg.data[5] << " " <<  msg.data[6] << " " <<  msg.data[7];
 
-    MELO_ERROR_STREAM(errorMsg.str());
+    MELO_ERROR_THROTTLE_STREAM(0.5, errorMsg.str());
 }
 
 } /* namespace tcan */
