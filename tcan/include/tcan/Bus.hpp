@@ -121,12 +121,17 @@ class Bus {
     /*! write the message at the front of the queue to the CAN bus
      * @return true if a message was successfully written to the bus
      */
-    inline bool writeMessage()
+    inline bool writeMessage(bool& writeError)
     {
+        writeError = false;
         if(outgoingMsgs_.size() != 0) {
             if(writeData( outgoingMsgs_.front() )) {
                 outgoingMsgs_.pop();
                 return true;
+            }
+            else {
+              writeError = true;
+              return false;
             }
         }
 
