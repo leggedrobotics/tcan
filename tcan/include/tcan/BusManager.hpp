@@ -62,7 +62,7 @@ class BusManager {
                 }
             }
         }
-        return writeError;
+        return !writeError;
     }
 
     /*! Call sanityCheck(..) on all buses. Call this function in the control loop if synchronous mode is used.
