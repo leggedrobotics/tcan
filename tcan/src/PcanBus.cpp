@@ -47,9 +47,10 @@ bool PcanBus::initializeInterface()
     const char* interface = options->name_.c_str();
 
     /* open CAN */
-    int port = atoi( options->name_.c_str()[3]);
+    char buffer[256];
+    int port = atoi( interface[3]);
     handle_ = CAN_Open(HW_PCI, port);
-    if  (h == NULL) {
+    if  (handle_ == NULL) {
       MELO_FATAL("Opening CAN channel %s (port: %d) failed!", interface, port);
       return false;
     }

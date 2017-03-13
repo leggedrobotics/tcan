@@ -8,6 +8,7 @@
 #pragma once
 
 #include <libpcan.h>
+#include <pcan.h>
 #include "tcan/CanBus.hpp"
 #include "tcan/PcanBusOptions.hpp"
 
@@ -35,7 +36,7 @@ class PcanBus : public CanBus {
     void handleBusError(const can_frame& msg);
 
  protected:
-    Handle handle_;
+    HANDLE handle_;
 };
 
 } /* namespace tcan */
