@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME}
   src/IpBusManager.cpp
   src/CanBus.cpp
   src/SocketBus.cpp
+  src/PcanBus.cpp
   src/UniversalSerialBus.cpp
   src/IpBus.cpp
   src/DeviceCanOpen.cpp

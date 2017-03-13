@@ -253,7 +253,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
 
 
     // bit 0
-    errorMsg << "    bit number in bitstream: " <<  msg.data[0];
+    errorMsg << "    bit number in bitstream: " <<  ((int)msg.data[0]);
 
     // bit 1
     switch(msg.data[1]) {
@@ -456,7 +456,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
     }
 
     // bit 5-7
-    errorMsg << "    controller specific additional information: " << msg.data[5] << " " <<  msg.data[6] << " " <<  msg.data[7];
+    errorMsg << "    controller specific additional information: " << ((int)msg.data[5]) << " " <<  ((int)msg.data[6]) << " " <<  ((int)msg.data[7]);
 
     MELO_ERROR_THROTTLE_STREAM(0.5, errorMsg.str());
 }
