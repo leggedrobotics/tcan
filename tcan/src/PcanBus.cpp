@@ -22,6 +22,9 @@
 #include "message_logger/message_logger.hpp"
 #include <sstream>
 
+#include <stdio.h>
+#include <string.h>
+
 namespace tcan {
 
 PcanBus::PcanBus(const std::string& interface):
@@ -46,15 +49,21 @@ bool PcanBus::initializeInterface()
     const PcanBusOptions* options = static_cast<const PcanBusOptions*>(options_);
     const char* interface = options->name_.c_str();
 
-    /* open CAN */
-    char buffer[256];
-    int port = atoi( interface[3]);
+    MELO_INFO("Reading device: %s", interface);
+
+
+    int port = atoi(options->name_.substr(3,1).c_str());
+    MELO_INFO("Opening CAN channel %s (port: %d)", interface, port);
     handle_ = CAN_Open(HW_PCI, port);
     if  (handle_ == NULL) {
       MELO_FATAL("Opening CAN channel %s (port: %d) failed!", interface, port);
       return false;
     }
     DWORD status = CAN_Init(handle_, CAN_BAUD_1M, CAN_INIT_TYPE_ST);
+    if (status != CAN_ERR_OK) {
+      MELO_FATAL("Could not initialize CAN %s.", interface);
+      return false;
+    }
 
     MELO_INFO("Opened CAN %s.", interface);
 
@@ -72,8 +81,8 @@ bool PcanBus::readData() {
   */
   status = CAN_Read(handle_, &msg);
 
-  if(true) {
-    //		printf("read nothing\n");
+  if(status != CAN_ERR_OK) {
+    	printf("read nothing\n");
     return false;
   }
   else {
@@ -83,7 +92,7 @@ bool PcanBus::readData() {
     can_frame frame;
     frame.can_id = msg.ID;
     frame.can_dlc = msg.LEN;
-    std::copy(msg.DATA, &(msg.DATA[msg.can_dlc]), frame.data);
+    std::copy(msg.DATA, &(msg.DATA[ msg.LEN]), frame.data);
 
     if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
         handleBusError( frame );
@@ -102,7 +111,7 @@ bool PcanBus::writeData(const CanMsg& cmsg) {
     /* CAN 2.0 channel handle */
     DWORD status;
     TPCANMsg msg;
-    msg.ID = = cmsg.getCobId();
+    msg.ID = cmsg.getCobId();
     msg.MSGTYPE = MSGTYPE_STANDARD;
     msg.LEN = cmsg.getLength();
     std::copy(cmsg.getData(), &(cmsg.getData()[msg.LEN]), msg.DATA);
@@ -112,6 +121,9 @@ bool PcanBus::writeData(const CanMsg& cmsg) {
     */
     status = CAN_Write(handle_, &msg);
 
+    if(status != CAN_ERR_OK) {
+      return false;
+    }
     return true;
 }
 

@@ -12,7 +12,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS message_logger
-#  DEPENDS Boost
+  DEPENDS pcan
 )
 
 ###########
@@ -41,6 +41,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   pthread
+  pcan
 )
 
 #############
