@@ -24,7 +24,17 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 namespace tcan {
 
 PcanBus::PcanBus(const std::string& interface):
@@ -42,6 +52,7 @@ PcanBus::~PcanBus()
 {
     stopThreads();
     CAN_Close(handle_);
+//    __close(pcanHandle_.fd);
 }
 
 bool PcanBus::initializeInterface()
@@ -53,8 +64,46 @@ bool PcanBus::initializeInterface()
 
 
     int port = atoi(options->name_.substr(3,1).c_str());
-    MELO_INFO("Opening CAN channel %s (port: %d)", interface, port);
-    handle_ = CAN_Open(HW_PCI, port);
+    MELO_INFO("Opening CAN channel %s (port: %d) ", interface, port);
+//    handle_ = CAN_Open(HW_PCI, port);
+    std::string szDevNode;
+    __u16 wIrq = 0;
+    __u32 dwPort = 0;
+    switch (port) {
+      case 0:
+        dwPort = 0;
+        wIrq = 0;
+        szDevNode = "/dev/pcanpci0";
+        break;
+      case 1:
+        dwPort = 1;
+        wIrq = 1;
+        szDevNode = "/dev/pcanpci1";
+        break;
+      case 2:
+        dwPort = 0;
+        wIrq = 0;
+        szDevNode = "/dev/pcanpci2";
+        break;
+      case 3:
+        dwPort = 1;
+        wIrq = 1;
+        szDevNode = "/dev/pcanpci3";
+        break;
+      default:
+        MELO_ERROR("Port: %d is unknown", port);
+    }
+//    handle_ = CAN_Open(HW_PCI, dwPort);
+
+//    pcanHandle_.szVersionString[0] = 0;
+//    pcanHandle_.szDevicePath[0] = 0;
+
+
+//      strncpy(pcanHandle_.szDevicePath, szDevNode.c_str(), LOCAL_STRING_LEN);
+//    pcanHandle_.fd = open(szDevNode.c_str(), O_RDWR);
+//    handle_  = static_cast<void *>(&pcanHandle_);
+    handle_ = LINUX_CAN_Open(szDevNode.c_str(), O_RDWR);
+
     if  (handle_ == NULL) {
       MELO_FATAL("Opening CAN channel %s (port: %d) failed!", interface, port);
       return false;
@@ -74,25 +123,46 @@ bool PcanBus::initializeInterface()
 bool PcanBus::readData() {
 
   DWORD status;
-  TPCANMsg msg;
+//  TPCANMsg msg;
+  TPCANRdMsg msg;
 
+
+
+//  MELO_INFO("readData now read the shit from mother  %s", options_->name_.c_str());
+
+  for (int i=0; i<12; i++) {
+//    MELO_INFO("readData  %s %d",  options_->name_.c_str(), i);
   /* wait for a CAN 2.0 msg received from the CAN channel
   * (the function may block)
   */
-  status = CAN_Read(handle_, &msg);
+//  status = CAN_Read(handle_, &msg);
+
+  status = LINUX_CAN_Read_Timeout(handle_, &msg, 20);
+
+//  MELO_INFO("DONE readData now read the shit from mother  %s", options_->name_.c_str());
+//  status = LINUX_CAN_Read(handle_, &msg);
+//  MELO_INFO("Received CAN message on bus %s COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+//            options_->name_.c_str(), msg.Msg.ID, msg.Msg.DATA[1], msg.Msg.DATA[0], msg.Msg.DATA[0], msg.Msg.DATA[1], msg.Msg.DATA[2], msg.Msg.DATA[3], msg.Msg.DATA[4], msg.Msg.DATA[5], msg.Msg.DATA[6], msg.Msg.DATA[7]);
+
+//    MELO_INFO("Received CAN message on bus %s COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+//              options_->name_.c_str(), msg.ID, msg.DATA[1], msg.DATA[0], msg.DATA[0], msg.DATA[1], msg.DATA[2], msg.DATA[3], msg.DATA[4], msg.DATA[5], msg.DATA[6], msg.DATA[7]);
+
 
   if(status != CAN_ERR_OK) {
-    	printf("read nothing\n");
-    return false;
+//    MELO_ERROR("PcanBus::readData: read nothing");
+//    return false;
   }
   else {
 //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-
     can_frame frame;
-    frame.can_id = msg.ID;
-    frame.can_dlc = msg.LEN;
-    std::copy(msg.DATA, &(msg.DATA[ msg.LEN]), frame.data);
+//    frame.can_id = msg.ID;
+//    frame.can_dlc = msg.LEN;
+//    std::copy(msg.DATA, &(msg.DATA[ msg.LEN]), frame.data);
+    frame.can_id = msg.Msg.ID;
+    frame.can_dlc = msg.Msg.LEN;
+    std::copy(msg.Msg.DATA, &(msg.Msg.DATA[ msg.Msg.LEN]), frame.data);
+
 
     if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
         handleBusError( frame );
@@ -101,13 +171,15 @@ bool PcanBus::readData() {
         handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
     }
   }
+  }
 
-    return true;
+//    return true;
+    return false;
 }
 
 
 bool PcanBus::writeData(const CanMsg& cmsg) {
-
+//  MELO_INFO("writeData  %s",  options_->name_.c_str());
     /* CAN 2.0 channel handle */
     DWORD status;
     TPCANMsg msg;
@@ -119,11 +191,13 @@ bool PcanBus::writeData(const CanMsg& cmsg) {
     /* write standard msg
     * (the function may block)
     */
-    status = CAN_Write(handle_, &msg);
+//    status = CAN_Write(handle_, &msg);
 
-    if(status != CAN_ERR_OK) {
-      return false;
-    }
+    status =  LINUX_CAN_Write_Timeout(handle_, &msg, 20);
+
+//    if(status != CAN_ERR_OK) {
+//      return false;
+//    }
     return true;
 }
 
