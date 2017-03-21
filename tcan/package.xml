@@ -4,9 +4,9 @@
   <version>0.0.1</version>
   <description>The tcan package</description>
   <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
-  <license>BSD</license>
+  <license>Proprietary</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
-  
+  <author email="gehrinch@ethz.ch">Christian Gehring</author>
   <buildtool_depend>catkin</buildtool_depend>
   <depend>message_logger</depend>
 </package>
