@@ -40,9 +40,9 @@ class DeviceCanOpen : public CanDevice {
     static constexpr int RxSDOId = 0x600;
 
     enum class NMTStates : uint8_t {
-        stopped = 0,
-        preOperational,
-        operational
+        stopped = 1,
+        preOperational = 2,
+        operational = 3
     };
 
     /*! Constructors
@@ -116,6 +116,19 @@ class DeviceCanOpen : public CanDevice {
     bool isPreOperational()	const { return isActive() && (nmtState_ == NMTStates::preOperational); }
     bool isOperational()	const { return isActive() && (nmtState_ == NMTStates::operational); }
 
+    virtual int getStatus() const {
+        if(static_cast<int>(state_.load()) <= 0) {
+            // device is initializing, missing or has an error
+            return static_cast<int>(state_.load());
+        }
+        return static_cast<int>(nmtState_.load());
+    }
+
+    /*!
+     * Resets the device to Initializing state and sends the RestartRemoteDevice NMT command.
+     */
+    virtual void resetDevice();
+
  public: /// Internal functions
     /*! Parse a heartbeat message
      * @param cmsg   reference to the received message
@@ -134,7 +147,17 @@ class DeviceCanOpen : public CanDevice {
      */
     bool checkSdoTimeout();
 
+    /*!
+     * put the next SDO from the sdo queue into the bus output queue.
+     * WARNING: This function does not lock the sdoMsgsMutex_, so its up to the caller to do so.
+     */
     void sendNextSdo();
+
+    /*!
+     * Acquires lock on the sdo queue mutex and clears the queue
+     */
+    void clearSdoQueue();
+
 
     /*! Get the ID of an SDO answer by index and subIndex.
      * @param index SDO index.
@@ -142,6 +165,7 @@ class DeviceCanOpen : public CanDevice {
      * @return SDO id.
      */
     static uint32_t getSdoAnswerId(const uint16_t index, const uint8_t subIndex);
+
 
  protected:
     //! the can state the device is in

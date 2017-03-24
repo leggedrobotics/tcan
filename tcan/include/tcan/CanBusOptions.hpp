@@ -18,13 +18,21 @@ struct CanBusOptions : public BusOptions {
     }
 
     CanBusOptions(const std::string& name):
-        BusOptions(name)
+        BusOptions(name),
+        passivateOnBusError_(false),
+        passivateIfNoDevices_(false)
     {
     }
 
     virtual ~CanBusOptions()
     {
     }
+
+    //! If set to true, bus goes to passive mode (no message are sent on the bus) on reception of bus errors
+    bool passivateOnBusError_;
+
+    //! If set to true, bus goes to passive mode (no messages are sent on the bus) if all devices are missing.
+    bool passivateIfNoDevices_;
 };
 
 } /* namespace tcan */

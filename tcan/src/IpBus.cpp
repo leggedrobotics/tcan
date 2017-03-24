@@ -38,8 +38,8 @@ IpBus::~IpBus()
 
 void IpBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const IpBusOptions*>(options_)->maxDeviceTimeoutCounter_;
-    isMissingDevice_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
-    allDevicesActive_ = !isMissingDevice_;
+    isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
+    allDevicesActive_ = !isMissingDeviceOrHasError_;
 }
 
 

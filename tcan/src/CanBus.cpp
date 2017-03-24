@@ -27,37 +27,45 @@ CanBus::~CanBus()
 }
 
 void CanBus::handleMessage(const CanMsg& msg) {
-
-    // check if message is a bus error message
-    if(msg.getCobId() > 0x20000000) {
-        handleBusError(msg);
-    }else{
-        // Check if CAN message is handled.
-        CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
-        if (it != cobIdToFunctionMap_.end()) {
-            if(it->second.first) {
-                it->second.first->resetDeviceTimeoutCounter();
-            }
-            it->second.second(msg); // call function pointer
-        } else {
-            auto value = msg.getData();
-            MELO_WARN("Received CAN message that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
-                      msg.getCobId(), value[1], value[0], value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]);
+    // Check if CAN message is handled.
+    CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
+    if (it != cobIdToFunctionMap_.end()) {
+        if(it->second.first) {
+            it->second.first->resetDeviceTimeoutCounter();
+            it->second.first->configureDeviceInternal(msg);
         }
+        it->second.second(msg); // call function pointer
+    } else {
+        auto value = msg.getData();
+        MELO_INFO("Received CAN message on bus %s that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+                  options_->name_.c_str(), msg.getCobId(), value[1], value[0], value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]);
     }
 }
 
 void CanBus::sanityCheck() {
-    bool isMissing = false;
+    bool isMissingOrError = false;
+    bool allMissing = true;
     bool allActive = true;
     for(auto device : devices_) {
         device->sanityCheck();
-        isMissing |= device->isMissing();
+        isMissingOrError |= device->isMissing() | device->hasError();
+        allMissing &= device->isMissing();
         allActive &= device->isActive();
     }
 
-    isMissingDevice_ = isMissing;
+    if(!isPassive() && allMissing && static_cast<const CanBusOptions*>(options_)->passivateIfNoDevices_) {
+        passivate();
+        MELO_WARN("All devices missing on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+    }
+
+    isMissingDeviceOrHasError_ = isMissingOrError;
     allDevicesActive_ = allActive;
+}
+
+void CanBus::resetAllDevices() {
+    for(auto device : devices_) {
+        device->resetDevice();
+    }
 }
 
 } /* namespace tcan */

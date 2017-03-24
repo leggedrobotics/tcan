@@ -26,8 +26,9 @@ class Bus {
 
     Bus() = delete;
     Bus(BusOptions* options):
-        isMissingDevice_(false),
+        isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
+        isPassive_(options->startPassive_),
         options_(options),
         outgointMsgsMutex_(),
         outgoingMsgs_(),
@@ -105,9 +106,28 @@ class Bus {
     }
 
     /*!
-     * @return true if no device timed out
+     * Activates the bus and allows sending messages
      */
-    inline bool isMissingDevice() const { return isMissingDevice_; }
+    inline void activate() {
+        isPassive_ = false;
+    }
+
+    /*!
+     * Passivates the bus, thus discarding all outgoing messages
+     */
+    inline void passivate() {
+        isPassive_ = true;
+    }
+
+    /*!
+     * @return True if the bus is in passive state
+     */
+    inline bool isPassive() const { return isPassive_; }
+
+    /*!
+     * @return false if no device timed out
+     */
+    inline bool isMissingDeviceOrHasError() const { return isMissingDeviceOrHasError_; }
 
     /*!
      * @return true if we received a message from all devices within timeout
@@ -119,12 +139,14 @@ class Bus {
  public: /// Internal functions
 
     /*! write the message at the front of the queue to the CAN bus
+     * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked
      * @return true if a message was successfully written to the bus
      */
     inline bool writeMessage()
     {
         if(outgoingMsgs_.size() != 0) {
-            if(writeData( outgoingMsgs_.front() )) {
+            const bool writeSuccess = isPassive_ ? true : writeData( outgoingMsgs_.front() );
+            if(writeSuccess) {
                 outgoingMsgs_.pop();
                 return true;
             }
@@ -133,12 +155,19 @@ class Bus {
         return false;
     }
 
-    /*! read and parse a message from the CAN bus
+    /*! read and parse a message from the bus
      * @return true if a message was read
      */
     inline bool readMessage()
     {
-        return readData();
+        if(readData()) {
+            if(isPassive_ && options_->activateBusOnReception_) {
+                isPassive_ = false;
+                MELO_WARN("Auto-activated bus %s", options_->name_.c_str());
+            }
+            return true;
+        }
+        return false;
     }
 
     /*! Do a sanity check of the bus.
@@ -201,7 +230,6 @@ class Bus {
 
 
     bool processOutputQueue() {
-        bool writeSuccess = false;
         std::unique_lock<std::mutex> lock(outgointMsgsMutex_);
 
         while(outgoingMsgs_.size() == 0 && running_) {
@@ -217,7 +245,7 @@ class Bus {
         Msg msg = outgoingMsgs_.front();
         lock.unlock();
 
-        writeSuccess = writeData( msg );
+        const bool writeSuccess = isPassive_ ? true : writeData( msg );
 
         if(writeSuccess) {
             // only pop the message from the queue if sending was successful
@@ -277,11 +305,14 @@ class Bus {
     }
 
  protected:
-    // true if a device timed out. Devices in 'initializing' state are not considered as missing.
-    std::atomic<bool> isMissingDevice_;
+    // true if a device is in 'Missing' or 'Error' state.
+    std::atomic<bool> isMissingDeviceOrHasError_;
 
     // true if all devices are in active state (we received a message within the timeout)
     std::atomic<bool> allDevicesActive_;
+
+    // if true, the outgoing messages are not sent to the physical bus
+    std::atomic<bool> isPassive_;
 
     const BusOptions* options_;
 

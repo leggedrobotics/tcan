@@ -23,7 +23,8 @@ class SdoMsg : public CanMsg {
         READ=0x40,
         WRITE_1_BYTE=0x2f,
         WRITE_2_BYTE=0x2b,
-        WRITE_4_BYTE=0x23
+        WRITE_4_BYTE=0x23,
+        WRITE_UNSPEC=0x22
     };
 
     /*! Constructor
@@ -165,7 +166,7 @@ class SdoMsg : public CanMsg {
         return name;
     }
 
- private:
+ protected:
     //! if true, message will stay in the SDO queue until answer was received or timed out.
     bool requiresAnswer_;
 };
