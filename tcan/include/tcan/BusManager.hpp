@@ -39,10 +39,8 @@ class BusManager {
     /*! Read and parse messages from all buses. Call this function in the control loop if synchronous mode is used.
      */
     void readMessagesSynchrounous() {
-      int i=0;
         for(auto bus : buses_) {
             if(!bus->isAsynchronous()) {
-//              MELO_INFO("tcan:BusManager:  readMessagesSynchrounous %d", i++);
                 while(bus->readMessage()) {
                 }
             }
@@ -58,7 +56,7 @@ class BusManager {
 
             for(auto bus : buses_) {
                 if(!bus->isAsynchronous()) {
-                  bool writeErrorLocal;
+                    bool writeErrorLocal;
                     sendingData |= bus->writeMessage(writeErrorLocal);
                     writeError |=  writeErrorLocal;
                 }

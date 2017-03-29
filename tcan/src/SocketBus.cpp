@@ -77,13 +77,13 @@ bool SocketBus::initializeInterface()
     }
 
     // get default bufer sizes
-    int buf_size;
-    socklen_t len;
-    getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &len);
-    printf("sndbuf size: %d (%d)\n", buf_size, len);
-
-    getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &len);
-    printf("rcvbuf size: %d (%d)\n", buf_size, len);
+//    int buf_size;
+//    socklen_t len;
+//    getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &len);
+//    printf("sndbuf size: %d (%d)\n", buf_size, len);
+//
+//    getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &len);
+//    printf("rcvbuf size: %d (%d)\n", buf_size, len);
 
     // On some CAN drivers, the txqueuelen of the netdevice cannot be changed (default=10).
     // The buffer size of the socket is larger than those 10 messages, so the write(..) call never blocks but raises a ENOBUFS error when writing to the netdevice.
