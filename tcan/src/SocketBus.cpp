@@ -174,14 +174,13 @@ bool SocketBus::readData() {
 
 
 bool SocketBus::writeData(const CanMsg& cmsg) {
-
     // poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
     // If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
 //    if(!options_->asynchronous_) {
 //        socket_.revents = 0;
 //
-//        const int ret = poll( &socket_, 1, 1 );
+//        const int ret = poll( &socket_, 1, 1000 );
 //
 //        if ( ret == -1 ) {
 //            MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
@@ -217,6 +216,12 @@ void SocketBus::handleBusError(const can_frame& msg) {
     //}
 
     busErrorFlag_ = true;
+
+    if(static_cast<const CanBusOptions*>(options_)->passivateOnBusError_) {
+        passivate();
+        MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+    }
+
     std::stringstream errorMsg;
     errorMsg << "received bus error frame on bus " << options_->name_ << " (";
     for (int i = 0; i < 8; i++)
@@ -224,66 +229,65 @@ void SocketBus::handleBusError(const can_frame& msg) {
     errorMsg << ")";
     // cob id
     if(msg.can_id & CAN_ERR_TX_TIMEOUT) {
-      errorMsg << "  TX timeout (by netdevice driver)";
+      errorMsg << "TX timeout (by netdevice driver). ";
     }
     if(msg.can_id & CAN_ERR_LOSTARB) {
-      errorMsg << "   lost arbitration";
+      errorMsg << "lost arbitration. ";
     }
     if(msg.can_id & CAN_ERR_CRTL) {
-      errorMsg << "   controller problems";
+      errorMsg << "controller problems. ";
     }
     if(msg.can_id & CAN_ERR_PROT) {
-      errorMsg << "   protocol violations";
+      errorMsg << "protocol violations. ";
     }
     if(msg.can_id & CAN_ERR_TRX) {
-      errorMsg << "   transceiver status";
+      errorMsg << "transceiver status. ";
     }
     if(msg.can_id & CAN_ERR_ACK) {
-      errorMsg << "   received no ACK on transmission";
+      errorMsg << "received no ACK on transmission. ";
     }
     if(msg.can_id & CAN_ERR_BUSOFF) {
-      errorMsg << "   bus off";
+      errorMsg << "bus off. ";
     }
     if(msg.can_id & CAN_ERR_BUSOFF) {
-      errorMsg << "   bus error (may flood!)";
+      errorMsg << "bus error (may flood!). ";
     }
     if(msg.can_id & CAN_ERR_RESTARTED) {
-      errorMsg << "   controller restarted";
+      errorMsg << "controller restarted. ";
     }
 
-
     // bit 0
-    errorMsg << "    bit number in bitstream: " <<  ((int)msg.data[0]);
+    errorMsg << "bit number in bitstream: 0x" <<  std::hex << static_cast<int>(msg.data[0]);
 
     // bit 1
     switch(msg.data[1]) {
         default: // fall-through!
         case CAN_ERR_CRTL_UNSPEC:
-          errorMsg << "    error status of CAN-controller: unspecified";
+          errorMsg << " / error status of CAN-controller: unspecified";
             break;
 
         case CAN_ERR_CRTL_RX_OVERFLOW:
-          errorMsg << "    error status of CAN-controller: rx buffer overflow";
+          errorMsg << " / error status of CAN-controller: rx buffer overflow";
             break;
 
         case CAN_ERR_CRTL_TX_OVERFLOW:
-          errorMsg << "    error status of CAN-controller: tx buffer overflow";
+          errorMsg << " / error status of CAN-controller: tx buffer overflow";
             break;
 
         case CAN_ERR_CRTL_RX_WARNING:
-          errorMsg << "    error status of CAN-controller: reached warning level for RX errors";
+          errorMsg << " / error status of CAN-controller: reached warning level for RX errors";
             break;
 
         case CAN_ERR_CRTL_TX_WARNING:
-          errorMsg << "    error status of CAN-controller: reached warning level for TX errors";
+          errorMsg << " / error status of CAN-controller: reached warning level for TX errors";
             break;
 
         case CAN_ERR_CRTL_RX_PASSIVE:
-          errorMsg << "    error status of CAN-controller: reached error passive status RX";
+          errorMsg << " / error status of CAN-controller: reached error passive status RX";
             break;
 
         case CAN_ERR_CRTL_TX_PASSIVE:
-          errorMsg << "    error status of CAN-controller: reached error passive status TX";
+          errorMsg << " / error status of CAN-controller: reached error passive status TX";
             break;
     }
 
@@ -291,39 +295,39 @@ void SocketBus::handleBusError(const can_frame& msg) {
     switch(msg.data[2]) {
         default: // fall-through!
         case CAN_ERR_PROT_UNSPEC:
-            errorMsg << "    error in CAN protocol (type): unspecified";
+            errorMsg << " / error in CAN protocol (type): unspecified";
             break;
 
         case CAN_ERR_PROT_BIT:
-            errorMsg << "    error in CAN protocol (type): single bit error";
+            errorMsg << " / error in CAN protocol (type): single bit error";
             break;
 
         case CAN_ERR_PROT_FORM:
-            errorMsg << "    error in CAN protocol (type): frame format error";
+            errorMsg << " / error in CAN protocol (type): frame format error";
             break;
 
         case CAN_ERR_PROT_STUFF:
-            errorMsg << "    error in CAN protocol (type): bit stuffing error";
+            errorMsg << " / error in CAN protocol (type): bit stuffing error";
             break;
 
         case CAN_ERR_PROT_BIT0:
-            errorMsg << "    error in CAN protocol (type): unable to send dominant bit";
+            errorMsg << " / error in CAN protocol (type): unable to send dominant bit";
             break;
 
         case CAN_ERR_PROT_BIT1:
-            errorMsg << "    error in CAN protocol (type): unable to send recessive bit";
+            errorMsg << " / error in CAN protocol (type): unable to send recessive bit";
             break;
 
         case CAN_ERR_PROT_OVERLOAD:
-            errorMsg << "    error in CAN protocol (type): bus overload";
+            errorMsg << " / error in CAN protocol (type): bus overload";
             break;
 
         case CAN_ERR_PROT_ACTIVE:
-            errorMsg << "    error in CAN protocol (type): active error announcement";
+            errorMsg << " / error in CAN protocol (type): active error announcement";
             break;
 
         case CAN_ERR_PROT_TX:
-            errorMsg << "    error in CAN protocol (type): error occurred on transmission";
+            errorMsg << " / error in CAN protocol (type): error occurred on transmission";
             break;
     }
 
@@ -331,83 +335,83 @@ void SocketBus::handleBusError(const can_frame& msg) {
     switch(msg.data[3]) {
         default:
         case CAN_ERR_PROT_LOC_UNSPEC:
-            errorMsg << "    error in CAN protocol (location): unspecified";
+            errorMsg << " / error in CAN protocol (location): unspecified";
             break;
 
         case CAN_ERR_PROT_LOC_SOF:
-            errorMsg << "    error in CAN protocol (location): start of frame";
+            errorMsg << " / error in CAN protocol (location): start of frame";
             break;
 
         case CAN_ERR_PROT_LOC_ID28_21:
-            errorMsg << "    error in CAN protocol (location): ID bits 28 - 21 (SFF: 10 - 3)";
+            errorMsg << " / error in CAN protocol (location): ID bits 28 - 21 (SFF: 10 - 3)";
             break;
 
         case CAN_ERR_PROT_LOC_ID20_18:
-            errorMsg << "    error in CAN protocol (location): ID bits 20 - 18 (SFF: 2 - 0 )";
+            errorMsg << " / error in CAN protocol (location): ID bits 20 - 18 (SFF: 2 - 0 )";
             break;
 
         case CAN_ERR_PROT_LOC_SRTR:
-            errorMsg << "    error in CAN protocol (location): substitute RTR (SFF: RTR)";
+            errorMsg << " / error in CAN protocol (location): substitute RTR (SFF: RTR)";
             break;
 
         case CAN_ERR_PROT_LOC_IDE:
-            errorMsg << "    error in CAN protocol (location): identifier extension";
+            errorMsg << " / error in CAN protocol (location): identifier extension";
             break;
 
         case CAN_ERR_PROT_LOC_ID17_13:
-            errorMsg << "    error in CAN protocol (location): ID bits 17-13";
+            errorMsg << " / error in CAN protocol (location): ID bits 17-13";
             break;
 
         case CAN_ERR_PROT_LOC_ID12_05:
-            errorMsg << "    error in CAN protocol (location): ID bits 12-5";
+            errorMsg << " / error in CAN protocol (location): ID bits 12-5";
             break;
 
         case CAN_ERR_PROT_LOC_ID04_00:
-            errorMsg << "    error in CAN protocol (location): ID bits 4-0";
+            errorMsg << " / error in CAN protocol (location): ID bits 4-0";
             break;
 
         case CAN_ERR_PROT_LOC_RTR:
-            errorMsg << "    error in CAN protocol (location): RTR";
+            errorMsg << " / error in CAN protocol (location): RTR";
             break;
 
         case CAN_ERR_PROT_LOC_RES1:
-            errorMsg << "    error in CAN protocol (location): reserved bit 1";
+            errorMsg << " / error in CAN protocol (location): reserved bit 1";
             break;
 
         case CAN_ERR_PROT_LOC_RES0:
-            errorMsg << "    error in CAN protocol (location): reserved bit 0";
+            errorMsg << " / error in CAN protocol (location): reserved bit 0";
             break;
 
         case CAN_ERR_PROT_LOC_DLC:
-            errorMsg << "    error in CAN protocol (location): data length code";
+            errorMsg << " / error in CAN protocol (location): data length code";
             break;
 
         case CAN_ERR_PROT_LOC_DATA:
-            errorMsg << "    error in CAN protocol (location): data section";
+            errorMsg << " / error in CAN protocol (location): data section";
             break;
 
         case CAN_ERR_PROT_LOC_CRC_SEQ:
-            errorMsg << "    error in CAN protocol (location): CRC sequence";
+            errorMsg << " / error in CAN protocol (location): CRC sequence";
             break;
 
         case CAN_ERR_PROT_LOC_CRC_DEL:
-            errorMsg << "    error in CAN protocol (location): CRC delimiter";
+            errorMsg << " / error in CAN protocol (location): CRC delimiter";
             break;
 
         case CAN_ERR_PROT_LOC_ACK:
-            errorMsg << "    error in CAN protocol (location): ACK slot";
+            errorMsg << " / error in CAN protocol (location): ACK slot";
             break;
 
         case CAN_ERR_PROT_LOC_ACK_DEL:
-            errorMsg << "    error in CAN protocol (location): ACK delimiter";
+            errorMsg << " / error in CAN protocol (location): ACK delimiter";
             break;
 
         case CAN_ERR_PROT_LOC_EOF:
-            errorMsg << "    error in CAN protocol (location): end of frame";
+            errorMsg << " / error in CAN protocol (location): end of frame";
             break;
 
         case CAN_ERR_PROT_LOC_INTERM:
-            errorMsg << "    error in CAN protocol (location): intermission";
+            errorMsg << " / error in CAN protocol (location): intermission";
             break;
     }
 
@@ -415,48 +419,48 @@ void SocketBus::handleBusError(const can_frame& msg) {
     switch(msg.data[4]) {
         default:
         case CAN_ERR_TRX_UNSPEC:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_UNSPEC";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_UNSPEC";
             break;
 
         case CAN_ERR_TRX_CANH_NO_WIRE:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANH_NO_WIRE";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANH_NO_WIRE";
             break;
 
         case CAN_ERR_TRX_CANH_SHORT_TO_BAT:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANH_SHORT_TO_BAT";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANH_SHORT_TO_BAT";
             break;
 
         case CAN_ERR_TRX_CANH_SHORT_TO_VCC:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANH_SHORT_TO_VCC";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANH_SHORT_TO_VCC";
             break;
 
         case CAN_ERR_TRX_CANH_SHORT_TO_GND:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANH_SHORT_TO_GND";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANH_SHORT_TO_GND";
             break;
 
         case CAN_ERR_TRX_CANL_NO_WIRE:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANL_NO_WIRE";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANL_NO_WIRE";
             break;
 
         case CAN_ERR_TRX_CANL_SHORT_TO_BAT:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_BAT";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_BAT";
             break;
 
         case CAN_ERR_TRX_CANL_SHORT_TO_VCC:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_VCC";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_VCC";
             break;
 
         case CAN_ERR_TRX_CANL_SHORT_TO_GND:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_GND";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_GND";
             break;
 
         case CAN_ERR_TRX_CANL_SHORT_TO_CANH:
-            errorMsg << "    error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_CANH";
+            errorMsg << " / error status of CAN-transceiver: CAN_ERR_TRX_CANL_SHORT_TO_CANH";
             break;
     }
 
     // bit 5-7
-    errorMsg << "    controller specific additional information: " << ((int)msg.data[5]) << " " <<  ((int)msg.data[6]) << " " <<  ((int)msg.data[7]);
+    errorMsg << " / controller specific additional information: 0x" << std::hex << static_cast<int>(msg.data[5]) << " 0x" <<  std::hex << static_cast<int>(msg.data[6]) << " 0x" <<  std::hex << static_cast<int>(msg.data[7]);
 
     MELO_ERROR_THROTTLE_STREAM(0.5, errorMsg.str());
 }

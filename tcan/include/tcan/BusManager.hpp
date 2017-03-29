@@ -83,9 +83,9 @@ class BusManager {
      * Check if no device timed out
      * @return  True if at least one device is missing
      */
-    bool isMissingDevice() const {
+    bool isMissingDeviceOrHasError() const {
         for(auto bus : buses_) {
-            if(bus->isMissingDevice()) {
+            if(bus->isMissingDeviceOrHasError()) {
                 return true;
             }
         }

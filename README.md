@@ -1,7 +1,12 @@
 # Threaded CAN library #
 
+## Overview
+
 [![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=tcan)](http://rsl-ci.ethz.ch/job/tcan/)
 
+The source code is released under a [proprietary license](LICENSE).
+
+**Author(s):** Philipp Leemann, Christian Gehring
 
 ## Dependencies
 

@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} pthread
   CATKIN_DEPENDS message_logger
   DEPENDS pcan
 )
