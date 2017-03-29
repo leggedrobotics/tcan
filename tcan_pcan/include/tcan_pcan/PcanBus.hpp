@@ -10,16 +10,7 @@
 #include <libpcan.h>
 #include <pcan.h>
 #include "tcan/CanBus.hpp"
-#include "tcan/PcanBusOptions.hpp"
-
-//#include <unistd.h>
-//#include <sys/stat.h>
-//#include <fcntl.h>
-//#include <sys/ioctl.h>
-//
-//#define NO_RT 1
-//#define __COBALT__ 1
-//#include </home/integration/software/peak-linux-driver-8.3.1/lib/src/libprivate.h>
+#include "tcan_pcan/PcanBusOptions.hpp"
 
 
 namespace tcan {

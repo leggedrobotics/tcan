@@ -77,13 +77,13 @@ bool SocketBus::initializeInterface()
     }
 
     // get default bufer sizes
-    //	int buf_size;
-    //	socklen_t len;
-    //	getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &len);
-    //	printf("sndbuf size: %d (%d)\n", buf_size, len);
-    //
-    //	getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &len);
-    //	printf("rcvbuf size: %d (%d)\n", buf_size, len);
+    int buf_size;
+    socklen_t len;
+    getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &len);
+    printf("sndbuf size: %d (%d)\n", buf_size, len);
+
+    getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &len);
+    printf("rcvbuf size: %d (%d)\n", buf_size, len);
 
     // On some CAN drivers, the txqueuelen of the netdevice cannot be changed (default=10).
     // The buffer size of the socket is larger than those 10 messages, so the write(..) call never blocks but raises a ENOBUFS error when writing to the netdevice.
@@ -92,23 +92,25 @@ bool SocketBus::initializeInterface()
     // If this is not possible, the sndbuf size of the socket can be decrease, such that the socket writes are the limiting pipe, leading to blocking socket write(..) calls. (write becomes poll(..)-able)
     // https://www.mail-archive.com/socketcan-users@lists.berlios.de/msg00787.html
     // http://socket-can.996257.n3.nabble.com/Solving-ENOBUFS-returned-by-write-td2886.html
-//    if(options->sndBufLength_ != 0) {
-//        if(setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_)) != 0) {
-//        	MELO_WARN("Failed to set sndBuf length:\n  %s", strerror(errno));
-//        }
-//    }
+    if(options->sndBufLength_ != 0) {
+        if(setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_)) != 0) {
+        	MELO_WARN("Failed to set sndBuf length:\n  %s", strerror(errno));
+        }
+    }
 
     // set read timeout
-//    timeval timeout;
-//    timeout.tv_sec = 1;
-//    timeout.tv_usec = 0;
-//    if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
-//        MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
-//    }
-//    // set write timeout
-//    if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout)) != 0) {
-//        MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
-//    }
+    if (options->setReadTimeout_) {
+      if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&options->readTimeout_, sizeof(options->readTimeout_)) != 0) {
+          MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
+      }
+    }
+
+    // set write timeout
+    if (options->setWriteTimeout_) {
+      if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&options->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
+          MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
+      }
+    }
 
 
 
@@ -177,22 +179,22 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
     // poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
     // If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
-//    if(!options_->asynchronous_) {
-//        socket_.revents = 0;
-//
-//        const int ret = poll( &socket_, 1, 1000 );
-//
-//        if ( ret == -1 ) {
-//            MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
-//            return false;
-//        }else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
-//            // poll timed out, without being able to write => raise error
-//            MELO_WARN("polling for socket writeability timed out for bus %s. Socket overflow?", options_->name_.c_str());
-//            return false;
-//        }else{
-//            // socket ready for write operations => proceed
-//        }
-//    }
+    if(!options_->asynchronous_ && static_cast<const SocketBusOptions*>(options_)->usePoll_) {
+        socket_.revents = 0;
+
+        const int ret = poll( &socket_, 1, 1000 );
+
+        if ( ret == -1 ) {
+            MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            return false;
+        }else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
+            // poll timed out, without being able to write => raise error
+            MELO_WARN("polling for socket writeability timed out for bus %s. Socket overflow?", options_->name_.c_str());
+            return false;
+        }else{
+            // socket ready for write operations => proceed
+        }
+    }
 
     can_frame frame;
     frame.can_id = cmsg.getCobId();
@@ -462,7 +464,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
     // bit 5-7
     errorMsg << " / controller specific additional information: 0x" << std::hex << static_cast<int>(msg.data[5]) << " 0x" <<  std::hex << static_cast<int>(msg.data[6]) << " 0x" <<  std::hex << static_cast<int>(msg.data[7]);
 
-    MELO_ERROR_THROTTLE_STREAM(0.5, errorMsg.str());
+    MELO_ERROR_THROTTLE_STREAM(static_cast<const SocketBusOptions*>(options_)->canErrorThrottleTime_, errorMsg.str());
 }
 
 } /* namespace tcan */

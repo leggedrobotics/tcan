@@ -1,8 +1,8 @@
 /*
  * PcanBusOptions.hpp
  *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
+ *  Created on: Mar 15, 2017
+ *      Author: Christian Gehring
  */
 
 #pragma once
@@ -25,7 +25,8 @@ struct PcanBusOptions : public CanBusOptions {
         loopback_(false),
         sndBufLength_(0),
         canErrorMask_(CAN_ERR_MASK),
-        canFilters_()
+        canFilters_(),
+        canErrorThrottleTime_(0.0)
     {
     }
 
@@ -47,6 +48,8 @@ struct PcanBusOptions : public CanBusOptions {
     //! vector of can filters to be applied
     // see https://www.kernel.org/doc/Documentation/networking/can.txt
     std::vector<can_filter> canFilters_;
+
+    double canErrorThrottleTime_;
 };
 
 } /* namespace tcan */
