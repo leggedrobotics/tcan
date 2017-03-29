@@ -44,12 +44,18 @@ target_link_libraries(usb_example_node
   ${catkin_LIBRARIES}
 )
 
-
 add_executable(tcp_example_node
   src/TcpConnection.cpp
   src/tcp_example_node.cpp
 )
 target_link_libraries(tcp_example_node
+  ${catkin_LIBRARIES}
+)
+
+add_executable(ethercat_example_node
+  src/ethercat_example_node.cpp
+)
+target_link_libraries(ethercat_example_node
   ${catkin_LIBRARIES}
 )
 
