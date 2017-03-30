@@ -35,22 +35,19 @@ class EtherCatDevice {
      */
     EtherCatDevice() = delete;
 
-    EtherCatDevice(const uint32_t address, const std::string& name):
-        EtherCatDevice(new EtherCatDeviceOptions(address, name))
-    {
+    EtherCatDevice(const uint32_t address, const std::string& name)
+    :   EtherCatDevice(new EtherCatDeviceOptions(address, name)) {
     }
 
     EtherCatDevice(EtherCatDeviceOptions* options):
         options_(options),
         deviceTimeoutCounter_(0),
         state_(Initializing),
-        bus_(nullptr)
-    {
+        bus_(nullptr) {
     }
 
     //! Destructor
-    virtual ~EtherCatDevice()
-    {
+    virtual ~EtherCatDevice() {
         delete options_;
     }
 
@@ -60,7 +57,9 @@ class EtherCatDevice {
      *   restart remote node, ...)
      * @return true if successfully initialized
      */
-    virtual bool initDevice() = 0;
+    virtual bool initDevice() {
+        return true;
+    }
 
     /*!
      * Configure the device
@@ -69,7 +68,9 @@ class EtherCatDevice {
      * @param msg   received message which caused the call of this function
      * @return      true if device is active
      */
-    virtual bool configureDevice(const CanMsg& msg) = 0;
+    virtual bool configureDevice(const CanMsg& msg) {
+        return true;
+    }
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
@@ -85,7 +86,7 @@ class EtherCatDevice {
         }
     }
 
-    inline uint32_t getNodeId() const { return options_->address_; }
+    inline uint32_t getAddress() const { return options_->address_; }
     inline const std::string& getName() const { return options_->name_; }
 
     inline bool isInitializing() const { return (state_ == Initializing); }

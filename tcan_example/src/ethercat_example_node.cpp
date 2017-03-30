@@ -60,29 +60,41 @@ void signal_handler(int) {
 }
 
 int main() {
+  const bool asynchronous = false;
+
 	signal(SIGINT, signal_handler);
-	tcan::EtherCatBusManager myManager_;
-	tcan::EtherCatBusOptions myOptions_;
-	myOptions_.name_ = "enp0s31f6";
-	tcan::EtherCatBus myBus_(&myOptions_);
-	myManager_.addBus(&myBus_);
+
+  tcan::EtherCatDevice device(1, "? M:0000009a I:00030924");
+
+	tcan::EtherCatBusOptions* busOptions = new tcan::EtherCatBusOptions(); // TODO: Why are the options destroyed in the bus destructor?
+	busOptions->name_ = "enp0s31f6";
+	busOptions->asynchronous_ = asynchronous;
+	tcan::EtherCatBus bus(busOptions);
+  bus.addDevice(&device);
+
+  tcan::EtherCatBusManager busManager;
+	if (!busManager.addBus(&bus)) {
+	  MELO_ERROR_STREAM("Bus could not be added.");
+	  return 0;
+	}
+  std::cout << "bus added and initialized" << std::endl;
 
 	auto nextStep = std::chrono::steady_clock::now();
 
 	while(g_running) {
-#ifdef USE_SYNCHRONOUS_MODE
-		myManager_.readMessagesSynchrounous();
-		myManager_.sanityCheckSynchronous();
-#endif
-//		for(auto device : myManager_.getConnectionContainer()) {
-//			device.second->emplaceMessage(tcan::IpMsg("hi"));
-//			// as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
-//		}
-#ifdef USE_SYNCHRONOUS_MODE
-		myManager_.writeMessagesSynchronous();
-#endif
+	  std::cout << "in loop" << std::endl;
+    if (!asynchronous) {
+      busManager.readMessagesSynchrounous();
+      busManager.sanityCheckSynchronous();
+    }
+//	  device.emplaceMessage(tcan::IpMsg("hi"));
+		// as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
+    if (!asynchronous) {
+      std::cout << " writeMessagesSynchronous " << std::endl;
+      busManager.writeMessagesSynchronous();
+    }
 
-		nextStep += std::chrono::microseconds(1000000);
+		nextStep += std::chrono::microseconds(100000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;
