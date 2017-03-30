@@ -429,6 +429,156 @@ class EtherCatBus : public Bus<EthernetFrame> {
         // check time the frame took to travel through the physical bus
         // check working counters
         // extract datagrams from ethernet frame and map datagrams to device callback
+
+        static int test_step=0;
+        static int step_counter=0;
+
+        // Test procedure
+        switch (test_step)
+        {
+            case 0: // Reset errors
+                if (step_counter >= 2000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, FAULT_RESET, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Clearing errors...\n\n");
+                }
+                break;
+
+            case 1: // Startup
+                if (step_counter >= 5000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Startup up drive...\n\n");
+                }
+                break;
+
+            case 2: // Switch on
+                if (step_counter >= 5000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Switching on drive...\n\n");
+                }
+                break;
+            case 3: // enable operation
+                if(step_counter >= 5000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Enabling operation...\n\n");
+                }
+            break;
+            case 4: // wait delay
+                if(step_counter >= 7000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Running test...\n\n");
+                }
+                break;
+            case 5: // Run test output
+                if(step_counter >= 7000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Running test...\n\n");
+                }
+                break;
+            case 6: // Stop before end
+                if(step_counter >= 5000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Stopping test...\n\n");
+                }
+                break;
+            case 7: // Stop before end
+                if(step_counter >= 5000)
+                {
+                    step_counter = 0;
+                    test_step++;
+                    running_ = false;
+                }
+                else if (step_counter == 1)
+                {
+                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
+                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
+                    ecatcomm_slave_print_controlword(outdata_.controlword);
+                    ecatcomm_slave_print_statusword(indata_.statusword);
+                    printf("Exiting test...\n\n");
+                }
+                break;
+        }
+
+        step_counter++;
     }
 
     /*! Initialize the device driver
@@ -525,8 +675,7 @@ class EtherCatBus : public Bus<EthernetFrame> {
 
 
 
-        if (ecatContext_.slavelist[0].state == EC_STATE_OPERATIONAL )
-        {
+        if (ecatContext_.slavelist[0].state == EC_STATE_OPERATIONAL ) {
             printf("Operational state reached for all slaves.\n");
             inOP_ = true;
 
@@ -542,14 +691,11 @@ class EtherCatBus : public Bus<EthernetFrame> {
             ecatcomm_slave_get_txpdo(&indata_);
             osal_usleep(1000);
         }
-        else
-        {
+        else {
             printf("Not all slaves reached operational state.\n");
             ecx_readstate(&ecatContext_);
-            for(int i = 1; i <= *ecatContext_.slavecount ; i++)
-            {
-                if(ecatContext_.slavelist[i].state != EC_STATE_OPERATIONAL)
-                {
+            for(int i = 1; i <= *ecatContext_.slavecount; i++) {
+                if(ecatContext_.slavelist[i].state != EC_STATE_OPERATIONAL) {
                     printf("Slave %d State=0x%2.2x StatusCode=0x%4.4x : %s\n",
                     i, ecatContext_.slavelist[i].state, ecatContext_.slavelist[i].ALstatuscode, ec_ALstatuscode2string(ecatContext_.slavelist[i].ALstatuscode));
                 }
@@ -656,164 +802,16 @@ class EtherCatBus : public Bus<EthernetFrame> {
      */
     virtual bool writeData(const EthernetFrame& msg) {
         static int i = 0;
-        static int test_step=0;
-        static int step_counter=0;
         static int print_counter=0;
 
         if (!running_) {
             std::cout << "is not running" << std::endl;
             return false;
         }
-        std::cout << "writing" << std::endl;
+//        std::cout << "writing" << std::endl;
 
         // Step
-        step_counter++;
         i++;
-
-        // Test procedure
-        switch (test_step)
-        {
-            case 0: // Reset errors
-                if (step_counter >= 2000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, FAULT_RESET, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Clearing errors...\n\n");
-                }
-                break;
-
-            case 1: // Startup
-                if (step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Startup up drive...\n\n");
-                }
-                break;
-
-            case 2: // Switch on
-                if (step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Switching on drive...\n\n");
-                }
-                break;
-            case 3: // enable operation
-                if(step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Enabling operation...\n\n");
-                }
-            break;
-            case 4: // wait delay
-                if(step_counter >= 7000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 1.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Running test...\n\n");
-                }
-                break;
-            case 5: // Run test output
-                if(step_counter >= 7000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, -1.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Running test...\n\n");
-                }
-                break;
-            case 6: // Stop before end
-                if(step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Stopping test...\n\n");
-                }
-                break;
-            case 7: // Stop before end
-                if(step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                    running_ = false;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Exiting test...\n\n");
-                }
-                break;
-        }
 
         // Handle PDO streams
         ecx_send_processdata(&ecatContext_);
@@ -842,9 +840,9 @@ class EtherCatBus : public Bus<EthernetFrame> {
             print_counter = 0;
         }
 
-        printf("\n\n");
-        inOP_ = false;
-        return false;
+//        inOP_ = false;
+
+        return true;
     }
 
     /*! Do a sanity check of all devices on this bus.

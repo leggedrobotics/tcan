@@ -77,24 +77,24 @@ int main() {
 	  MELO_ERROR_STREAM("Bus could not be added.");
 	  return 0;
 	}
-  std::cout << "bus added and initialized" << std::endl;
+//  std::cout << "bus added and initialized" << std::endl;
 
 	auto nextStep = std::chrono::steady_clock::now();
 
 	while(g_running) {
-	  std::cout << "in loop" << std::endl;
+//	  std::cout << "in loop" << std::endl;
     if (!asynchronous) {
       busManager.readMessagesSynchrounous();
       busManager.sanityCheckSynchronous();
     }
-//	  device.emplaceMessage(tcan::IpMsg("hi"));
+	  bus.emplaceMessage(tcan::EthernetFrame());
 		// as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
     if (!asynchronous) {
-      std::cout << " writeMessagesSynchronous " << std::endl;
+//      std::cout << " writeMessagesSynchronous " << std::endl;
       busManager.writeMessagesSynchronous();
     }
 
-		nextStep += std::chrono::microseconds(100000);
+		nextStep += std::chrono::microseconds(1000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;
