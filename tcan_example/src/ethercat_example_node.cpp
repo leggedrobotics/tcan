@@ -483,6 +483,9 @@ int main() {
     static int i = 0;
     static int print_counter=0;
 
+    if (bus.getData())
+        ecatcomm_slave_get_txpdo(&indata_, bus.getData()->rxAndTxDatagrams_[1].second);
+
     if(++print_counter >= 5) {
 //        printf("Processdata cycle %4d, WKC %d", i++, wkc_.load());
         printf("Processdata cycle %4d", i++);
@@ -507,8 +510,6 @@ int main() {
 
 
 
-    if (bus.getData())
-        ecatcomm_slave_get_txpdo(&indata_, bus.getData()->rxAndTxDatagrams_[1].second);
 	  bus.emplaceMessage(createDatagrams());
 
 

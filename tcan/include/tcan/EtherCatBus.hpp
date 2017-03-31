@@ -476,7 +476,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
           return false;
         }
 
-        for (int i = 1; i < *ecatContext_.slavecount; i++) {
+        for (int i = 1; i <= *ecatContext_.slavecount; i++) {
 //            memcpy(
 //                datagramsSent_->rxAndTxDatagrams_[i].first.data_,
 //                ecatContext_.slavelist[i].inputs,
