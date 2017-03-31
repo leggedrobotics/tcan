@@ -22,27 +22,28 @@
 #include "tcan/CanMsg.hpp"
 #include "tcan/EtherCatBusOptions.hpp"
 #include "tcan/EtherCatDevice.hpp"
-#include "tcan/EthernetFrame.hpp"
+#include "tcan/EtherCatDatagramData.hpp"
+#include "tcan/SdoMsg.hpp"
 
 namespace tcan {
 
 
 
-struct EthernetHeader {
-    uint8_t destination_[6];
-    uint8_t source_[6];
-    uint8_t etherType_[2];
+//struct EthernetHeader {
+//    uint8_t destination_[6];
+//    uint8_t source_[6];
+//    uint8_t etherType_[2];
+//
+//    EthernetHeader()
+//    :   destination_{0,0,0,0,0,0},
+//        source_{0,0,0,0,0,0},
+//        etherType_{0,0} {}
+//};
 
-    EthernetHeader()
-    :   destination_{0,0,0,0,0,0},
-        source_{0,0,0,0,0,0},
-        etherType_{0,0} {}
-};
-
-struct EthercatHeader {
+struct EtherCatHeader {
     uint16_t data_ = 0;
 
-    EthercatHeader() {}
+    EtherCatHeader() {}
 
     uint16_t getLength() const {
         return (data_ & 0xFFE0) >> 5;
@@ -72,13 +73,13 @@ struct EthercatHeader {
     }
 };
 
-class Datagram {
+class EtherCatDatagram {
  public:
     inline void resize(const uint16_t length) {
         uint8_t* oldData = data_;
         data_ = new uint8_t[length];
-        std::copy(&oldData[0], &oldData[header_.lenRCM_.lenRCMElements_.len_], data_);
-        header_.lenRCM_.lenRCMElements_.len_ = length;
+        std::copy(&oldData[0], &oldData[header_.lenRCM_.elements_.len_], data_);
+        header_.lenRCM_.elements_.len_ = length;
         delete[] oldData;
     }
 
@@ -89,13 +90,13 @@ class Datagram {
     }
 
     inline const uint16_t getTotalLength() const { return getDataLength() + 12; }
-    inline const uint16_t getDataLength() const { return header_.lenRCM_.lenRCMElements_.len_; }
+    inline const uint16_t getDataLength() const { return header_.lenRCM_.elements_.len_; }
     inline const uint8_t* getData() const { return data_; }
     inline const uint16_t getWorkingCounter() const { return workingCounter_; }
 
  private:
 
-    struct DatagramHeader {
+    struct EtherCatDatagramHeader {
         enum class Command : uint8_t {
             NOP=0, // No operation
             APRD=1, // Auto Increment Read
@@ -122,8 +123,8 @@ class Datagram {
         };
         // Note: The constructor per default calls the initializer of the first element of a union.
         union LenRCM {
-          uint16_t lenRCMAll_;
-          LenRCMBits lenRCMElements_;
+          uint16_t all_;
+          LenRCMBits elements_;
         };
 
         Command cmd_;
@@ -133,7 +134,7 @@ class Datagram {
         uint16_t irq_;
 
 //        DatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), len_(0), reserved_(0), circulating_(0), more_(0), irq_(0) { }
-        DatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), lenRCM_{0}, irq_(0) { }
+        EtherCatDatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), lenRCM_{0}, irq_(0) { }
 
 //        uint16_t getLength() const {
 //            return (lenRCM_ & 0xFFE0) >> 5;
@@ -174,7 +175,7 @@ class Datagram {
 
 
  public:
-    DatagramHeader header_;
+    EtherCatDatagramHeader header_;
     uint8_t* data_ = nullptr;
     uint16_t workingCounter_ = 0;
 
@@ -182,106 +183,22 @@ class Datagram {
 };
 
 
-
-
-typedef enum ECAT_DSP402_COMMAND_TYPE
-{
-    SWITCH_ON           = 0x00,
-    SHUTDOWN            ,
-    DISABLE_VOLTAGE     ,
-    ENABLE_VOLTAGE      ,
-    QUICK_STOP          ,
-    DISABLE_OPERATION   ,
-    ENABLE_OPERATION    ,
-    FAULT_RESET         ,
-    HALT                ,
-    HALT_RESET          ,
-    CLEAR_CONTROLWORD   ,
-
-} dsp402_command_e;
-
-// Note: Bit field ordering depends on the Endianness which is implementation dependent.
-typedef struct DSP402_STATUSWORD_BITS
-{
-    uint16_t ready_to_switch_on:1;
-    uint16_t switched_on:1;
-    uint16_t operation_enabled:1;
-    uint16_t fault:1;
-    uint16_t voltage_enabled:1;
-    uint16_t quick_stop:1;
-    uint16_t switch_on_disabled:1;
-    uint16_t warning:1;
-    uint16_t manufacturer_specific_0:1;
-    uint16_t remote:1;
-    uint16_t operation_mode_specific_0:1;
-    uint16_t internal_limit_active:1;
-    uint16_t operation_mode_specific_1:1;
-    uint16_t operation_mode_specific_2:1;
-    uint16_t manufacturer_specific_1:2;
-
-} dsp402_statusword_bits_t;
-
-typedef union DSP402_STATUSWORD_TYPE
-{
-    uint16_t all;
-    dsp402_statusword_bits_t bits;
-
-} dsp402_statusword_t;
-
-typedef struct DSP402_CONTROLWORD_BITS
-{
-    uint16_t switch_on:1;
-    uint16_t enable_voltage:1;
-    uint16_t quick_stop:1;
-    uint16_t enable_operation:1;
-    uint16_t operation_mode_specific_0:3;
-    uint16_t fault_reset:1;
-    uint16_t halt:1;
-    uint16_t operation_mode_specific_1:1;
-    uint16_t rsrvd:1;
-    uint16_t manufacturer_specific:5;
-
-} dsp402_controlword_bits_t;
-
-typedef union DSP402_CONTROLWORD_TYPE
-{
-    uint16_t all;
-    dsp402_controlword_bits_t bits;
-
-} dsp402_controlword_t;
-
-typedef struct ELMO_INDATA_TYPE
-{
-    dsp402_statusword_t statusword;
-
-    int position;
-    int velocity;
-
-    int digitalin;
-
-    int busvoltage;
-    int motorcurrent;
-
-} elmo_twitter_indata_t;
-
-typedef struct ELMO_OUTDATA_TYPE
-{
-    dsp402_controlword_t controlword;
-
-    int torque;
-
-} elmo_twitter_outdata_t;
-
-
-
-class EtherCatBus : public Bus<EthernetFrame> {
+class EtherCatDatagrams {
  public:
-    typedef std::function<bool(const CanMsg&)> CallbackPtr;
+    // TODO: function callbacks could be added here.
+    // TODO: avoid multiple pdos per address?
+    std::unordered_map<uint32_t, std::pair<EtherCatDatagram, EtherCatDatagram>> rxAndTxDatagrams_;
+};
+
+
+class EtherCatBus : public Bus<EtherCatDatagrams> {
+ public:
+    typedef std::function<bool(const EtherCatDatagram&)> CallbackPtr;
     typedef std::unordered_map<uint32_t, std::pair<EtherCatDevice*, CallbackPtr>> AddressToFunctionMap;
 
     EtherCatBus() = delete;
     EtherCatBus(EtherCatBusOptions* options)
-    : Bus<EthernetFrame>(options),
+    : Bus<EtherCatDatagrams>(options),
       wkcExpected_(0),
       wkc_(0),
       needlf_(false),
@@ -311,7 +228,7 @@ class EtherCatBus : public Bus<EthernetFrame> {
       }) {}
 
     virtual ~EtherCatBus() {
-        exit();
+        cleanupInterface();
     }
 
     /*!
@@ -336,86 +253,63 @@ class EtherCatBus : public Bus<EthernetFrame> {
         return device->initDeviceInternal(this);
     }
 
-    template <class T>
-    inline std::shared_ptr<Datagram> addReadDatagram(Datagram&& datagram, T* device, bool(std::common_type<T>::type::*fp)()) {
-        // add a datagram linked with a callback to addressToFunctionMap_, use datagram address as key
-        return addDatagram(std::forward<Datagram>(datagram));
-    }
-
-    inline std::shared_ptr<Datagram> addWriteDatagram(Datagram&& datagram) {
-        return addDatagram(std::forward<Datagram>(datagram));
-    }
+//    template <class T>
+//    inline std::shared_ptr<EtherCatDatagram> addReadDatagram(EtherCatDatagram&& datagram, T* device, bool(std::common_type<T>::type::*fp)()) {
+//        // add a datagram linked with a callback to addressToFunctionMap_, use datagram address as key
+//        return addDatagram(std::forward<EtherCatDatagram>(datagram));
+//    }
+//
+//    inline std::shared_ptr<EtherCatDatagram> addWriteDatagram(EtherCatDatagram&& datagram) {
+//        return addDatagram(std::forward<EtherCatDatagram>(datagram));
+//    }
 
     /*!
      * Should be called from the same thread as write operations on the datagrams, otherwise it is up to the user to ensure thread safety
      * @return  true on success
      */
-    inline void dispatchFrame() {
-        // TODO: How are SDOs handled?
-        // TODO: Is the ethernet frame size fixed?
-        // TODO: SOEM: Where are the headers? First slave inputs (RxPDOs), the outputs (TxPDOs))
-
-        // TODO: These values are still unknown.
-        EthernetHeader ethernetHeader;
-        EthercatHeader ethercatHeader;
-        uint64_t fcs = 0;
-
-        // Compute length of the ethernet frame.
-        uint16_t len = 20; // Ethernet + EtherCat overhead. TODO: derive EthernetFrame from GenericMsg and add length getter
-        for (const auto& datagramPtr : datagrams_) {
-            len += datagramPtr->getTotalLength();
-        }
-
-        // Instantiate data.
-        uint8_t* data = new uint8_t[len];
-        uint16_t pos = 0;
-
-        // Copy ethernet header.
-        for (uint16_t i = 0; i < 6; i++) {
-            data[pos++] = ethernetHeader.destination_[i];
-        }
-        for (uint16_t i = 0; i < 6; i++) {
-            data[pos++] = ethernetHeader.source_[i];
-        }
-        for (uint16_t i = 0; i < 2; i++) {
-            data[pos++] = ethernetHeader.etherType_[i];
-        }
-        // Copy ethercat header.
-        data[pos++] = static_cast<uint8_t>((ethercatHeader.data_ >> 0) & 0xFF);
-        data[pos++] = static_cast<uint8_t>((ethercatHeader.data_ >> 8) & 0xFF);
-        // Copy ethercat datagrams.
-        for (const auto& datagramPtr : datagrams_) {
-            // Copy ethercat datagram header.
-            data[pos++] = static_cast<uint8_t>(datagramPtr->header_.cmd_);
-            data[pos++] = static_cast<uint8_t>(datagramPtr->header_.idx_);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 0) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 8) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 16) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 24) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.lenRCM_.lenRCMAll_ >> 0) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.lenRCM_.lenRCMAll_ >> 8) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.irq_ >> 0) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.irq_ >> 8) & 0xFF);
-            // Copy ethercat datagram data.
-            for (uint16_t i = 0; i < datagramPtr->getDataLength(); i++) {
-                data[pos++] = static_cast<uint8_t>(datagramPtr->data_[i]);
-            }
-            // Copy ethercat datagram working counter.
-            data[pos++] = static_cast<uint8_t>((datagramPtr->workingCounter_ >> 0) & 0xFF);
-            data[pos++] = static_cast<uint8_t>((datagramPtr->workingCounter_ >> 8) & 0xFF);
-        }
-        // Copy ethernet FCS.
-        for(uint16_t i = 0; i < 4; i++) {
-            data[pos++] = static_cast<uint8_t>((fcs >> i*8) & 0xFF);
-        }
-
-        // compute expected working counter
-
-        // other option:
-        EthernetFrame msg;
-        msg.emplaceData(len, data);
-        sendMessage(msg);
-    }
+//    inline void dispatchFrame() {
+//        // Compute length of the ethernet frame.
+//        uint16_t len = 20; // Ethernet + EtherCat overhead. TODO: derive EthernetFrame from GenericMsg and add length getter
+//        for (const auto& datagramPtr : datagrams_) {
+//            len += datagramPtr->getTotalLength();
+//        }
+//
+//        // Instantiate data.
+//        uint8_t* data = new uint8_t[len];
+//        uint16_t pos = 0;
+//
+//        // Copy ethercat header.
+//        data[pos++] = static_cast<uint8_t>((ethercatHeader.data_ >> 0) & 0xFF);
+//        data[pos++] = static_cast<uint8_t>((ethercatHeader.data_ >> 8) & 0xFF);
+//        // Copy ethercat datagrams.
+//        for (const auto& datagramPtr : datagrams_) {
+//            // Copy ethercat datagram header.
+//            data[pos++] = static_cast<uint8_t>(datagramPtr->header_.cmd_);
+//            data[pos++] = static_cast<uint8_t>(datagramPtr->header_.idx_);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 0) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 8) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 16) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.address_ >> 24) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.lenRCM_.lenRCMAll_ >> 0) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.lenRCM_.lenRCMAll_ >> 8) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.irq_ >> 0) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->header_.irq_ >> 8) & 0xFF);
+//            // Copy ethercat datagram data.
+//            for (uint16_t i = 0; i < datagramPtr->getDataLength(); i++) {
+//                data[pos++] = static_cast<uint8_t>(datagramPtr->data_[i]);
+//            }
+//            // Copy ethercat datagram working counter.
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->workingCounter_ >> 0) & 0xFF);
+//            data[pos++] = static_cast<uint8_t>((datagramPtr->workingCounter_ >> 8) & 0xFF);
+//        }
+//
+//        // compute expected working counter
+//
+//        // other option:
+//        EthernetFrame msg;
+//        msg.emplaceData(len, data);
+//        sendMessage(msg);
+//    }
 
     void discoverDevices() {
         // do not add the devices by hand but get the topology and memory from the connected devices?
@@ -425,160 +319,12 @@ class EtherCatBus : public Bus<EthernetFrame> {
     /*! Is called after reception of a message. Routes the message to the callback.
      * @param cmsg    reference to the can message
      */
-    void handleMessage(const EthernetFrame& msg) {
+    void handleMessage(const EtherCatDatagrams& msg) {
+
+        // TODO:
         // check time the frame took to travel through the physical bus
         // check working counters
         // extract datagrams from ethernet frame and map datagrams to device callback
-
-        static int test_step=0;
-        static int step_counter=0;
-
-        // Test procedure
-        switch (test_step)
-        {
-            case 0: // Reset errors
-                if (step_counter >= 2000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, FAULT_RESET, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Clearing errors...\n\n");
-                }
-                break;
-
-            case 1: // Startup
-                if (step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Startup up drive...\n\n");
-                }
-                break;
-
-            case 2: // Switch on
-                if (step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Switching on drive...\n\n");
-                }
-                break;
-            case 3: // enable operation
-                if(step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Enabling operation...\n\n");
-                }
-            break;
-            case 4: // wait delay
-                if(step_counter >= 7000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Running test...\n\n");
-                }
-                break;
-            case 5: // Run test output
-                if(step_counter >= 7000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Running test...\n\n");
-                }
-                break;
-            case 6: // Stop before end
-                if(step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_OPERATION, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Stopping test...\n\n");
-                }
-                break;
-            case 7: // Stop before end
-                if(step_counter >= 5000)
-                {
-                    step_counter = 0;
-                    test_step++;
-                    running_ = false;
-                }
-                else if (step_counter == 1)
-                {
-                    ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, SWITCH_ON, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, ENABLE_VOLTAGE, 0.0);
-                    ecatcomm_slave_set_rxpdo(&outdata_, QUICK_STOP, 0.0);
-                    ecatcomm_slave_print_controlword(outdata_.controlword);
-                    ecatcomm_slave_print_statusword(indata_.statusword);
-                    printf("Exiting test...\n\n");
-                }
-                break;
-        }
-
-        step_counter++;
     }
 
     /*! Initialize the device driver
@@ -648,8 +394,7 @@ class EtherCatBus : public Bus<EthernetFrame> {
          * When the mapping is done SOEM requests slaves to enter SAFE_OP.
          */
         ecx_config_map_group(&ecatContext_, &IOmap_, 0);
-
-        ecx_configdc(&ecatContext_); // TODO what is this doing?
+        ecx_configdc(&ecatContext_);
 
         printf("Slaves mapped, state to SAFE_OP.\n");
         /* wait for all slaves to reach SAFE_OP state */
@@ -664,16 +409,9 @@ class EtherCatBus : public Bus<EthernetFrame> {
 
         printf("segments : %d : %d %d %d %d\n",ecatContext_.grouplist[0].nsegments, ecatContext_.grouplist[0].IOsegment[0], ecatContext_.grouplist[0].IOsegment[1], ecatContext_.grouplist[0].IOsegment[2], ecatContext_.grouplist[0].IOsegment[3]);
 
-
-
-
-
         checkSlaveStates();
         configureSlave();
         checkSlaveStates();
-
-
-
 
         if (ecatContext_.slavelist[0].state == EC_STATE_OPERATIONAL ) {
             printf("Operational state reached for all slaves.\n");
@@ -682,14 +420,14 @@ class EtherCatBus : public Bus<EthernetFrame> {
             // Start preparation
             running_ = true;
 
-            // Handle PDO streams
-            outdata_.controlword.all = 0;
-            ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-            ecatcomm_slave_set_rxpdo(&outdata_, SHUTDOWN, 0.0);
-            ecx_send_processdata(&ecatContext_);
-            wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-            ecatcomm_slave_get_txpdo(&indata_);
-            osal_usleep(1000);
+//            // Handle PDO streams
+//            outdata_.controlword.all = 0;
+//            ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+//            ecatcomm_slave_set_rxpdo(&outdata_, SHUTDOWN, 0.0);
+//            ecx_send_processdata(&ecatContext_);
+//            wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+//            ecatcomm_slave_get_txpdo(&indata_);
+//            osal_usleep(1000);
         }
         else {
             printf("Not all slaves reached operational state.\n");
@@ -702,80 +440,19 @@ class EtherCatBus : public Bus<EthernetFrame> {
             }
         }
 
-
-
-
-
-//        printf("Request operational state for all slaves\n");
-//        wkcExpected_ = (ec_group[0].outputswkc_ * 2) + ec_group[0].inputsWKC;
-//        printf("Calculated workcounter %d\n", wkcExpected_.load());
-//        ec_slave[0].state = EC_STATE_OPERATIONAL;
-//        /* send one valid process data to make outputs in slaves happy*/
-//        ec_send_processdata();
-//        ec_receive_processdata(EC_TIMEOUTRET);
-//        /* request OP state for all slaves */
-//        ec_writestate(0);
-//        int chk = 40;
-//        /* wait for all slaves to reach OP state */
-//        do
-//        {
-//            ec_send_processdata();
-//            ec_receive_processdata(EC_TIMEOUTRET);
-//            ec_statecheck(0, EC_STATE_OPERATIONAL, 50000);
-//        }
-//        while (chk-- && (ec_slave[0].state != EC_STATE_OPERATIONAL));
-//        if (ec_slave[0].state == EC_STATE_OPERATIONAL )
-//        {
-//            printf("Operational state reached for all slaves.\n");
-//            inOP_ = true;
-//            /* cyclic loop */
-//            for(int i = 1; i <= 10000; i++)
-//            {
-//                ec_send_processdata();
-//                wkc_ = ec_receive_processdata(EC_TIMEOUTRET);
-//
-//                if(wkc_ >= wkcExpected_)
-//                {
-//                    printf("Processdata cycle %4d, wkc_ %d , O:", i, wkc_.load());
-//
-//                    for(int j = 0 ; j < oloop; j++)
-//                    {
-//                        printf(" %2.2x", *(ec_slave[0].outputs + j));
-//                    }
-//
-//                    printf(" I:");
-//                    for(int j = 0 ; j < iloop; j++)
-//                    {
-//                        printf(" %2.2x", *(ec_slave[0].inputs + j));
-//                    }
-//                    printf(" T:%" PRId64 "\r",ec_DCtime);
-//                    needlf_ = true;
-//                }
-//                osal_usleep(5000);
-//
-//            }
-//            inOP_ = false;
-//        }
-//        else
-//        {
-//            printf("Not all slaves reached operational state.\n");
-//            ec_readstate();
-//            for(int i = 1; i<=ec_slavecount ; i++)
-//            {
-//                if(ec_slave[i].state != EC_STATE_OPERATIONAL)
-//                {
-//                    printf("Slave %d State=0x%2.2x StatusCode=0x%4.4x : %s\n",
-//                            i, ec_slave[i].state, ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
-//                }
-//            }
-//        }
-//        printf("\nRequest init state for all slaves\n");
-//        ec_slave[0].state = EC_STATE_INIT;
-//        /* request INIT state for all slaves */
-//        ec_writestate(0);
-
-
         return true;
+    }
+
+    void cleanupInterface() {
+        /* request INIT state for all slaves */
+        printf("\nRequest init state for all slaves\n");
+        ecatContext_.slavelist[0].state = EC_STATE_INIT;
+        ecx_writestate(&ecatContext_, 0);
+
+        /* stop SOEM, close socket */
+        printf("End simple test, close socket\n");
+        ecx_close(&ecatContext_);
+        printf("Closed socket\n");
     }
 
     /*! read CAN message from the device driver
@@ -786,61 +463,70 @@ class EtherCatBus : public Bus<EthernetFrame> {
 //          MELO_WARN_STREAM("Devices are not in OP.");
 //          return false;
 //        }
-//        wkc_ = ec_receive_processdata(EC_TIMEOUTRET);
-//        MELO_INFO_STREAM("Working counter is at " << wkc_ << "/" << wkcExpected_ << ".");
-//        if (wkc_ < wkcExpected_) {
-//          MELO_WARN_STREAM("Working counter is too low.");
-//          return false;
-//        }
-//        EthernetFrame ethernetFrame;
-//        handleMessage(ethernetFrame);
-        return false;
+
+        if (!datagramsSent_) {
+          MELO_WARN_STREAM("No data has been sent yet.");
+          return false;
+        }
+
+        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+
+        if (wkc_ < wkcExpected_) {
+          MELO_WARN_STREAM("Working counter is too low.");
+          return false;
+        }
+
+        for (int i = 1; i < *ecatContext_.slavecount; i++) {
+//            memcpy(
+//                datagramsSent_->rxAndTxDatagrams_[i].first.data_,
+//                ecatContext_.slavelist[i].inputs,
+//                datagramsSent_->rxAndTxDatagrams_[i].first.getDataLength());
+//            memcpy(
+//                datagramsSent_->rxAndTxDatagrams_[i].second.data_,
+//                ecatContext_.slavelist[i].inputs + datagramsSent_->rxAndTxDatagrams_[i].first.getDataLength(),
+//                datagramsSent_->rxAndTxDatagrams_[i].second.getDataLength());
+            memcpy(
+                datagramsSent_->rxAndTxDatagrams_[i].second.data_,
+                ecatContext_.slavelist[i].inputs,
+                datagramsSent_->rxAndTxDatagrams_[i].second.getDataLength());
+        }
+
+        // TODO fill this.
+//        EtherCatDatagrams etherCatDatagrams;
+//        handleMessage(etherCatDatagrams);
+
+        return false; // TODO true?
     }
 
     /*! write CAN message to the device driver
      * @return true if the message was successfully written
      */
-    virtual bool writeData(const EthernetFrame& msg) {
-        static int i = 0;
-        static int print_counter=0;
+    virtual bool writeData(const EtherCatDatagrams& msg) {
 
         if (!running_) {
             std::cout << "is not running" << std::endl;
             return false;
         }
-//        std::cout << "writing" << std::endl;
 
-        // Step
-        i++;
+        for (const auto& rxAndTxDatagram : msg.rxAndTxDatagrams_) {
+            memcpy(
+                ecatContext_.slavelist[rxAndTxDatagram.second.first.header_.address_].outputs,
+                rxAndTxDatagram.second.first.getData(),
+                rxAndTxDatagram.second.first.getDataLength());
+//            memcpy(
+//                ecatContext_.slavelist[rxAndTxDatagram.second.second.header_.address_].outputs + rxAndTxDatagram.second.first.getDataLength(),
+//                rxAndTxDatagram.second.second.getData(),
+//                rxAndTxDatagram.second.second.getDataLength());
+        }
+
+        datagramsSent_.reset(new EtherCatDatagrams(msg));
+
+//        for (const EtherCatDatagram datagram : msg.txDatagrams_) {
+//            memcpy(datagram.getData(), ecatContext_.slavelist[datagram.header_.address_].inputs, datagram.getDataLength());
+//        }
 
         // Handle PDO streams
         ecx_send_processdata(&ecatContext_);
-        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-        ecatcomm_slave_get_txpdo(&indata_);
-
-        if((wkc_ >= wkcExpected_) && (++print_counter>=5))
-        {
-            printf("Processdata cycle %4d, WKC %d", i, wkc_.load());
-
-            printf(", Outputs:");
-            for(int j = 0 ; j < oloop_; j++)
-            {
-                printf(" %2.2x", *(ecatContext_.slavelist[0].outputs + j));
-            }
-            // printf(", Inputs:");
-            // for(j = 0 ; j < iloop; j++)
-            // {
-            //     printf(" %2.2x", *(ecatContext_.slavelist[0].inputs + j));
-            // }
-
-            // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
-            printf(", Command Data: 0x%4x, %4d", outdata_.controlword.all, outdata_.torque);
-            printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d", indata_.statusword.all, indata_.position, indata_.velocity, indata_.busvoltage, indata_.motorcurrent);
-            printf("\r");
-            print_counter = 0;
-        }
-
-//        inOP_ = false;
 
         return true;
     }
@@ -915,13 +601,21 @@ class EtherCatBus : public Bus<EthernetFrame> {
         isMissingDeviceOrHasError_ = isMissingOrError;
         allDevicesActive_ = allActive;
     }
-protected:
-    inline std::shared_ptr<Datagram> addDatagram(Datagram&& datagram) {
-        // put the datagram at apropriate position to replicate the physical structure of the bus in the datagram order?
-        auto ptr = std::make_shared<Datagram>(std::forward<Datagram>(datagram));
-        datagrams_.push_back(ptr);
-        return ptr;
+
+
+
+    std::shared_ptr<EtherCatDatagrams> getData() {
+        return datagramsSent_;
     }
+
+
+protected:
+//    inline std::shared_ptr<EtherCatDatagram> addDatagram(EtherCatDatagram&& datagram) {
+//        // put the datagram at apropriate position to replicate the physical structure of the bus in the datagram order?
+//        auto ptr = std::make_shared<EtherCatDatagram>(std::forward<EtherCatDatagram>(datagram));
+//        datagrams_.push_back(ptr);
+//        return ptr;
+//    }
 
     bool allDeviceMatch() {
         // Verify the expected number of slaves
@@ -1103,7 +797,7 @@ protected:
         //     osal_usleep(1000);
         // }
 
-        // Set state to Ethercat Operatoinal
+        // Set state to EtherCat Operatoinal
         ecatContext_.slavelist[0].state = EC_STATE_OPERATIONAL;
         ecx_writestate(&ecatContext_, 0);
         ecx_statecheck(&ecatContext_, 0, EC_STATE_OPERATIONAL,  EC_TIMEOUTSTATE * 4);
@@ -1143,6 +837,26 @@ protected:
         ecatcomm_slave_check_sdo(0x2085, 0, FALSE);
     }
 
+//    void sendSdo(uint32_t deviceAddress, tcan::SdoMsg& sdoMsg) {
+//        // TODO: tcan::CanMsg can only hold 4 bytes. In case of CoE this should not be limited.
+//
+//        switch (static_cast<tcan::SdoMsg::Command>(sdoMsg.getCommandByte())) {
+//            case tcan::SdoMsg::Command::READ:
+//                int sdodata = 0;
+//                int sdodatasize = static_cast<int>(sizeof(int));
+//                wkc_ = ecx_SDOread(&ecatContext_, deviceAddress, sdoMsg.getIndex(), sdoMsg.getSubIndex(), FALSE, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
+//                sdoMsg.setData(static_cast<uint8_t>(sdodatasize), static_cast<uint8_t*>(&sdodata));
+//                break;
+//            case tcan::SdoMsg::Command::WRITE_1_BYTE:
+//            case tcan::SdoMsg::Command::WRITE_2_BYTE:
+//            case tcan::SdoMsg::Command::WRITE_4_BYTE:
+//                wkc_ = ecx_SDOwrite(&ecatContext_, deviceAddress, sdoMsg.getIndex(), sdoMsg.getSubIndex(), FALSE, sdodatasize, sdodata, EC_TIMEOUTRXM);
+//                break;
+//            default:
+//                break;
+//        }
+//    }
+
     void checkSlaveStates() {
         int slavestate=0, wkc=0;
         int sdodata=0, sdodatasize=sizeof(int);
@@ -1172,18 +886,6 @@ protected:
         }
     }
 
-    void exit() {
-        /* request INIT state for all slaves */
-        printf("\nRequest init state for all slaves\n");
-        ecatContext_.slavelist[0].state = EC_STATE_INIT;
-        ecx_writestate(&ecatContext_, 0);
-
-        /* stop SOEM, close socket */
-        printf("End simple test, close socket\n");
-        ecx_close(&ecatContext_);
-        printf("Closed socket\n");
-    }
-
     void ecatcomm_slave_check_sdo(int index, int subindex, boolean CA)
     {
         int sdodata[4]={0,0}, sdodatasize=16;
@@ -1191,131 +893,13 @@ protected:
         printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
     }
 
-    void ecatcomm_slave_set_rxpdo(elmo_twitter_outdata_t *pdata, int command, double torque)
-    {
-        static dsp402_controlword_t controlword = {0};
-        int16_t torque_data=0;
-        char databuffer[4];
-
-        // Set controlword data
-        switch(command)
-        {
-            case SWITCH_ON:
-                controlword.bits.switch_on = 1;
-                break;
-
-            case SHUTDOWN:
-                controlword.bits.switch_on = 0;
-                break;
-
-            case DISABLE_VOLTAGE:
-                controlword.bits.enable_voltage = 0;
-                break;
-
-            case ENABLE_VOLTAGE:
-                controlword.bits.enable_voltage = 1;
-                break;
-
-            case QUICK_STOP:
-                controlword.bits.quick_stop = 1;
-                break;
-
-            case DISABLE_OPERATION:
-                controlword.bits.enable_operation = 0;
-                break;
-
-            case ENABLE_OPERATION:
-                controlword.bits.enable_operation = 1;
-                break;
-
-            case FAULT_RESET:
-                controlword.bits.fault_reset = 1;
-                break;
-
-            case HALT:
-                controlword.bits.halt = 1;
-                break;
-
-            case HALT_RESET:
-                controlword.bits.halt = 0;
-                break;
-
-            case CLEAR_CONTROLWORD:
-                controlword.all = 0;
-                return;
-        }
-
-        // Covert torque data to INT16 from double
-        double rated_current = 20000.0;
-        double rated_torque = (20000.0*0.27)*0.001;
-        torque_data = (int16_t)(torque/rated_torque*1000.0);
-
-        // Copy to internal struct
-        pdata->controlword.all = controlword.all;
-        pdata->torque = torque_data;
-
-        // Write to output buffer
-        databuffer[0] = ((controlword.all >> 0) & 0xff);
-        databuffer[1] = ((controlword.all >> 8) & 0xff);
-        databuffer[2] = ((torque_data >> 0) & 0xff);
-        databuffer[3] = ((torque_data >> 8) & 0xff);
-
-        // Set data into buffer
-        memcpy(ecatContext_.slavelist[1].outputs, &databuffer[0], 4);
-    }
-
-    void ecatcomm_slave_get_txpdo(elmo_twitter_indata_t *pdata)
-    {
-        uint16 statusword=0;
-        char databuffer[21];
-
-        // Get data
-        memcpy(&databuffer[0], ecatContext_.slavelist[1].inputs, 21);
-
-        // Store data
-        pdata->statusword.all = ((databuffer[13] << 8 ) & 0xff00) | (databuffer[12] & 0xff);
-        pdata->position = ((databuffer[3] << 24) & 0xff000000) | ((databuffer[2] << 16) & 0x00ff0000) | ((databuffer[1] << 8) & 0x0000ff00) | ((databuffer[0] << 0) & 0x000000ff);
-        pdata->digitalin = ((databuffer[7] << 24) & 0xff000000) | ((databuffer[6] << 16) & 0x00ff0000) | ((databuffer[5] << 8) & 0x0000ff00) | ((databuffer[4] << 0) & 0x000000ff);
-        pdata->velocity = ((databuffer[11] << 24) & 0xff000000) | ((databuffer[10] << 16) & 0x00ff0000) | ((databuffer[9] << 8) & 0x0000ff00) | ((databuffer[8] << 0) & 0x000000ff);
-        pdata->busvoltage = ((databuffer[18] << 24) & 0xff000000) | ((databuffer[17] << 16) & 0x00ff0000) | ((databuffer[16] << 8) & 0x0000ff00) | ((databuffer[15] << 0) & 0x000000ff);
-        pdata->motorcurrent = ((databuffer[20] << 8) & 0xff00) | ((databuffer[19] << 0) & 0x00ff);
-    }
-
-    void ecatcomm_slave_print_statusword(dsp402_statusword_t statusword)
-    {
-        // Printout
-        printf("\n\n");
-        printf("statusword.ready_to_switch_on         = %d\n", statusword.bits.ready_to_switch_on);
-        printf("statusword.switched_on                = %d\n", statusword.bits.switched_on);
-        printf("statusword.operation_enabled          = %d\n", statusword.bits.operation_enabled);
-        printf("statusword.fault                      = %d\n", statusword.bits.fault);
-        printf("statusword.volt_enabled               = %d\n", statusword.bits.voltage_enabled);
-        printf("statusword.quick_stop                 = %d\n", statusword.bits.quick_stop);
-        printf("statusword.switch_on_disabled         = %d\n", statusword.bits.switch_on_disabled);
-        printf("statusword.warning                    = %d\n", statusword.bits.warning);
-        printf("statusword.manufacturer_specific      = %d\n", statusword.bits.manufacturer_specific_0);
-        printf("statusword.remote                     = %d\n", statusword.bits.remote);
-        printf("statusword.operation_mode_specific_0  = %d\n", statusword.bits.operation_mode_specific_0);
-        printf("statusword.internal_limit_active      = %d\n", statusword.bits.internal_limit_active);
-        printf("statusword.operation_mode_specific_1  = %d\n", statusword.bits.operation_mode_specific_1);
-        printf("statusword.operation_mode_specific_2  = %d\n", statusword.bits.operation_mode_specific_2);
-        printf("statusword.manufacturer_specific      = %d\n", statusword.bits.manufacturer_specific_1);
-    }
-
-    void ecatcomm_slave_print_controlword(dsp402_controlword_t controlword)
-    {
-        // Printout
-        printf("\n\n");
-        printf("controlword.switch_on                 = %d\n", controlword.bits.switch_on);
-        printf("controlword.enable_voltage            = %d\n", controlword.bits.enable_voltage);
-        printf("controlword.quick_stop                = %d\n", controlword.bits.quick_stop);
-        printf("controlword.enable_operation          = %d\n", controlword.bits.enable_operation);
-        printf("controlword.operation_mode_specific_0 = %d\n", controlword.bits.operation_mode_specific_0);
-        printf("controlword.fault_reset               = %d\n", controlword.bits.fault_reset);
-        printf("controlword.halt                      = %d\n", controlword.bits.halt);
-        printf("controlword.operation_mode_specific_1 = %d\n", controlword.bits.operation_mode_specific_1);
-        printf("controlword.manufacturer_specific     = %d\n", controlword.bits.manufacturer_specific);
-    }
+//    void sendRxPdo(const uint32_t deviceAddress, const uint8_t length, const uint8_t* data) {
+//        memcpy(ecatContext_.slavelist[deviceAddress].outputs, data, length);
+//    }
+//
+//    void getTxPdo(const uint32_t deviceAddress, const uint8_t length, uint8_t* data) const {
+//        memcpy(data, ecatContext_.slavelist[deviceAddress].inputs, length);
+//    }
 
 protected:
     // vector containing all devices
@@ -1324,7 +908,7 @@ protected:
     // map mapping COB id to parse functions
     AddressToFunctionMap addressToFunctionMap_;
 
-    std::vector<std::shared_ptr<Datagram>> datagrams_;
+    std::shared_ptr<EtherCatDatagrams> datagramsSent_;
 
 
 
@@ -1388,8 +972,8 @@ protected:
     uint8 currentgroup_ = 0;
 
     bool running_ = false;
-    elmo_twitter_outdata_t outdata_;
-    elmo_twitter_indata_t indata_;
+//    elmo_twitter_outdata_t outdata_;
+//    elmo_twitter_indata_t indata_;
 };
 
 } /* namespace tcan */

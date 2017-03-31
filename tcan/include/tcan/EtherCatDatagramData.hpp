@@ -1,5 +1,5 @@
 /*
- * EthernetFrame.hpp
+ * EtherCatDatagramData.hpp
  *
  *  Created on: Mar 24, 2017
  *      Author: Remo Diethelm
@@ -11,6 +11,6 @@
 
 namespace tcan {
 
-using EthernetFrame = GenericMsg;
+using EtherCatDatagramData = GenericMsg;
 
 } /* namespace tcan */

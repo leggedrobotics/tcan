@@ -11,7 +11,6 @@
 #include <string>
 #include <atomic>
 
-#include "tcan/EthernetFrame.hpp"
 #include "tcan/EtherCatDeviceOptions.hpp"
 
 #include "message_logger/message_logger.hpp"

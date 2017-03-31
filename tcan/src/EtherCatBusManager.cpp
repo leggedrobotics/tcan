@@ -10,7 +10,7 @@
 namespace tcan {
 
 EtherCatBusManager::EtherCatBusManager():
-    BusManager<EthernetFrame>()
+    BusManager<EtherCatDatagrams>()
 {
 }
 
