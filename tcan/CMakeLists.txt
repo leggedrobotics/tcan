@@ -12,7 +12,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME} pthread
   CATKIN_DEPENDS message_logger
-#  DEPENDS Boost
 )
 
 ###########
@@ -36,10 +35,6 @@ add_library(${PROJECT_NAME}
   src/UniversalSerialBus.cpp
   src/IpBus.cpp
   src/DeviceCanOpen.cpp
-)
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  pthread
 )
 
 #############

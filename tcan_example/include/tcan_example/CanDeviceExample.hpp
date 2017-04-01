@@ -10,8 +10,9 @@
 
 #pragma once
 
+#include "tcan/DeviceCanOpen.hpp"
+
 #include <stdint.h>
-#include <tcan/DeviceCanOpen.hpp>
 #include <atomic>
 
 
