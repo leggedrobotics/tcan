@@ -70,14 +70,14 @@ bool IpBus::initializeInterface() {
     }
 
     // set read timeout
-    if (options->setReadTimeout_) {
+    if (options_->readTimeout_.tv_sec != 0 || options_->readTimeout_.tv_usec != 0) {
         if(setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&options->readTimeout_, sizeof(options->readTimeout_)) != 0) {
             MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
         }
     }
 
     // set write timeout
-    if (options->setWriteTimeout_) {
+    if (options_->writeTimeout_.tv_sec != 0 || options_->writeTimeout_.tv_usec != 0) {
         if(setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&options->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
             MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
         }
@@ -100,7 +100,7 @@ bool IpBus::readData() {
     const int bytes_read = recv( socket_, &buf, maxMessageSize, recvFlag_);
 
     if(bytes_read <= 0) {
-        if(bytes_read != 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Failed to read data from IP interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
         return false;

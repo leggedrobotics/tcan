@@ -30,11 +30,9 @@ struct BusOptions {
         startPassive_(false),
         activateBusOnReception_(false),
         synchronousBlockingWrite_(true),
-        setReadTimeout_(true),
         readTimeout_{1, 0},
-        setWriteTimeout_(true),
         writeTimeout_{1,0},
-        canErrorThrottleTime_(0.0)
+        errorThrottleTime_(0.0)
     {
     }
 
@@ -66,13 +64,12 @@ struct BusOptions {
     //! output queue are sent when calling BusManager::writeMessagesSynchronous(), but may increase its execution time.
     bool synchronousBlockingWrite_;
 
-    bool setReadTimeout_;
+    //! timeouts for read and write operations on the interface. Set to zero to leave default (infinity)
     timeval readTimeout_;
-
-    bool setWriteTimeout_;
     timeval writeTimeout_;
 
-    double canErrorThrottleTime_;
+    //! throttle time for MELO outputs
+    double errorThrottleTime_;
 };
 
 } /* namespace tcan */

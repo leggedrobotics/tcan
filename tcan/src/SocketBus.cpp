@@ -101,15 +101,15 @@ bool SocketBus::initializeInterface()
     }
 
     // set read timeout
-    if (options->setReadTimeout_) {
-      if(setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&options->readTimeout_, sizeof(options->readTimeout_)) != 0) {
+    if (options_->readTimeout_.tv_sec != 0 || options_->readTimeout_.tv_usec != 0) {
+      if(setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&options_->readTimeout_, sizeof(options->readTimeout_)) != 0) {
           MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
       }
     }
 
     // set write timeout
-    if (options->setWriteTimeout_) {
-      if(setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&options->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
+    if (options_->writeTimeout_.tv_sec != 0 || options_->writeTimeout_.tv_usec != 0) {
+      if(setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&options_->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
           MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
       }
     }
@@ -157,7 +157,7 @@ bool SocketBus::readData() {
     //	printf("CanManager_ bytes read: %i\n", bytes_read);
 
     if(bytes_read <= 0) {
-        if(bytes_read != 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Failed to read data from bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
         return false;
@@ -457,7 +457,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
     // bit 5-7
     errorMsg << " / controller specific additional information: 0x" << std::hex << static_cast<int>(msg.data[5]) << " 0x" <<  std::hex << static_cast<int>(msg.data[6]) << " 0x" <<  std::hex << static_cast<int>(msg.data[7]);
 
-    MELO_ERROR_THROTTLE_STREAM(static_cast<const SocketBusOptions*>(options_)->canErrorThrottleTime_, errorMsg.str());
+    MELO_ERROR_THROTTLE_STREAM(options_->errorThrottleTime_, errorMsg.str());
 }
 
 } /* namespace tcan */

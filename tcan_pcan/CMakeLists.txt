@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
+  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
     tcan
     pcan_driver

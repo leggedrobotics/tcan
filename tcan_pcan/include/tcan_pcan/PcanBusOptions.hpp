@@ -2,7 +2,7 @@
  * PcanBusOptions.hpp
  *
  *  Created on: Mar 15, 2017
- *      Author: Christian Gehring
+ *      Author: Philipp Leemann
  */
 
 #pragma once
@@ -20,7 +20,8 @@ struct PcanBusOptions : public CanBusOptions {
     PcanBusOptions(const std::string& interface_name):
         CanBusOptions(interface_name),
         loopback_(false),
-        maxMessagesPassed_(10)
+        maxMessagesPassed_(10),
+        bitrate_(1000000)
     {
     }
 

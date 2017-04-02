@@ -141,7 +141,7 @@ class Bus {
     /*!
      * @return  number of messages in the output queue
      */
-    unsigned int getNumOutogingMessages() const { return outgoingMsgs_.size(); }
+    unsigned int getNumOutogingMessagesWithoutLock() const { return outgoingMsgs_.size(); }
 
  public: /// Internal functions
 
@@ -150,7 +150,7 @@ class Bus {
      * and if there is something in the queue is NOT checked.
      * @return true if a message was successfully written to the bus
      */
-    inline bool writeMessages()
+    inline bool writeMessagesWithoutLock()
     {
         return isPassive_ ? clearOutputQueueWithoutLock() : writeData( nullptr );
     }
@@ -248,7 +248,7 @@ class Bus {
         // after the wait function we own the lock.
 
         if(!running_) {
-            return 0;
+            return true;
         }
 
         return isPassive_ ? clearOutputQueueWithoutLock() : writeData( &lock );

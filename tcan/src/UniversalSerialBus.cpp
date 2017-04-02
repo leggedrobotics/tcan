@@ -68,7 +68,7 @@ bool UniversalSerialBus::readData() {
     if(options_->asynchronous_) {
         pollfd fds = {fileDescriptor_, POLLIN, 0};
 
-        ret = poll( &fds, 1, 1000 );
+        ret = poll( &fds, 1, calculateTimeoutMs(options_->readTimeout_) );
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor readability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
@@ -87,7 +87,7 @@ bool UniversalSerialBus::readData() {
     //  printf("CanManager_ bytes read: %i\n", bytes_read);
 
     if(bytes_read <= 0) {
-        if(bytes_read != 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("read failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
         return false;
@@ -110,7 +110,7 @@ bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
     if(options_->asynchronous_ || options_->synchronousBlockingWrite_) {
         pollfd fds = {fileDescriptor_, POLLOUT, 0};
 
-        ret = poll( &fds, 1, 1000 );
+        ret = poll( &fds, 1, calculateTimeoutMs(options_->writeTimeout_) );
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor writeability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
