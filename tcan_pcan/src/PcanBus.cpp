@@ -62,10 +62,11 @@ bool PcanBus::readData() {
     const unsigned int maxMsgs = static_cast<const PcanBusOptions*>(options_)->maxMessagesPassed_;
     pcanfd_msg inMsgs[maxMsgs];
     const int numReceived = pcanfd_recv_msgs_list(fd_, maxMsgs, inMsgs);
-    if(numReceived < 0) {
-        MELO_ERROR("Error while receiving messages: %d", numReceived);
-        return false;
-    }else if(numReceived == 0) {
+
+    if(numReceived <= 0) {
+        if(numReceived != EWOULDBLOCK) {
+            MELO_ERROR("Error while receiving messages: %d", numReceived);
+        }
         return false;
     }
     
@@ -94,8 +95,10 @@ bool PcanBus::writeData(std::unique_lock<std::mutex>* lock) {
         lock->unlock();
     }
     const int numSent = pcanfd_send_msgs_list(fd_, numMsgs, outMsgs);
-    if(numSent < 0) {
-        MELO_ERROR("Error while sending messages: %d", numSent);
+    if(numSent <= 0) {
+        if(numSent != EWOULDBLOCK) {
+            MELO_ERROR("Error while sending messages: %d", numSent);
+        }
         return false;
     }
 
