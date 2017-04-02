@@ -34,7 +34,7 @@ class UniversalSerialBus : public Bus<UsbMsg> {
  protected:
     bool initializeInterface();
     bool readData();
-    bool writeData(const UsbMsg& msg);
+    bool writeData(std::unique_lock<std::mutex>* lock);
 
  private:
     void configureInterface();

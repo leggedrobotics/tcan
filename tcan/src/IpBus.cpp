@@ -24,6 +24,8 @@ constexpr uint16_t maxMessageSize = 512;
 IpBus::IpBus(IpBusOptions* options):
     Bus<IpMsg>(options),
 	socket_(-1),
+	recvFlag_(0),
+	sendFlag_(0),
     deviceTimeoutCounter_(0)
 {
 
@@ -67,59 +69,69 @@ bool IpBus::initializeInterface() {
         return false;
     }
 
-    // set nonblocking
-    int flags = fcntl(socket_, F_GETFL, 0);
-    fcntl(socket_, F_SETFL, flags | O_NONBLOCK);
+    // set read timeout
+    if (options->setReadTimeout_) {
+        if(setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&options->readTimeout_, sizeof(options->readTimeout_)) != 0) {
+            MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
+        }
+    }
+
+    // set write timeout
+    if (options->setWriteTimeout_) {
+        if(setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&options->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
+            MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
+        }
+    }
+
+    // set nonblocking flags for synchrounous mode
+    if(!options_->asynchronous_) {
+        recvFlag_ = MSG_DONTWAIT;
+        if(!options_->synchronousBlockingWrite_) {
+            sendFlag_ = MSG_DONTWAIT;
+        }
+    }
 
     return true;
 }
 
 bool IpBus::readData() {
-    pollfd fds = {socket_, POLLIN, 0};
 
-    const int ret = poll( &fds, 1, 1000 );
+    uint8_t buf[maxMessageSize];
+    const int bytes_read = recv( socket_, &buf, maxMessageSize, recvFlag_);
 
-    if ( ret == -1 ) {
-        MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
-        return false;
-    }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
-        // poll timed out, without being able to read => return silently
-        return false;
-    }else{
-        uint8_t buf[maxMessageSize];
-        const int bytes_read = recv( socket_, &buf, maxMessageSize, 0);
-
-        if(bytes_read<=0) {
-            // failed to read something even with poll(..) reporting availabe data => raise error
-            MELO_ERROR("read failed on IP interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
-            return false;
-        } else {
-            handleMessage( IpMsg(bytes_read, buf) );
+    if(bytes_read <= 0) {
+        if(bytes_read != 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            MELO_ERROR("Failed to read data from IP interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
         }
+        return false;
+    } else {
+        handleMessage( IpMsg(bytes_read, buf) );
     }
 
     return true;
 }
 
-bool IpBus::writeData(const IpMsg& msg) {
-    pollfd fds = {socket_, POLLOUT, 0};
+bool IpBus::writeData(std::unique_lock<std::mutex>* lock) {
 
-    int ret = poll( &fds, 1, 1000 );
-
-    if ( ret == -1 ) {
-        MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
-        return false;
-    }else if ( ret == 0 || !(fds.revents & POLLOUT) ) {
-        // poll timed out, without being able to read => raise error
-        MELO_WARN("polling for fileDescriptor writeability timed out for bus %s. Overflow?", options_->name_.c_str());
-        return false;
-    }else{
-        if( ( ret = send(socket_, msg.getData(), msg.getLength(), 0) ) != static_cast<int>(msg.getLength())) {
-            MELO_ERROR("Error at sending TCP/UDP message on interface %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
-            return false;
-        }
+    IpMsg msg = outgoingMsgs_.front();
+    if(lock != nullptr) {
+        lock->unlock();
     }
-    return true;
+
+    const int ret = send(socket_, msg.getData(), msg.getLength(), sendFlag_);
+    if( ret != static_cast<int>(msg.getLength())) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
+            MELO_ERROR("Error at sending TCP/UDP message on interface %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
+        }
+    }else{
+        if(lock != nullptr) {
+            lock->lock();
+        }
+        outgoingMsgs_.pop_front();
+        return true;
+    }
+
+    return false;
 }
 
 } /* namespace tcan */

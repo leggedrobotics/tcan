@@ -46,7 +46,10 @@ class BusManager {
             }
         }
     }
-    /*! Send the messages in the output queue on all buses. Call this function in the control loop if synchronous mode is used.
+    /*!
+     * Send the messages in the output queue on all buses. Call this function in the control loop if synchronous mode is used.
+     * Note that this function may not send all the messages in the output queue if polling is disabled (see BusOptions)
+     * @return  False if at least one write error occured
      */
     bool writeMessagesSynchronous() {
         bool sendingData = true;
@@ -55,10 +58,9 @@ class BusManager {
             sendingData = false;
 
             for(auto bus : buses_) {
-                if(!bus->isAsynchronous()) {
-                    bool writeErrorLocal;
-                    sendingData |= bus->writeMessage(writeErrorLocal);
-                    writeError |=  writeErrorLocal;
+                if(!bus->isAsynchronous() && bus->getNumOutogingMessages() > 0) {
+                    writeError |= bus->writeMessages() < 0 ? true : false;
+                    sendingData = true;
                 }
             }
         }

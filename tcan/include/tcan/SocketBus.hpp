@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <poll.h>
-
 #include "tcan/CanBus.hpp"
 #include "tcan/SocketBusOptions.hpp"
 
@@ -26,7 +24,7 @@ class SocketBus : public CanBus {
  protected:
     bool initializeInterface();
     bool readData();
-    bool writeData(const CanMsg& cmsg);
+    bool writeData(std::unique_lock<std::mutex>* lock);
 
     /*!
      * Is called on reception of a bus error message. Sets the flag
@@ -35,7 +33,9 @@ class SocketBus : public CanBus {
     void handleBusError(const can_frame& msg);
 
  protected:
-    pollfd socket_;
+    int socket_;
+    int recvFlag_;
+    int sendFlag_;
 };
 
 } /* namespace tcan */
