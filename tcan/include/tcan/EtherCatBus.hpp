@@ -407,38 +407,12 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         if ((iloop_ == 0) && (ecatContext_.slavelist[0].Ibits > 0)) iloop_ = 1;
 //        if (iloop_ > 8) iloop_ = 8;
 
-        printf("segments : %d : %d %d %d %d\n",ecatContext_.grouplist[0].nsegments, ecatContext_.grouplist[0].IOsegment[0], ecatContext_.grouplist[0].IOsegment[1], ecatContext_.grouplist[0].IOsegment[2], ecatContext_.grouplist[0].IOsegment[3]);
-
-        checkSlaveStates();
-        configureSlave();
-        checkSlaveStates();
-
-        if (ecatContext_.slavelist[0].state == EC_STATE_OPERATIONAL ) {
-            printf("Operational state reached for all slaves.\n");
-            inOP_ = true;
-
-            // Start preparation
-            running_ = true;
-
-//            // Handle PDO streams
-//            outdata_.controlword.all = 0;
-//            ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-//            ecatcomm_slave_set_rxpdo(&outdata_, SHUTDOWN, 0.0);
-//            ecx_send_processdata(&ecatContext_);
-//            wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-//            ecatcomm_slave_get_txpdo(&indata_);
-//            osal_usleep(1000);
-        }
-        else {
-            printf("Not all slaves reached operational state.\n");
-            ecx_readstate(&ecatContext_);
-            for(int i = 1; i <= *ecatContext_.slavecount; i++) {
-                if(ecatContext_.slavelist[i].state != EC_STATE_OPERATIONAL) {
-                    printf("Slave %d State=0x%2.2x StatusCode=0x%4.4x : %s\n",
-                    i, ecatContext_.slavelist[i].state, ecatContext_.slavelist[i].ALstatuscode, ec_ALstatuscode2string(ecatContext_.slavelist[i].ALstatuscode));
-                }
-            }
-        }
+        printf("segments : %d : %d %d %d %d\n",
+            ecatContext_.grouplist[0].nsegments,
+            ecatContext_.grouplist[0].IOsegment[0],
+            ecatContext_.grouplist[0].IOsegment[1],
+            ecatContext_.grouplist[0].IOsegment[2],
+            ecatContext_.grouplist[0].IOsegment[3]);
 
         return true;
     }
@@ -502,11 +476,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      * @return true if the message was successfully written
      */
     virtual bool writeData(const EtherCatDatagrams& msg) {
-
-        if (!running_) {
-            std::cout << "is not running" << std::endl;
-            return false;
-        }
 
         for (const auto& rxAndTxDatagram : msg.rxAndTxDatagrams_) {
             memcpy(
@@ -602,14 +571,10 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         allDevicesActive_ = allActive;
     }
 
-
-
     std::shared_ptr<EtherCatDatagrams> getData() {
         return datagramsSent_;
     }
 
-
-protected:
 //    inline std::shared_ptr<EtherCatDatagram> addDatagram(EtherCatDatagram&& datagram) {
 //        // put the datagram at apropriate position to replicate the physical structure of the bus in the datagram order?
 //        auto ptr = std::make_shared<EtherCatDatagram>(std::forward<EtherCatDatagram>(datagram));
@@ -689,152 +654,132 @@ protected:
         }
     }
 
-    void configureSlave() {
-        int i=0;
-        uint8 bufferu8 = 0;
-        uint16 bufferu16 = 0;
-        uint32 bufferu32 = 0;
-        uint64 bufferu64 = 0;
-        int8 buffers8 = 0;
-        int16 buffers16 = 0;
-        int32 buffers32 = 0;
-        int64 buffers64 = 0;
+    void checkSlaveStates() {
+        int slavestate=0, wkc=0;
+        int sdodata=0, sdodatasize=sizeof(int);
 
-//        dsp402_controlword_t controlword = {0};
-//        elmo_twitter_indata_t indata;
-//        elmo_twitter_outdata_t outdata;
+        slavestate = ecx_readstate(&ecatContext_);
+        printf("\nSlave EtherCAT StateMachine state is 0x%x\n", slavestate);
 
-        // Set state
-        ecatContext_.slavelist[0].state = EC_STATE_PRE_OP;
-        ecx_writestate(&ecatContext_, 0);
-        ecx_statecheck(&ecatContext_, 0, EC_STATE_PRE_OP,  EC_TIMEOUTSTATE * 4);
+        sdodata = 0;
+        sdodatasize = sizeof(int);
+        wkc_ = ecx_SDOread(&ecatContext_, 1, 0x6041, 0, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
+        printf("Slave DSP402 StateMachine state is 0x%x\n", (uint16)sdodata);
+    }
 
-        printf("\nSetting device configuratons...\n");
+    void checkSlaveErrors() {
+        int i = 0;
+        ec_errort error;
+        char *errstr;
 
-        // RxPDO assignments in SM2
-        bufferu8 = 1;
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c12, 0, FALSE, 1, &bufferu8, EC_TIMEOUTRXM);
-        ecatcomm_slave_check_sdo(0x1c12, 0, FALSE);
+        printf("\nERROR REPORT:\n");
 
-        bufferu16 = 0x1602;
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c12, 1, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
-        ecatcomm_slave_check_sdo(0x1c12, 1, TRUE);
+        // Built-in error reporting
+        if (ecx_iserror(&ecatContext_)) {
+            do {
+                errstr = ecx_elist2string(&ecatContext_);
+                printf("    Error %d: %s", ++i, errstr);
+            } while(ecx_iserror(&ecatContext_));
+        }
+    }
 
-        // RxPDO assignments in SM3
-        bufferu8 = 3;
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 0, FALSE, 1, &bufferu8, EC_TIMEOUTRXM);
-        ecatcomm_slave_check_sdo(0x1c13, 0, FALSE);
+    void sendSdoWrite(int index, int subindex, boolean CA, int8_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 1, &value, EC_TIMEOUTRXM);
+    }
 
-        bufferu64 = 0x1a1f1a181a03;
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 1, TRUE, 8, &bufferu64, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x1c13, 1, TRUE);
-        ecatcomm_slave_check_sdo(0x1c13, 1, FALSE);
-        ecatcomm_slave_check_sdo(0x1c13, 2, FALSE);
-        ecatcomm_slave_check_sdo(0x1c13, 3, FALSE);
+    void sendSdoWrite(int index, int subindex, boolean CA, int16_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 2, &value, EC_TIMEOUTRXM);
+    }
 
-        // bufferu16 = 0x1a03; // position + velocity feedback
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 1, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x1c13, 1, TRUE);
-        //
-        // bufferu16 = 0x1a18; // DC bus voltage
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 2, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x1c13, 2, TRUE);
-        //
-        // bufferu16 = 0x1a1f; // motor current
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 3, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x1c13, 3, TRUE);
+    void sendSdoWrite(int index, int subindex, boolean CA, int32_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 4, &value, EC_TIMEOUTRXM);
+    }
 
-        // DC Sync0
+    void sendSdoWrite(int index, int subindex, boolean CA, int64_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 8, &value, EC_TIMEOUTRXM);
+    }
+
+    void sendSdoWrite(int index, int subindex, boolean CA, uint8_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 1, &value, EC_TIMEOUTRXM);
+    }
+
+    void sendSdoWrite(int index, int subindex, boolean CA, uint16_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 2, &value, EC_TIMEOUTRXM);
+    }
+
+    void sendSdoWrite(int index, int subindex, boolean CA, uint32_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 4, &value, EC_TIMEOUTRXM);
+    }
+
+    void sendSdoWrite(int index, int subindex, boolean CA, uint64_t value) {
+        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 8, &value, EC_TIMEOUTRXM);
+    }
+
+    void sendSdoRead(int index, int subindex, boolean CA) {
+        int sdodata[4]={0,0}, sdodatasize=16;
+        wkc_ = ecx_SDOread(&ecatContext_, 1, index, subindex, CA, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
+        printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
+    }
+
+    void syncDc() {
         double time_step = 1e-3;
         ecx_dcsync0(&ecatContext_, 1, TRUE, (int64)(time_step*1e9), (int64)(time_step*0.5*1e9));
+    }
 
-        // // enable voltage + quick-stop + fault reset
-        // controlword.bits.quick_stop = 1;
-        // controlword.bits.enable_voltage = 1;
-        // controlword.bits.fault_reset = 1;
-        // bufferu16 = controlword.all;
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x6040, 0, FALSE, 2, &bufferu16, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x6040, 0, FALSE);
-        // ecatcomm_slave_check_sdo(0x6041, 0, FALSE);
-
-        // Set state
-        ecatContext_.slavelist[0].state = EC_STATE_SAFE_OP;
-        ecx_writestate(&ecatContext_, 0);
-        ecx_statecheck(&ecatContext_, 0, EC_STATE_SAFE_OP,  EC_TIMEOUTSTATE * 4);
-
-        // // Unkown config
-        // buffers16 = 0x5f;
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x3034, 7, FALSE, 2, &buffers16, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x3034, 7, FALSE);
-        //
-        // // Halp Option Code
-        // bufferu8 = 3;
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x605D, 0, TRUE, 1, &bufferu8, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x605D, 0, TRUE);
-
-        // buffers8 = 3;
-        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x605D, 0, FALSE, 1, &buffers8, EC_TIMEOUTRXM);
-        // ecatcomm_slave_check_sdo(0x605D, 0, FALSE);
-
-        bufferu8 = 4;
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x6060, 0, FALSE, 1, &bufferu8, EC_TIMEOUTRXM);
-        ecatcomm_slave_check_sdo(0x6060, 0, FALSE);
-        ecatcomm_slave_check_sdo(0x6061, 0, FALSE);
-
-        // Set initial process data - SWITCH ON
-        // outdata.controlword.all = 0;
-        // outdata.controlword.bits.enable_voltage = 1;
-        // outdata.controlword.bits.quick_stop = 1;
-        // outdata.controlword.bits.fault_reset = 1;
-        // for (i=0; i<1000; i++)
-        // {
-        //     ecatcomm_slave_set_rxpdo(&outdata, SWITCH_ON, 0.0);
-        //     ecx_send_processdata(&ecatContext_);
-        //     ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-        //     ecatcomm_slave_get_txpdo(&indata);
-        //     ecatcomm_slave_print_controlword(controlword);
-        //     ecatcomm_slave_print_statusword(indata.statusword);
-        //     osal_usleep(1000);
-        // }
-
-        // Set state to EtherCat Operatoinal
-        ecatContext_.slavelist[0].state = EC_STATE_OPERATIONAL;
-        ecx_writestate(&ecatContext_, 0);
-        ecx_statecheck(&ecatContext_, 0, EC_STATE_OPERATIONAL,  EC_TIMEOUTSTATE * 4);
-
-        // send one valid process data to make outputs in slaves happy
+    void sendProcessData() {
         ecx_send_processdata(&ecatContext_);
-        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+    }
 
-        // wait for all slaves to reach OP state
+    void receiveProcessData() {
+        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+    }
+
+    void setStatePreOp() { setState(EC_STATE_PRE_OP); }
+    void setStateSafeOp() { setState(EC_STATE_SAFE_OP); }
+    void setStateOperational() { setState(EC_STATE_OPERATIONAL); }
+
+    void waitForStateOperational() { waitForState(EC_STATE_OPERATIONAL); }
+
+    void strangeFunction() {
+        if (ecatContext_.slavelist[0].state == EC_STATE_OPERATIONAL ) {
+            printf("Operational state reached for all slaves.\n");
+            inOP_ = true;
+
+      //            // Handle PDO streams
+      //            outdata_.controlword.all = 0;
+      //            ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
+      //            ecatcomm_slave_set_rxpdo(&outdata_, SHUTDOWN, 0.0);
+      //            ecx_send_processdata(&ecatContext_);
+      //            wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+      //            ecatcomm_slave_get_txpdo(&indata_);
+      //            osal_usleep(1000);
+        }
+        else {
+            printf("Not all slaves reached operational state.\n");
+            ecx_readstate(&ecatContext_);
+            for(int i = 1; i <= *ecatContext_.slavecount; i++) {
+                if(ecatContext_.slavelist[i].state != EC_STATE_OPERATIONAL) {
+                    printf("Slave %d State=0x%2.2x StatusCode=0x%4.4x : %s\n",
+                    i, ecatContext_.slavelist[i].state, ecatContext_.slavelist[i].ALstatuscode, ec_ALstatuscode2string(ecatContext_.slavelist[i].ALstatuscode));
+                }
+            }
+        }
+    }
+
+ protected:
+    void setState(uint16_t state) {
+        ecatContext_.slavelist[0].state = state;
+        ecx_writestate(&ecatContext_, 0);
+        ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 4);
+    }
+
+    void waitForState(uint16_t state) {
         int chk = 40;
         do {
             ecx_send_processdata(&ecatContext_);
             wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-            ecx_statecheck(&ecatContext_, 0, EC_STATE_OPERATIONAL,  50000);
-        } while (chk-- && (ecatContext_.slavelist[0].state != EC_STATE_OPERATIONAL));
-
-        // Get error data
-        dumpSlaveStatusInfo();
-    }
-
-    void dumpSlaveStatusInfo() {
-        printf("\nDevice Errors: \n");
-        ecatcomm_slave_check_sdo(0x1001, 0, FALSE);
-
-        ecatcomm_slave_check_sdo(0x1002, 0, FALSE);
-
-        ecatcomm_slave_check_sdo(0x1003, 0, TRUE);
-
-        ecatcomm_slave_check_sdo(0x2081, 0, FALSE);
-        ecatcomm_slave_check_sdo(0x2081, 1, FALSE);
-        ecatcomm_slave_check_sdo(0x2081, 2, FALSE);
-        ecatcomm_slave_check_sdo(0x2081, 3, FALSE);
-        ecatcomm_slave_check_sdo(0x2081, 4, FALSE);
-        ecatcomm_slave_check_sdo(0x2081, 5, FALSE);
-        ecatcomm_slave_check_sdo(0x2081, 6, FALSE);
-
-        ecatcomm_slave_check_sdo(0x2085, 0, FALSE);
+            ecx_statecheck(&ecatContext_, 0, state,  50000);
+        } while (chk-- && (ecatContext_.slavelist[0].state != state));
     }
 
 //    void sendSdo(uint32_t deviceAddress, tcan::SdoMsg& sdoMsg) {
@@ -856,42 +801,6 @@ protected:
 //                break;
 //        }
 //    }
-
-    void checkSlaveStates() {
-        int slavestate=0, wkc=0;
-        int sdodata=0, sdodatasize=sizeof(int);
-
-        slavestate = ecx_readstate(&ecatContext_);
-        printf("\nSlave EtherCAT StateMachine state is 0x%x\n", slavestate);
-
-        sdodata = 0;
-        sdodatasize = sizeof(int);
-        wkc_ = ecx_SDOread(&ecatContext_, 1, 0x6041, 0, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
-        printf("Slave DSP402 StateMachine state is 0x%x\n", (uint16)sdodata);
-    }
-
-    void checkSlaveErrors() {
-        int i=0, Nt=0, Nh=0, Nerr=0;
-        ec_errort error;
-        char *errstr;
-
-        printf("\nERROR REPORT:\n");
-
-        // Built-in error reporting
-        if (ecx_iserror(&ecatContext_)) {
-            do {
-                errstr = ecx_elist2string(&ecatContext_);
-                printf("    Error %d: %s", ++i, errstr);
-            } while(ecx_iserror(&ecatContext_));
-        }
-    }
-
-    void ecatcomm_slave_check_sdo(int index, int subindex, boolean CA)
-    {
-        int sdodata[4]={0,0}, sdodatasize=16;
-        wkc_ = ecx_SDOread(&ecatContext_, 1, index, subindex, CA, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
-        printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
-    }
 
 //    void sendRxPdo(const uint32_t deviceAddress, const uint8_t length, const uint8_t* data) {
 //        memcpy(ecatContext_.slavelist[deviceAddress].outputs, data, length);
@@ -970,10 +879,6 @@ protected:
     std::atomic<int> oloop_;
     std::atomic<int> iloop_;
     uint8 currentgroup_ = 0;
-
-    bool running_ = false;
-//    elmo_twitter_outdata_t outdata_;
-//    elmo_twitter_indata_t indata_;
 };
 
 } /* namespace tcan */

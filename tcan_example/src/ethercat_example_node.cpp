@@ -54,6 +54,138 @@ protected:
 */
 
 
+class ElmoTwitter : public tcan::EtherCatDevice {
+ public:
+    ElmoTwitter(const uint32_t address, const std::string& name)
+    : tcan::EtherCatDevice(address, name) {}
+
+    void dumpSlaveStatusInfo() {
+        printf("\nDevice Errors: \n");
+        bus_->sendSdoRead(0x1001, 0, FALSE);
+
+        bus_->sendSdoRead(0x1002, 0, FALSE);
+
+        bus_->sendSdoRead(0x1003, 0, TRUE);
+
+        bus_->sendSdoRead(0x2081, 0, FALSE);
+        bus_->sendSdoRead(0x2081, 1, FALSE);
+        bus_->sendSdoRead(0x2081, 2, FALSE);
+        bus_->sendSdoRead(0x2081, 3, FALSE);
+        bus_->sendSdoRead(0x2081, 4, FALSE);
+        bus_->sendSdoRead(0x2081, 5, FALSE);
+        bus_->sendSdoRead(0x2081, 6, FALSE);
+
+        bus_->sendSdoRead(0x2085, 0, FALSE);
+    }
+
+    void configureSlave() {
+
+//        dsp402_controlword_t controlword = {0};
+//        elmo_twitter_indata_t indata;
+//        elmo_twitter_outdata_t outdata;
+
+        // Set state
+        bus_->setStatePreOp();
+
+        printf("\nSetting device configuratons...\n");
+
+        // RxPDO assignments in SM2
+        bus_->sendSdoWrite(0x1c12, 0, FALSE, uint8_t(1));
+        bus_->sendSdoRead(0x1c12, 0, FALSE);
+
+        bus_->sendSdoWrite(0x1c12, 1, TRUE, uint16_t(0x1602));
+        bus_->sendSdoRead(0x1c12, 1, TRUE);
+
+        // RxPDO assignments in SM3
+        bus_->sendSdoWrite(0x1c13, 0, FALSE, uint8_t(3));
+        bus_->sendSdoRead(0x1c13, 0, FALSE);
+
+        bus_->sendSdoWrite(0x1c13, 1, TRUE, uint64_t(0x1a1f1a181a03));
+        bus_->sendSdoRead(0x1c13, 1, FALSE);
+        bus_->sendSdoRead(0x1c13, 2, FALSE);
+        bus_->sendSdoRead(0x1c13, 3, FALSE);
+
+        // bufferu16 = 0x1a03; // position + velocity feedback
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 1, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x1c13, 1, TRUE);
+        //
+        // bufferu16 = 0x1a18; // DC bus voltage
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 2, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x1c13, 2, TRUE);
+        //
+        // bufferu16 = 0x1a1f; // motor current
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 3, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x1c13, 3, TRUE);
+
+        // DC Sync0
+        bus_->syncDc();
+
+        // // enable voltage + quick-stop + fault reset
+        // controlword.bits.quick_stop = 1;
+        // controlword.bits.enable_voltage = 1;
+        // controlword.bits.fault_reset = 1;
+        // bufferu16 = controlword.all;
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x6040, 0, FALSE, 2, &bufferu16, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x6040, 0, FALSE);
+        // ecatcomm_slave_check_sdo(0x6041, 0, FALSE);
+
+        // Set state
+        bus_->setStateSafeOp();
+
+        // // Unkown config
+        // buffers16 = 0x5f;
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x3034, 7, FALSE, 2, &buffers16, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x3034, 7, FALSE);
+        //
+        // // Halp Option Code
+        // bufferu8 = 3;
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x605D, 0, TRUE, 1, &bufferu8, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x605D, 0, TRUE);
+
+        // buffers8 = 3;
+        // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x605D, 0, FALSE, 1, &buffers8, EC_TIMEOUTRXM);
+        // ecatcomm_slave_check_sdo(0x605D, 0, FALSE);
+
+        bus_->sendSdoWrite(0x6060, 0, FALSE, uint8_t(4));
+        bus_->sendSdoRead(0x6060, 0, FALSE);
+        bus_->sendSdoRead(0x6061, 0, FALSE);
+
+        // Set initial process data - SWITCH ON
+        // outdata.controlword.all = 0;
+        // outdata.controlword.bits.enable_voltage = 1;
+        // outdata.controlword.bits.quick_stop = 1;
+        // outdata.controlword.bits.fault_reset = 1;
+        // for (i=0; i<1000; i++)
+        // {
+        //     ecatcomm_slave_set_rxpdo(&outdata, SWITCH_ON, 0.0);
+        //     ecx_send_processdata(&ecatContext_);
+        //     ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+        //     ecatcomm_slave_get_txpdo(&indata);
+        //     ecatcomm_slave_print_controlword(controlword);
+        //     ecatcomm_slave_print_statusword(indata.statusword);
+        //     osal_usleep(1000);
+        // }
+
+        // Set state to EtherCat Operatoinal
+        bus_->setStateOperational();
+
+        // send one valid process data to make outputs in slaves happy
+        bus_->sendProcessData();
+        bus_->receiveProcessData();
+
+        // wait for all slaves to reach OP state
+        bus_->waitForStateOperational();
+
+        // Get error data
+        dumpSlaveStatusInfo();
+
+
+        bus_->strangeFunction();
+
+
+    }
+};
+
 
 
 
@@ -455,7 +587,7 @@ int main() {
 
 	signal(SIGINT, signal_handler);
 
-  tcan::EtherCatDevice device(1, "? M:0000009a I:00030924");
+  ElmoTwitter device(1, "? M:0000009a I:00030924");
 
 	tcan::EtherCatBusOptions* busOptions = new tcan::EtherCatBusOptions(); // TODO: Why are the options destroyed in the bus destructor?
 	busOptions->name_ = "enp0s31f6";
@@ -469,6 +601,22 @@ int main() {
 	  return 0;
 	}
 //  std::cout << "bus added and initialized" << std::endl;
+
+
+
+
+
+	bus.checkSlaveStates();
+	device.configureSlave();
+	bus.checkSlaveStates();
+
+
+
+
+
+
+
+
 
 	auto nextStep = std::chrono::steady_clock::now();
 
