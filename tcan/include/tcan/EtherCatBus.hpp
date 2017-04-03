@@ -398,7 +398,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
         printf("Slaves mapped, state to SAFE_OP.\n");
         /* wait for all slaves to reach SAFE_OP state */
-        ecx_statecheck(&ecatContext_, 0, EC_STATE_SAFE_OP,  EC_TIMEOUTSTATE * 4);
+        if (ecx_statecheck(&ecatContext_, 0, EC_STATE_SAFE_OP,  EC_TIMEOUTSTATE * 4) != EC_STATE_SAFE_OP) {
+            printf("State EC_STATE_SAFE_OP has not been reached.\n");
+        }
 
         int oloop_ = ecatContext_.slavelist[0].Obytes;
         if ((oloop_ == 0) && (ecatContext_.slavelist[0].Obits > 0)) oloop_ = 1;
