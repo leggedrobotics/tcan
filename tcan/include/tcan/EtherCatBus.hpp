@@ -435,11 +435,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() {
-//        if (!inOP_) {
-//          MELO_WARN_STREAM("Devices are not in OP.");
-//          return false;
-//        }
-
         if (!datagramsSent_) {
           MELO_WARN_STREAM("No data has been sent yet.");
           return false;
@@ -453,14 +448,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         }
 
         for (int i = 1; i <= *ecatContext_.slavecount; i++) {
-//            memcpy(
-//                datagramsSent_->rxAndTxDatagrams_[i].first.data_,
-//                ecatContext_.slavelist[i].inputs,
-//                datagramsSent_->rxAndTxDatagrams_[i].first.getDataLength());
-//            memcpy(
-//                datagramsSent_->rxAndTxDatagrams_[i].second.data_,
-//                ecatContext_.slavelist[i].inputs + datagramsSent_->rxAndTxDatagrams_[i].first.getDataLength(),
-//                datagramsSent_->rxAndTxDatagrams_[i].second.getDataLength());
             memcpy(
                 datagramsSent_->rxAndTxDatagrams_[i].second.data_,
                 ecatContext_.slavelist[i].inputs,
@@ -484,20 +471,11 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                 ecatContext_.slavelist[rxAndTxDatagram.second.first.header_.address_].outputs,
                 rxAndTxDatagram.second.first.getData(),
                 rxAndTxDatagram.second.first.getDataLength());
-//            memcpy(
-//                ecatContext_.slavelist[rxAndTxDatagram.second.second.header_.address_].outputs + rxAndTxDatagram.second.first.getDataLength(),
-//                rxAndTxDatagram.second.second.getData(),
-//                rxAndTxDatagram.second.second.getDataLength());
         }
 
         datagramsSent_.reset(new EtherCatDatagrams(msg));
 
-//        for (const EtherCatDatagram datagram : msg.txDatagrams_) {
-//            memcpy(datagram.getData(), ecatContext_.slavelist[datagram.header_.address_].inputs, datagram.getDataLength());
-//        }
-
-        // Handle PDO streams
-        ecx_send_processdata(&ecatContext_);
+        sendProcessData();
 
         return true;
     }
@@ -608,10 +586,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
     void getSlaveInfo() {
         int ret = 0;
-        int i = 0, k = 0, j = 0, n = 0;
-        int wkc_ = 0;
-        int32_t actual_position = 0;
-        int posdatasize = sizeof(int32_t);
+        int wkc = 0;
         int Osize = 0, Isize = 0;
 
         #define Nsdo  16
@@ -630,19 +605,19 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         ret = ecx_readODlist(&ecatContext_, 1, &odinfo_);
         printf("\nc_readODlist returned %d\n", ret);
         printf("Slave = %d, Entries = %d\n", odinfo_.Slave, odinfo_.Entries);
-        for (k = 0; k < odinfo_.Entries; k++) {
-            wkc_ = ecx_readODdescription(&ecatContext_, k, &odinfo_);
-            wkc_ = ecx_readOE(&ecatContext_, k, &odinfo_, &odentryinfo_);
+        for (int k = 0; k < odinfo_.Entries; k++) {
+            wkc = ecx_readODdescription(&ecatContext_, k, &odinfo_);
+            wkc = ecx_readOE(&ecatContext_, k, &odinfo_, &odentryinfo_);
             printf("\nIndex = 0x%x\n", odinfo_.Index[k]);
             printf("    MaxSub     = %d\n", odinfo_.MaxSub[k]+1);
             printf("    ObjectCode = %d\n", odinfo_.ObjectCode[k]);
             printf("    DataType   = %d\n", odinfo_.DataType[k]);
             printf("    Description: %s\n", &odinfo_.Name[k][0]);
             printf("    OE Entries = %d\n", odentryinfo_.Entries);
-            for (j = 0; j < odentryinfo_.Entries; j++) {
-                for (n=0; n<Nsdo; n++) sdodata[n] = 0;
+            for (int j = 0; j < odentryinfo_.Entries; j++) {
+                for (int n=0; n<Nsdo; n++) sdodata[n] = 0;
                 sdodatasize = Nsdo*sizeof(int);
-                wkc_ = ecx_SDOread(&ecatContext_, odinfo_.Slave, odinfo_.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
+                wkc = ecx_SDOread(&ecatContext_, odinfo_.Slave, odinfo_.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
                 printf("    OE = %d\n", j);
                 printf("        ValueInfo  = %d\n", odentryinfo_.ValueInfo[j]);
                 printf("        DataType   = %d\n", odentryinfo_.DataType[j]);
@@ -650,76 +625,51 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                 printf("        ObjAccess  = %d\n", odentryinfo_.ObjAccess[j]);
                 printf("        Name       = %s\n", &odentryinfo_.Name[j][0]);
                 printf("        Value      =");
-                for (n=0; n<sdodatasize; n++) printf(" 0x%x", (0xFF & databuf[n]));
+                for (int n=0; n<sdodatasize; n++) printf(" 0x%x", (0xFF & databuf[n]));
                 printf("\n");
             }
         }
     }
 
     void checkSlaveStates() {
-        int slavestate=0, wkc=0;
-        int sdodata=0, sdodatasize=sizeof(int);
-
-        slavestate = ecx_readstate(&ecatContext_);
+        int slavestate = ecx_readstate(&ecatContext_);
         printf("\nSlave EtherCAT StateMachine state is 0x%x\n", slavestate);
 
-        sdodata = 0;
-        sdodatasize = sizeof(int);
+        int sdodata = 0;
+        int sdodatasize = sizeof(int);
         wkc_ = ecx_SDOread(&ecatContext_, 1, 0x6041, 0, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
         printf("Slave DSP402 StateMachine state is 0x%x\n", (uint16)sdodata);
     }
 
     void checkSlaveErrors() {
-        int i = 0;
-        ec_errort error;
-        char *errstr;
-
         printf("\nERROR REPORT:\n");
-
-        // Built-in error reporting
         if (ecx_iserror(&ecatContext_)) {
+            int i = 0;
             do {
-                errstr = ecx_elist2string(&ecatContext_);
+                char* errstr = ecx_elist2string(&ecatContext_);
                 printf("    Error %d: %s", ++i, errstr);
             } while(ecx_iserror(&ecatContext_));
         }
     }
 
-    void sendSdoWrite(int index, int subindex, boolean CA, int8_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 1, &value, EC_TIMEOUTRXM);
+    template <typename Value>
+    void sendSdoWrite(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess, Value value) {
+        int size = sizeof(Value);
+        wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &value, EC_TIMEOUTRXM);
     }
 
-    void sendSdoWrite(int index, int subindex, boolean CA, int16_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 2, &value, EC_TIMEOUTRXM);
+    template <typename Value>
+    void sendSdoRead(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess, Value& value) {
+        int size = sizeof(Value);
+        wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
+        if (size != sizeof(Value)) {
+            MELO_WARN_STREAM("Expected (" << sizeof(Value) << ") and read (" << size << ") SDO value size mismatch.");
+        }
     }
 
-    void sendSdoWrite(int index, int subindex, boolean CA, int32_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 4, &value, EC_TIMEOUTRXM);
-    }
-
-    void sendSdoWrite(int index, int subindex, boolean CA, int64_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 8, &value, EC_TIMEOUTRXM);
-    }
-
-    void sendSdoWrite(int index, int subindex, boolean CA, uint8_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 1, &value, EC_TIMEOUTRXM);
-    }
-
-    void sendSdoWrite(int index, int subindex, boolean CA, uint16_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 2, &value, EC_TIMEOUTRXM);
-    }
-
-    void sendSdoWrite(int index, int subindex, boolean CA, uint32_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 4, &value, EC_TIMEOUTRXM);
-    }
-
-    void sendSdoWrite(int index, int subindex, boolean CA, uint64_t value) {
-        wkc_ = ecx_SDOwrite(&ecatContext_, 1, index, subindex, CA, 8, &value, EC_TIMEOUTRXM);
-    }
-
-    void sendSdoRead(int index, int subindex, boolean CA) {
-        int sdodata[4]={0,0}, sdodatasize=16;
-        wkc_ = ecx_SDOread(&ecatContext_, 1, index, subindex, CA, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
+    void sendSdoReadAndPrint(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess) {
+        int sdodata[4]={0,0,0,0}, sdodatasize=16;
+        sendSdoRead(slave, index, subindex, completeAccess, sdodata);
         printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
     }
 
@@ -802,14 +752,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 //            default:
 //                break;
 //        }
-//    }
-
-//    void sendRxPdo(const uint32_t deviceAddress, const uint8_t length, const uint8_t* data) {
-//        memcpy(ecatContext_.slavelist[deviceAddress].outputs, data, length);
-//    }
-//
-//    void getTxPdo(const uint32_t deviceAddress, const uint8_t length, uint8_t* data) const {
-//        memcpy(data, ecatContext_.slavelist[deviceAddress].inputs, length);
 //    }
 
 protected:

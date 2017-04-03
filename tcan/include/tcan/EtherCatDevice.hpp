@@ -12,6 +12,7 @@
 #include <atomic>
 
 #include "tcan/EtherCatDeviceOptions.hpp"
+#include "tcan/CanMsg.hpp"
 
 #include "message_logger/message_logger.hpp"
 
@@ -123,6 +124,14 @@ class EtherCatDevice {
     inline void resetDeviceTimeoutCounter() {
         deviceTimeoutCounter_ = 0;
     }
+
+    template <typename Value>
+    void sendSdoWrite(uint16_t index, uint8_t subindex, bool completeAccess, Value value);
+
+    template <typename Value>
+    void sendSdoRead(uint16_t index, uint8_t subindex, bool completeAccess, Value& value);
+
+    void sendSdoReadAndPrint(uint16_t index, uint8_t subindex, bool completeAccess);
 
  protected:
     /*!

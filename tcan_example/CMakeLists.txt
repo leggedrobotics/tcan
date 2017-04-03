@@ -53,6 +53,7 @@ target_link_libraries(tcp_example_node
 )
 
 add_executable(ethercat_example_node
+  src/ElmoTwitter.cpp
   src/ethercat_example_node.cpp
 )
 target_link_libraries(ethercat_example_node
