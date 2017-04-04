@@ -201,7 +201,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     : Bus<EtherCatDatagrams>(options),
       wkcExpected_(0),
       wkc_(0),
-      needlf_(false),
       inOP_(false),
       ecatContext_({
           &ecat_port,          // .port          =
@@ -332,7 +331,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      */
     virtual bool initializeInterface() {
         printf("Starting simple test\n");
-        needlf_ = false;
         inOP_ = false;
 
         /*
@@ -402,12 +400,12 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             printf("State EC_STATE_SAFE_OP has not been reached.\n");
         }
 
-        int oloop_ = ecatContext_.slavelist[0].Obytes;
-        if ((oloop_ == 0) && (ecatContext_.slavelist[0].Obits > 0)) oloop_ = 1;
-//        if (oloop_ > 8) oloop_ = 8;
-        int iloop_ = ecatContext_.slavelist[0].Ibytes;
-        if ((iloop_ == 0) && (ecatContext_.slavelist[0].Ibits > 0)) iloop_ = 1;
-//        if (iloop_ > 8) iloop_ = 8;
+//        int oloop_ = ecatContext_.slavelist[0].Obytes;
+//        if ((oloop_ == 0) && (ecatContext_.slavelist[0].Obits > 0)) oloop_ = 1;
+////        if (oloop_ > 8) oloop_ = 8;
+//        int iloop_ = ecatContext_.slavelist[0].Ibytes;
+//        if ((iloop_ == 0) && (ecatContext_.slavelist[0].Ibits > 0)) iloop_ = 1;
+////        if (iloop_ > 8) iloop_ = 8;
 
         printf("segments : %d : %d %d %d %d\n",
             ecatContext_.grouplist[0].nsegments,
@@ -436,15 +434,15 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      */
     virtual bool readData() {
         if (!datagramsSent_) {
-          MELO_WARN_STREAM("No data has been sent yet.");
-          return false;
+            MELO_WARN_STREAM("No data has been sent yet.");
+            return false;
         }
 
-        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+        receiveProcessData();
 
         if (wkc_ < wkcExpected_) {
-          MELO_WARN_STREAM("Working counter is too low.");
-          return false;
+            MELO_WARN_STREAM("Working counter is too low.");
+            return false;
         }
 
         for (int i = 1; i <= *ecatContext_.slavecount; i++) {
@@ -483,14 +481,15 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     /*! Do a sanity check of all devices on this bus.
      */
     void sanityCheck() {
-        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup_].docheckstate)) {
+        uint8 currentgroup = 0;
+        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup].docheckstate)) {
             /* one ore more slaves are not responding */
-            ecatContext_.grouplist[currentgroup_].docheckstate = FALSE;
+            ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
             ecx_readstate(&ecatContext_);
             for (int slave = 1; slave <= *ecatContext_.slavecount; slave++) {
-                if ((ecatContext_.slavelist[slave].group == currentgroup_) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
+                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
                 {
-                    ecatContext_.grouplist[currentgroup_].docheckstate = TRUE;
+                    ecatContext_.grouplist[currentgroup].docheckstate = TRUE;
                     if (ecatContext_.slavelist[slave].state == (EC_STATE_SAFE_OP + EC_STATE_ERROR)) {
                         printf("ERROR : slave %d is in SAFE_OP + ERROR, attempting ack.\n", slave);
                         ecatContext_.slavelist[slave].state = (EC_STATE_SAFE_OP + EC_STATE_ACK);
@@ -529,7 +528,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                     }
                 }
             }
-            if(!ecatContext_.grouplist[currentgroup_].docheckstate) {
+            if(!ecatContext_.grouplist[currentgroup].docheckstate) {
                 printf("OK : all slaves resumed OPERATIONAL.\n");
             }
         }
@@ -654,7 +653,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
     template <typename Value>
     void sendSdoWrite(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess, Value value) {
-        int size = sizeof(Value);
+        const int size = sizeof(Value);
         wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &value, EC_TIMEOUTRXM);
     }
 
@@ -668,14 +667,14 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     void sendSdoReadAndPrint(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess) {
-        int sdodata[4]={0,0,0,0}, sdodatasize=16;
+        int sdodata[4]={0,0,0,0};
         sendSdoRead(slave, index, subindex, completeAccess, sdodata);
         printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
     }
 
     void syncDc() {
-        double time_step = 1e-3;
-        ecx_dcsync0(&ecatContext_, 1, TRUE, (int64)(time_step*1e9), (int64)(time_step*0.5*1e9));
+        const double timeStep = 1e-3;
+        ecx_dcsync0(&ecatContext_, 1, TRUE, (int64)(timeStep*1e9), (int64)(timeStep*0.5*1e9));
     }
 
     void sendProcessData() {
@@ -728,8 +727,8 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     void waitForState(uint16_t state) {
         int chk = 40;
         do {
-            ecx_send_processdata(&ecatContext_);
-            wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+            sendProcessData();
+            receiveProcessData();
             ecx_statecheck(&ecatContext_, 0, state,  50000);
         } while (chk-- && (ecatContext_.slavelist[0].state != state));
     }
@@ -818,11 +817,7 @@ protected:
     char IOmap_[4096];
     std::atomic<int> wkcExpected_;
     std::atomic<int> wkc_;
-    std::atomic<bool> needlf_;
     std::atomic<bool> inOP_;
-    std::atomic<int> oloop_;
-    std::atomic<int> iloop_;
-    uint8 currentgroup_ = 0;
 };
 
 } /* namespace tcan */
