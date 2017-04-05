@@ -11,28 +11,43 @@
 namespace tcan_example {
 
 
-struct ElmoTwitterIndata
+struct AnydriveIndata
 {
     Dsp402Statusword statusword;
 
-    int32_t position = 0;
-    int32_t velocity = 0;
+    int16_t mode_of_operation_display = 0;
+    int16_t measured_temperature = 0;
+    int16_t measured_motor_voltage = 0;
 
-    int32_t digitalin = 0;
-
-    int32_t busvoltage = 0;
-    int16_t motorcurrent = 0;
+    int64_t measured_motor_position = 0;
+    int64_t measured_gear_position = 0;
+    int64_t measured_joint_position = 0;
+    int32_t measured_motor_current = 0;
+    int32_t measured_motor_velocity = 0;
+    int32_t measured_gear_velocity = 0;
+    int32_t measured_joint_velocity = 0;
+    int32_t measured_joint_acceleration = 0;
+    int32_t measured_joint_torque = 0;
 };
 
-struct ElmoTwitterOutdata
+struct AnydriveOutdata
 {
     Dsp402Controlword controlword;
 
-    int32_t torque = 0;
+    int16_t mode_of_operation = 0;
+
+    int32_t desired_motor_current = 0;
+    int32_t desired_joint_velocity = 0;
+    int32_t desired_joint_torque = 0;
+    int64_t desired_joint_position = 0;
+    int16_t control_gain_a = 0;
+    int16_t control_gain_b = 0;
+    int16_t control_gain_c = 0;
+    int16_t control_gain_d = 0;
 };
 
 
-inline ElmoTwitterOutdata createOutdata(Dsp402Command command, double torque)
+inline AnydriveOutdata createOutdata(Dsp402Command command, double torque)
 {
     // Set controlword data
     static Dsp402Controlword controlword;
@@ -89,9 +104,9 @@ inline ElmoTwitterOutdata createOutdata(Dsp402Command command, double torque)
     int16_t torque_data = (int16_t)(torque/rated_torque*1000.0);
 
     // Copy to internal struct
-    ElmoTwitterOutdata data;
-    data.controlword.all = controlword.all;
-    data.torque = torque_data;
+    AnydriveOutdata data;
+//    data.controlword.all = controlword.all;
+//    data.torque = torque_data;
     return data;
 }
 
@@ -117,52 +132,35 @@ void readValue(uint8_t* data, const uint16_t pos, Value& value) {
     }
 }
 
-inline ElmoTwitterIndata createIndata(const tcan::EtherCatDatagram& datagram)
+inline AnydriveIndata createIndata(const tcan::EtherCatDatagram& datagram)
 {
     // Get data
-    uint8_t databuffer[21];
+    uint8_t databuffer[56];
     memcpy(&databuffer[0], datagram.getData(), datagram.getDataLength());
 
-
-    ElmoTwitterIndata data2;
-    readValue(&databuffer[0], 0, data2.position);
-    readValue(&databuffer[0], 4, data2.digitalin);
-    readValue(&databuffer[0], 8, data2.velocity);
-    readValue(&databuffer[0], 12, data2.statusword.all);
-    readValue(&databuffer[0], 15, data2.busvoltage);
-    readValue(&databuffer[0], 19, data2.motorcurrent);
-
     // Store data
-    ElmoTwitterIndata data;
-    data.statusword.all = ((databuffer[13] << 8 ) & 0xff00) | (databuffer[12] & 0x00ff);
-    data.position = ((databuffer[3] << 24) & 0xff000000) | ((databuffer[2] << 16) & 0x00ff0000) | ((databuffer[1] << 8) & 0x0000ff00) | ((databuffer[0] << 0) & 0x000000ff);
-    data.digitalin = ((databuffer[7] << 24) & 0xff000000) | ((databuffer[6] << 16) & 0x00ff0000) | ((databuffer[5] << 8) & 0x0000ff00) | ((databuffer[4] << 0) & 0x000000ff);
-    data.velocity = ((databuffer[11] << 24) & 0xff000000) | ((databuffer[10] << 16) & 0x00ff0000) | ((databuffer[9] << 8) & 0x0000ff00) | ((databuffer[8] << 0) & 0x000000ff);
-    data.busvoltage = ((databuffer[18] << 24) & 0xff000000) | ((databuffer[17] << 16) & 0x00ff0000) | ((databuffer[16] << 8) & 0x0000ff00) | ((databuffer[15] << 0) & 0x000000ff);
-    data.motorcurrent = ((databuffer[20] << 8) & 0xff00) | ((databuffer[19] << 0) & 0x00ff);
-
-
-//    printf("position 0x%8x 0x%8x\n", data.position, data2.position);
-//    printf("digitalin 0x%8x 0x%8x\n", data.digitalin, data2.digitalin);
-//    printf("velocity 0x%8x 0x%8x\n", data.velocity, data2.velocity);
-//    printf("statusword 0x%8x 0x%8x\n", data.statusword.all, data2.statusword.all);
-//    printf("busvoltage 0x%8x 0x%8x\n", data.busvoltage, data2.busvoltage);
-//    printf("motorcurrent 0x%8x 0x%8x\n", data.velocity, data2.motorcurrent);
-//    printf("Position 0 0x%8x\n", ((databuffer[0] << 0) & 0x000000ff));
-//    printf("Position 1 0x%8x\n", ((databuffer[1] << 8) & 0x0000ff00));
-//    printf("Position 1 0x%8x\n", ((uint32_t(databuffer[1]) << 8) & 0x0000ff00));
-//    printf("Position 2 0x%8x\n", ((databuffer[2] << 16) & 0x00ff0000));
-//    printf("Position 3 0x%8x\n", ((databuffer[3] << 24) & 0xff000000));
-//    printf("%i    \n", databuffer[1]);
-
+    AnydriveIndata data;
+    readValue(&databuffer[0], 0, data.statusword.all);
+    readValue(&databuffer[0], 2, data.mode_of_operation_display);
+    readValue(&databuffer[0], 4, data.measured_temperature);
+    readValue(&databuffer[0], 6, data.measured_motor_voltage);
+    readValue(&databuffer[0], 8, data.measured_motor_position);
+    readValue(&databuffer[0], 16, data.measured_gear_position);
+    readValue(&databuffer[0], 24, data.measured_joint_position);
+    readValue(&databuffer[0], 32, data.measured_motor_current);
+    readValue(&databuffer[0], 36, data.measured_motor_velocity);
+    readValue(&databuffer[0], 40, data.measured_gear_velocity);
+    readValue(&databuffer[0], 44, data.measured_joint_velocity);
+    readValue(&databuffer[0], 48, data.measured_joint_acceleration);
+    readValue(&databuffer[0], 52, data.measured_joint_torque);
     return data;
 }
 
 
 
-class ElmoTwitter : public tcan::EtherCatDevice {
+class Anydrive : public tcan::EtherCatDevice {
  public:
-    ElmoTwitter(const uint32_t address, const std::string& name);
+    Anydrive(const uint32_t address, const std::string& name);
 
     void dumpSlaveStatusInfo();
     void configureSlave();

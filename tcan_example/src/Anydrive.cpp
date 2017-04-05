@@ -2,16 +2,16 @@
 #include <tcan/EtherCatBus.hpp>
 
 // tcan example
-#include "tcan_example/ElmoTwitter.hpp"
+#include "tcan_example/Anydrive.hpp"
 
 
 namespace tcan_example {
 
 
-ElmoTwitter::ElmoTwitter(const uint32_t address, const std::string& name)
+Anydrive::Anydrive(const uint32_t address, const std::string& name)
 : tcan::EtherCatDevice(address, name) {}
 
-void ElmoTwitter::dumpSlaveStatusInfo() {
+void Anydrive::dumpSlaveStatusInfo() {
     printf("\nDevice Errors: \n");
     sendSdoReadAndPrint(0x1001, 0, false);
 
@@ -30,7 +30,7 @@ void ElmoTwitter::dumpSlaveStatusInfo() {
     sendSdoReadAndPrint(0x2085, 0, false);
 }
 
-void ElmoTwitter::configureSlave() {
+void Anydrive::configureSlave() {
 
 //        dsp402_controlword_t controlword = {0};
 //        elmo_twitter_indata_t indata;
@@ -42,20 +42,18 @@ void ElmoTwitter::configureSlave() {
     printf("\nSetting device configuratons...\n");
 
     // RxPDO assignments in SM2
-    sendSdoWrite(0x1c12, 0, false, uint8_t(1));
+    sendSdoWrite(0x1c12, 0, false, uint8_t(1)); // TODO read only?
     sendSdoReadAndPrint(0x1c12, 0, false);
 
-    sendSdoWrite(0x1c12, 1, true, uint16_t(0x1602));
+    sendSdoWrite(0x1c12, 1, true, uint16_t(0x1600)); // TODO read only?
     sendSdoReadAndPrint(0x1c12, 1, true);
 
     // RxPDO assignments in SM3
-    sendSdoWrite(0x1c13, 0, false, uint8_t(3));
+    sendSdoWrite(0x1c13, 0, false, uint8_t(1)); // TODO read only?
     sendSdoReadAndPrint(0x1c13, 0, false);
 
-    sendSdoWrite(0x1c13, 1, true, uint64_t(0x1a1f1a181a03));
-    sendSdoReadAndPrint(0x1c13, 1, false);
-    sendSdoReadAndPrint(0x1c13, 2, false);
-    sendSdoReadAndPrint(0x1c13, 3, false);
+    sendSdoWrite(0x1c13, 1, true, uint64_t(0x1a00)); // TODO read only?
+    sendSdoReadAndPrint(0x1c13, 1, true);
 
     // bufferu16 = 0x1a03; // position + velocity feedback
     // wkc_ = ecx_SDOwrite(&ecatContext_, 1, 0x1c13, 1, TRUE, 2, &bufferu16, EC_TIMEOUTRXM);

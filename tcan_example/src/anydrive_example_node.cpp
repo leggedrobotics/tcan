@@ -4,14 +4,13 @@
 #include "tcan/EtherCatBus.hpp"
 #include "tcan/EtherCatBusManager.hpp"
 
-#include "tcan_example/ElmoTwitter.hpp"
-
+#include "tcan_example/Anydrive.hpp"
 
 
 using namespace tcan_example;
 
 
-tcan::EtherCatDatagrams createDatagrams(ElmoTwitterOutdata& outdata) {
+tcan::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
 
     static int test_step=0;
     static int step_counter=0;
@@ -154,17 +153,19 @@ tcan::EtherCatDatagrams createDatagrams(ElmoTwitterOutdata& outdata) {
     step_counter++;
 
     // Write to output buffer
-    char databuffer[4];
+    uint8_t databuffer[32];
+    for (unsigned int i = 0; i < 32; i++)
+      databuffer[i] = 0;
     databuffer[0] = ((outdata.controlword.all >> 0) & 0xff);
     databuffer[1] = ((outdata.controlword.all >> 8) & 0xff);
-    databuffer[2] = ((outdata.torque >> 0) & 0xff);
-    databuffer[3] = ((outdata.torque >> 8) & 0xff);
 
     tcan::EtherCatDatagrams datagrams;
     tcan::EtherCatDatagram rxDatagram;
-    rxDatagram.resize(4);
+    rxDatagram.resize(32);
+    rxDatagram.setZero();
     tcan::EtherCatDatagram txDatagram;
-    txDatagram.resize(21);
+    txDatagram.resize(56);
+    txDatagram.setZero();
     memcpy(rxDatagram.data_, &databuffer[0], 4);
     datagrams.rxAndTxDatagrams_.insert({1, {rxDatagram, txDatagram}});
     return datagrams;
@@ -184,7 +185,7 @@ int main() {
 
     signal(SIGINT, signal_handler);
 
-    ElmoTwitter device(1, "? M:0000009a I:00030924");
+    Anydrive device(1, "ANYdrive");
 
     tcan::EtherCatBusOptions* busOptions = new tcan::EtherCatBusOptions(); // TODO: Why are the options destroyed in the bus destructor?
     busOptions->name_ = "enp0s31f6";
@@ -206,6 +207,7 @@ int main() {
     bus.checkSlaveStates();
     device.configureSlave();
     bus.checkSlaveStates();
+    bus.checkSlaveErrors();
 
 
     bus.strangeFunction();
@@ -224,41 +226,43 @@ int main() {
     int print_counter = 0;
     int print_counter_statusword = 0;
 
+    std::cout << "STARTING LOOP" << std::endl;
+
     while(g_running) {
         if (!asynchronous) {
             busManager.readMessagesSynchrounous();
             busManager.sanityCheckSynchronous();
         }
 
-        ElmoTwitterOutdata outdata;
-        ElmoTwitterIndata indata;
-
-        if (bus.getData()) {
-            indata = createIndata(bus.getData()->rxAndTxDatagrams_[1].second);
-        }
+        AnydriveOutdata outdata;
+        AnydriveIndata indata;
 
         bus.emplaceMessage(createDatagrams(outdata));
 
-        if(++print_counter >= 5) {
-    //        printf("Processdata cycle %4d, WKC %d", i++, wkc_.load());
-            printf("Processdata cycle %4d", i++);
+        if (bus.getData()) {
+            indata = createIndata(bus.getData()->rxAndTxDatagrams_[1].second);
 
-    //        printf(", Outputs:");
-    //        for(int j = 0 ; j < oloop_; j++)
-    //        {
-    //            printf(" %2.2x", *(ecatContext_.slavelist[0].outputs + j));
-    //        }
-            // printf(", Inputs:");
-            // for(j = 0 ; j < iloop; j++)
-            // {
-            //     printf(" %2.2x", *(ecatContext_.slavelist[0].inputs + j));
-            // }
+            if(++print_counter >= 5) {
+        //        printf("Processdata cycle %4d, WKC %d", i++, wkc_.load());
+                printf("Processdata cycle %4d", i++);
 
-            // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
-            printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.torque);
-            printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d", indata.statusword.all, indata.position, indata.velocity, indata.busvoltage, indata.motorcurrent);
-            printf("\r");
-            print_counter = 0;
+        //        printf(", Outputs:");
+        //        for(int j = 0 ; j < oloop_; j++)
+        //        {
+        //            printf(" %2.2x", *(ecatContext_.slavelist[0].outputs + j));
+        //        }
+                // printf(", Inputs:");
+                // for(j = 0 ; j < iloop; j++)
+                // {
+                //     printf(" %2.2x", *(ecatContext_.slavelist[0].inputs + j));
+                // }
+
+                // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
+                printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.desired_joint_position);
+                printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d, %8d", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
+                printf("\r");
+                print_counter = 0;
+            }
         }
 
         if (++print_counter_statusword >= 100) {
@@ -271,7 +275,7 @@ int main() {
             busManager.writeMessagesSynchronous();
         }
 
-        nextStep += std::chrono::microseconds(1000);
+        nextStep += std::chrono::microseconds(1000000);
         std::this_thread::sleep_until( nextStep );
     }
     return 0;

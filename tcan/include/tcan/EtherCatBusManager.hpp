@@ -15,7 +15,7 @@ namespace tcan {
 //! Container of all EtherCat buses
 class EtherCatBusManager : public BusManager<EtherCatDatagrams> {
  public:
-	EtherCatBusManager();
+	  EtherCatBusManager();
 
     virtual ~EtherCatBusManager();
 

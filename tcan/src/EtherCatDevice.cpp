@@ -13,6 +13,10 @@
 namespace tcan {
 
 
+void EtherCatDevice::syncDc(bool activate) {
+    bus_->syncDc(options_->address_, activate);
+}
+
 template <typename Value>
 void EtherCatDevice::sendSdoWrite(uint16_t index, uint8_t subindex, bool completeAccess, Value value) {
     bus_->sendSdoWrite(options_->address_, index, subindex, completeAccess, value);

@@ -94,6 +94,12 @@ class EtherCatDatagram {
     inline const uint8_t* getData() const { return data_; }
     inline const uint16_t getWorkingCounter() const { return workingCounter_; }
 
+    inline void setZero() {
+        for (uint16_t i = 0; i < getDataLength(); i++) {
+            data_[i] = 0;
+        }
+    }
+
  private:
 
     struct EtherCatDatagramHeader {
@@ -414,6 +420,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             ecatContext_.grouplist[0].IOsegment[2],
             ecatContext_.grouplist[0].IOsegment[3]);
 
+        wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
+        printf("Calculated workcounter %d\n", wkcExpected_.load());
+
         return true;
     }
 
@@ -441,7 +450,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         receiveProcessData();
 
         if (wkc_ < wkcExpected_) {
-            MELO_WARN_STREAM("Working counter is too low.");
+            MELO_WARN_STREAM("Working counter is too low (" << wkc_ << " < " << wkcExpected_ << ").");
             return false;
         }
 
@@ -481,57 +490,57 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     /*! Do a sanity check of all devices on this bus.
      */
     void sanityCheck() {
-        uint8 currentgroup = 0;
-        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup].docheckstate)) {
-            /* one ore more slaves are not responding */
-            ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
-            ecx_readstate(&ecatContext_);
-            for (int slave = 1; slave <= *ecatContext_.slavecount; slave++) {
-                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
-                {
-                    ecatContext_.grouplist[currentgroup].docheckstate = TRUE;
-                    if (ecatContext_.slavelist[slave].state == (EC_STATE_SAFE_OP + EC_STATE_ERROR)) {
-                        printf("ERROR : slave %d is in SAFE_OP + ERROR, attempting ack.\n", slave);
-                        ecatContext_.slavelist[slave].state = (EC_STATE_SAFE_OP + EC_STATE_ACK);
-                        ecx_writestate(&ecatContext_, slave);
-                    }
-                    else if(ecatContext_.slavelist[slave].state == EC_STATE_SAFE_OP) {
-                        printf("WARNING : slave %d is in SAFE_OP, change to OPERATIONAL.\n", slave);
-                        ecatContext_.slavelist[slave].state = EC_STATE_OPERATIONAL;
-                        ecx_writestate(&ecatContext_, slave);
-                    }
-                    else if(ecatContext_.slavelist[slave].state > 0) {
-                        if (ecx_reconfig_slave(&ecatContext_, slave, timeoutmon_)) {
-                            ecatContext_.slavelist[slave].islost = FALSE;
-                            printf("MESSAGE : slave %d reconfigured\n",slave);
-                        }
-                    }
-                    else if(!ecatContext_.slavelist[slave].islost) {
-                        /* re-check state */
-                        ecx_statecheck(&ecatContext_, slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
-                        if (!ecatContext_.slavelist[slave].state) {
-                            ecatContext_.slavelist[slave].islost = TRUE;
-                            printf("ERROR : slave %d lost\n",slave);
-                        }
-                    }
-                }
-                if (ecatContext_.slavelist[slave].islost) {
-                    if(!ecatContext_.slavelist[slave].state) {
-                        if (ecx_recover_slave(&ecatContext_, slave, timeoutmon_)) {
-                          ecatContext_.slavelist[slave].islost = FALSE;
-                            printf("MESSAGE : slave %d recovered\n",slave);
-                        }
-                    }
-                    else {
-                        ecatContext_.slavelist[slave].islost = FALSE;
-                        printf("MESSAGE : slave %d found\n",slave);
-                    }
-                }
-            }
-            if(!ecatContext_.grouplist[currentgroup].docheckstate) {
-                printf("OK : all slaves resumed OPERATIONAL.\n");
-            }
-        }
+//        uint8 currentgroup = 0;
+//        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup].docheckstate)) {
+//            /* one ore more slaves are not responding */
+//            ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
+//            ecx_readstate(&ecatContext_);
+//            for (int slave = 1; slave <= *ecatContext_.slavecount; slave++) {
+//                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
+//                {
+//                    ecatContext_.grouplist[currentgroup].docheckstate = TRUE;
+//                    if (ecatContext_.slavelist[slave].state == (EC_STATE_SAFE_OP + EC_STATE_ERROR)) {
+//                        printf("ERROR : slave %d is in SAFE_OP + ERROR, attempting ack.\n", slave);
+//                        ecatContext_.slavelist[slave].state = (EC_STATE_SAFE_OP + EC_STATE_ACK);
+//                        ecx_writestate(&ecatContext_, slave);
+//                    }
+//                    else if(ecatContext_.slavelist[slave].state == EC_STATE_SAFE_OP) {
+//                        printf("WARNING : slave %d is in SAFE_OP, change to OPERATIONAL.\n", slave);
+//                        ecatContext_.slavelist[slave].state = EC_STATE_OPERATIONAL;
+//                        ecx_writestate(&ecatContext_, slave);
+//                    }
+//                    else if(ecatContext_.slavelist[slave].state > 0) {
+//                        if (ecx_reconfig_slave(&ecatContext_, slave, timeoutmon_)) {
+//                            ecatContext_.slavelist[slave].islost = FALSE;
+//                            printf("MESSAGE : slave %d reconfigured\n",slave);
+//                        }
+//                    }
+//                    else if(!ecatContext_.slavelist[slave].islost) {
+//                        /* re-check state */
+//                        ecx_statecheck(&ecatContext_, slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
+//                        if (!ecatContext_.slavelist[slave].state) {
+//                            ecatContext_.slavelist[slave].islost = TRUE;
+//                            printf("ERROR : slave %d lost\n",slave);
+//                        }
+//                    }
+//                }
+//                if (ecatContext_.slavelist[slave].islost) {
+//                    if(!ecatContext_.slavelist[slave].state) {
+//                        if (ecx_recover_slave(&ecatContext_, slave, timeoutmon_)) {
+//                          ecatContext_.slavelist[slave].islost = FALSE;
+//                            printf("MESSAGE : slave %d recovered\n",slave);
+//                        }
+//                    }
+//                    else {
+//                        ecatContext_.slavelist[slave].islost = FALSE;
+//                        printf("MESSAGE : slave %d found\n",slave);
+//                    }
+//                }
+//            }
+//            if(!ecatContext_.grouplist[currentgroup].docheckstate) {
+//                printf("OK : all slaves resumed OPERATIONAL.\n");
+//            }
+//        }
 
 
 
@@ -672,9 +681,11 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
     }
 
-    void syncDc() {
+    void syncDc(uint16_t slave, bool activate) {
+        MELO_INFO_STREAM("Starting synchronizing clock.")
         const double timeStep = 1e-3;
-        ecx_dcsync0(&ecatContext_, 1, TRUE, (int64)(timeStep*1e9), (int64)(timeStep*0.5*1e9));
+        ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), (int64)(timeStep*1e9), (int64)(timeStep*0.5*1e9));
+        MELO_INFO_STREAM("Finished synchronizing clock.")
     }
 
     void sendProcessData() {
@@ -682,7 +693,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     void receiveProcessData() {
-        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+        wkc_ = ecx_receive_processdata(&ecatContext_, 100*EC_TIMEOUTRET);
     }
 
     void setStatePreOp() { setState(EC_STATE_PRE_OP); }

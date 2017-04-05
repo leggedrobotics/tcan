@@ -52,11 +52,19 @@ target_link_libraries(tcp_example_node
   ${catkin_LIBRARIES}
 )
 
-add_executable(ethercat_example_node
+add_executable(elmo_twitter_example_node
   src/ElmoTwitter.cpp
-  src/ethercat_example_node.cpp
+  src/elmo_twitter_example_node.cpp
 )
-target_link_libraries(ethercat_example_node
+target_link_libraries(elmo_twitter_example_node
+  ${catkin_LIBRARIES}
+)
+
+add_executable(anydrive_example_node
+  src/Anydrive.cpp
+  src/anydrive_example_node.cpp
+)
+target_link_libraries(anydrive_example_node
   ${catkin_LIBRARIES}
 )
 
@@ -65,7 +73,7 @@ target_link_libraries(ethercat_example_node
 #############
 
 
-install(TARGETS can_example_node usb_example_node tcp_example_node
+install(TARGETS can_example_node usb_example_node tcp_example_node elmo_twitter_example_node anydrive_example_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

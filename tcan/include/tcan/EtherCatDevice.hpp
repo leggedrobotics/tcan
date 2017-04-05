@@ -125,6 +125,8 @@ class EtherCatDevice {
         deviceTimeoutCounter_ = 0;
     }
 
+    void syncDc(bool activate);
+
     template <typename Value>
     void sendSdoWrite(uint16_t index, uint8_t subindex, bool completeAccess, Value value);
 
