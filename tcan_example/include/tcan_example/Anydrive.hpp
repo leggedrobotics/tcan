@@ -112,19 +112,6 @@ inline AnydriveOutdata createOutdata(Dsp402Command command, double torque)
 
 template <typename Value>
 void readValue(uint8_t* data, const uint16_t pos, Value& value) {
-//    value = 0;
-//    uint64_t buffer = 0;
-//    const uint16_t len = sizeof(Value);
-//    for (uint16_t i = 0; i < len; i++) {
-////        printf("%i    %i    ", pos+i,   data[pos+i]);
-////        printf("Read %2i: 0x%8x\n", i, (uint64_t((data[pos+i]) << uint64_t(i*8)) & (uint64_t(0xff) <<  uint64_t(i*8))));
-////        printf("Read %2i: 0x%8x\n", i, uint64_t(data[pos+i]));
-////        printf("Read %2i: 0x%8x\n", i, (uint64_t((data[pos+i]) << uint64_t(i*8))));
-////        printf("Read %2i: 0x%8x\n", i, (uint64_t(0xff) <<  uint64_t(i*8)));
-//        buffer |= (uint64_t((data[pos+i]) << uint64_t(i*8)) & (uint64_t(0xff) <<  uint64_t(i*8)));
-//    }
-//    value = buffer;
-
     value = 0;
     const uint16_t len = sizeof(Value);
     for (uint16_t i = 0; i < len; i++) {
@@ -162,8 +149,8 @@ class Anydrive : public tcan::EtherCatDevice {
  public:
     Anydrive(const uint32_t address, const std::string& name);
 
-    void dumpSlaveStatusInfo();
-    void configureSlave();
+    void printStatusInfo();
+    bool initializeInterface();
 };
 
 

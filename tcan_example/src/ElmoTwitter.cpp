@@ -11,7 +11,7 @@ namespace tcan_example {
 ElmoTwitter::ElmoTwitter(const uint32_t address, const std::string& name)
 : tcan::EtherCatDevice(address, name) {}
 
-void ElmoTwitter::dumpSlaveStatusInfo() {
+void ElmoTwitter::printStatusInfo() {
     printf("\nDevice Errors: \n");
     sendSdoReadAndPrint(0x1001, 0, false);
 
@@ -30,7 +30,7 @@ void ElmoTwitter::dumpSlaveStatusInfo() {
     sendSdoReadAndPrint(0x2085, 0, false);
 }
 
-void ElmoTwitter::configureSlave() {
+bool ElmoTwitter::initializeInterface() {
 
 //        dsp402_controlword_t controlword = {0};
 //        elmo_twitter_indata_t indata;
@@ -70,7 +70,7 @@ void ElmoTwitter::configureSlave() {
     // ecatcomm_slave_check_sdo(0x1c13, 3, TRUE);
 
     // DC Sync0
-    syncDc(false); // TODO correct?
+    syncDc(true);
 
     // // enable voltage + quick-stop + fault reset
     // controlword.bits.quick_stop = 1;
@@ -129,7 +129,9 @@ void ElmoTwitter::configureSlave() {
     bus_->waitForStateOperational();
 
     // Get error data
-    dumpSlaveStatusInfo();
+    printStatusInfo();
+
+    return true;
 }
 
 

@@ -203,35 +203,12 @@ int main(int argc, char *argv[]) {
         MELO_ERROR_STREAM("Bus could not be added.");
         return 0;
     }
-  //  std::cout << "bus added and initialized" << std::endl;
-
-
-
-
-
-    bus.checkSlaveStates();
-    device.configureSlave();
-    bus.checkSlaveStates();
-    bus.checkSlaveErrors();
-
-
-    bus.strangeFunction();
-
-
-
-
-
-
-
-
 
     auto nextStep = std::chrono::steady_clock::now();
 
     int i = 0;
     int print_counter = 0;
     int print_counter_statusword = 0;
-
-    std::cout << "STARTING LOOP" << std::endl;
 
     while(g_running) {
         if (!asynchronous) {
@@ -248,20 +225,7 @@ int main(int argc, char *argv[]) {
             indata = createIndata(bus.getData()->rxAndTxDatagrams_[1].second);
 
             if(++print_counter >= 5) {
-        //        printf("Processdata cycle %4d, WKC %d", i++, wkc_.load());
                 printf("Processdata cycle %4d", i++);
-
-        //        printf(", Outputs:");
-        //        for(int j = 0 ; j < oloop_; j++)
-        //        {
-        //            printf(" %2.2x", *(ecatContext_.slavelist[0].outputs + j));
-        //        }
-                // printf(", Inputs:");
-                // for(j = 0 ; j < iloop; j++)
-                // {
-                //     printf(" %2.2x", *(ecatContext_.slavelist[0].inputs + j));
-                // }
-
                 // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
                 printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.desired_joint_position);
                 printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d, %8d", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
@@ -275,7 +239,7 @@ int main(int argc, char *argv[]) {
             print_counter_statusword = 0;
         }
 
-    // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
+        // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         if (!asynchronous) {
             busManager.writeMessagesSynchronous();
         }

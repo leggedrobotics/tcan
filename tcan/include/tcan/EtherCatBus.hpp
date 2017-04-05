@@ -426,6 +426,22 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
         printf("Calculated workcounter %d\n", wkcExpected_.load());
 
+
+
+
+        checkSlaveStates();
+        for (EtherCatDevice* device : devices_) {
+            if (!device->initializeInterface()) {
+                MELO_ERROR_STREAM("Device '" << device->getName() << "' was not initialized successfully.");
+                return false;
+            }
+        }
+        checkSlaveStates();
+        checkSlaveErrors();
+
+
+        strangeFunction();
+
         return true;
     }
 

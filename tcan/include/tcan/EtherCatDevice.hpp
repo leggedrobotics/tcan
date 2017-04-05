@@ -48,7 +48,7 @@ class EtherCatDevice {
 
     //! Destructor
     virtual ~EtherCatDevice() {
-        delete options_;
+        delete options_; // TODO why are the options not destroyed where they are created?
     }
 
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..)
@@ -60,6 +60,12 @@ class EtherCatDevice {
     virtual bool initDevice() {
         return true;
     }
+
+    /*! Initialize the slave. This function is automatically called by EtherCatBus::initializeInterface().
+     *  This function is intended to set up the communication between master and slave.
+     * @return true if successfully initialized
+     */
+    virtual bool initializeInterface() = 0;
 
     /*!
      * Configure the device
@@ -102,7 +108,7 @@ class EtherCatDevice {
     virtual void resetDevice() { state_ = Initializing; }
 
  public: /// Internal functions
-    /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
+    /*! Initialize the device. This function is automatically called by EtherCatBus::addDevice(..).
      * Calls the initDevice() function.
      */
     inline bool initDeviceInternal(EtherCatBus* bus) {

@@ -203,27 +203,6 @@ int main(int argc, char *argv[]) {
         MELO_ERROR_STREAM("Bus could not be added.");
         return 0;
     }
-  //  std::cout << "bus added and initialized" << std::endl;
-
-
-
-
-
-    bus.checkSlaveStates();
-    device.configureSlave();
-    bus.checkSlaveStates();
-    bus.checkSlaveErrors();
-
-
-    bus.strangeFunction();
-
-
-
-
-
-
-
-
 
     auto nextStep = std::chrono::steady_clock::now();
 
@@ -246,20 +225,7 @@ int main(int argc, char *argv[]) {
             indata = createIndata(bus.getData()->rxAndTxDatagrams_[1].second);
 
             if(++print_counter >= 5) {
-        //        printf("Processdata cycle %4d, WKC %d", i++, wkc_.load());
                 printf("Processdata cycle %4d", i++);
-
-        //        printf(", Outputs:");
-        //        for(int j = 0 ; j < oloop_; j++)
-        //        {
-        //            printf(" %2.2x", *(ecatContext_.slavelist[0].outputs + j));
-        //        }
-                // printf(", Inputs:");
-                // for(j = 0 ; j < iloop; j++)
-                // {
-                //     printf(" %2.2x", *(ecatContext_.slavelist[0].inputs + j));
-                // }
-
                 // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
                 printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.torque);
                 printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d", indata.statusword.all, indata.position, indata.velocity, indata.busvoltage, indata.motorcurrent);
@@ -273,7 +239,7 @@ int main(int argc, char *argv[]) {
             print_counter_statusword = 0;
         }
 
-    // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
+        // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         if (!asynchronous) {
             busManager.writeMessagesSynchronous();
         }
