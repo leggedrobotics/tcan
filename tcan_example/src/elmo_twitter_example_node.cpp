@@ -180,7 +180,12 @@ void signal_handler(int signal) {
     g_running = false;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        MELO_ERROR_STREAM("Missing port name (e.g. enp0s31f6).");
+        return 0;
+    }
+
     const bool asynchronous = false;
 
     signal(SIGINT, signal_handler);
@@ -188,7 +193,7 @@ int main() {
     ElmoTwitter device(1, "? M:0000009a I:00030924");
 
     tcan::EtherCatBusOptions* busOptions = new tcan::EtherCatBusOptions(); // TODO: Why are the options destroyed in the bus destructor?
-    busOptions->name_ = "enp0s31f6";
+    busOptions->name_ = argv[1];
     busOptions->asynchronous_ = asynchronous;
     tcan::EtherCatBus bus(busOptions);
     bus.addDevice(&device);
