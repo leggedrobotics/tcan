@@ -280,7 +280,7 @@ int main(int argc, char *argv[]) {
             busManager.writeMessagesSynchronous();
         }
 
-        nextStep += std::chrono::microseconds(1000000);
+        nextStep += std::chrono::microseconds(1000);
         std::this_thread::sleep_until( nextStep );
     }
     return 0;

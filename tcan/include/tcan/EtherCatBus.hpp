@@ -420,6 +420,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             ecatContext_.grouplist[0].IOsegment[2],
             ecatContext_.grouplist[0].IOsegment[3]);
 
+        // Disable symmetrical transfers
+        ecatContext_.grouplist[0].blockLRW = 1;
+
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
         printf("Calculated workcounter %d\n", wkcExpected_.load());
 
@@ -693,7 +696,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     void receiveProcessData() {
-        wkc_ = ecx_receive_processdata(&ecatContext_, 100*EC_TIMEOUTRET);
+        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
     }
 
     void setStatePreOp() { setState(EC_STATE_PRE_OP); }
