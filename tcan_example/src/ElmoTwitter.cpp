@@ -9,7 +9,7 @@ namespace tcan_example {
 
 
 ElmoTwitter::ElmoTwitter(const uint32_t address, const std::string& name)
-: tcan::EtherCatDevice(address, name) {}
+: tcan::EtherCatSlave(address, name) {}
 
 void ElmoTwitter::printStatusInfo() {
     MELO_INFO_STREAM("Status info:");
@@ -28,6 +28,10 @@ void ElmoTwitter::printStatusInfo() {
     sendSdoReadAndPrint(0x2081, 6, false);
 
     sendSdoReadAndPrint(0x2085, 0, false);
+}
+
+bool ElmoTwitter::initDevice() {
+    return true;
 }
 
 bool ElmoTwitter::initializeInterface() {

@@ -38,7 +38,7 @@ add_library(${PROJECT_NAME}
   src/IpBus.cpp
   src/DeviceCanOpen.cpp
   src/EtherCatBusManager.cpp
-  src/EtherCatDevice.cpp
+  src/EtherCatSlave.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

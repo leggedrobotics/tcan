@@ -9,11 +9,15 @@ namespace tcan_example {
 
 
 Anydrive::Anydrive(const uint32_t address, const std::string& name)
-: tcan::EtherCatDevice(address, name) {}
+: tcan::EtherCatSlave(address, name) {}
 
 void Anydrive::printStatusInfo() {
     MELO_INFO_STREAM("Status info:");
     sendSdoReadAndPrint(0x1001, 0, false);
+}
+
+bool Anydrive::initDevice() {
+    return true;
 }
 
 bool Anydrive::initializeInterface() {

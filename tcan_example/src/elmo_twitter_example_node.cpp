@@ -167,7 +167,7 @@ tcan::EtherCatDatagrams createDatagrams(ElmoTwitterOutdata& outdata) {
     txDatagram.resize(21);
     txDatagram.setZero();
     memcpy(rxDatagram.data_, &databuffer[0], 4);
-    datagrams.rxAndTxDatagrams_.insert({1, {rxDatagram, txDatagram}});
+    datagrams.rxAndTxPdoDatagrams_.insert({1, {rxDatagram, txDatagram}});
     return datagrams;
 }
 
@@ -190,13 +190,13 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, signal_handler);
 
-    ElmoTwitter device(1, "? M:0000009a I:00030924");
+    ElmoTwitter slave(1, "? M:0000009a I:00030924");
 
     tcan::EtherCatBusOptions* busOptions = new tcan::EtherCatBusOptions(); // TODO: Why are the options destroyed in the bus destructor?
     busOptions->name_ = argv[1];
     busOptions->asynchronous_ = asynchronous;
     tcan::EtherCatBus bus(busOptions);
-    bus.addDevice(&device);
+    bus.addSlave(&slave);
 
     tcan::EtherCatBusManager busManager;
     if (!busManager.addBus(&bus)) {
@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
         bus.emplaceMessage(createDatagrams(outdata));
 
         if (bus.getData()) {
-            indata = createIndata(bus.getData()->rxAndTxDatagrams_[1].second);
+            indata = createIndata(bus.getData()->rxAndTxPdoDatagrams_[1].second);
 
             if(++print_counter >= 5) {
                 printf("Processdata cycle %4d", i++);

@@ -11,7 +11,7 @@
 #include <string>
 #include <atomic>
 
-#include "tcan/EtherCatDeviceOptions.hpp"
+#include "EtherCatSlaveOptions.hpp"
 #include "tcan/CanMsg.hpp"
 
 #include "message_logger/message_logger.hpp"
@@ -20,8 +20,8 @@ namespace tcan {
 
 class EtherCatBus;
 
-//! A device that is connected via EtherCat.
-class EtherCatDevice {
+//! A slave that is connected via EtherCat.
+class EtherCatSlave {
  public:
     enum State {
         Initializing=0,
@@ -31,24 +31,23 @@ class EtherCatDevice {
     };
 
     /*! Constructor
-     *  @param address	address of the device
-     *  @param name		human-readable name of the device
+     *  @param address address of the device
+     *  @param name    human-readable name of the device
      */
-    EtherCatDevice() = delete;
+    EtherCatSlave() = delete;
 
-    EtherCatDevice(const uint32_t address, const std::string& name)
-    :   EtherCatDevice(new EtherCatDeviceOptions(address, name)) {
+    EtherCatSlave(const uint32_t address, const std::string& name)
+    :   EtherCatSlave(new EtherCatSlaveOptions(address, name)) {
     }
 
-    EtherCatDevice(EtherCatDeviceOptions* options)
+    EtherCatSlave(EtherCatSlaveOptions* options)
     :   options_(options),
         deviceTimeoutCounter_(0),
-        state_(Initializing),
-        bus_(nullptr) {
+        state_(Initializing) {
     }
 
     //! Destructor
-    virtual ~EtherCatDevice() {
+    virtual ~EtherCatSlave() {
         delete options_; // TODO why are the options not (always) destroyed where they are created?
     }
 
@@ -58,9 +57,7 @@ class EtherCatDevice {
      *  restart remote node, ...)
      *  @return true if successfully initialized
      */
-    virtual bool initDevice() {
-        return true;
-    }
+    virtual bool initDevice() = 0;
 
     /*! Initialize the device's communication. This function is automatically called by EtherCatBus::initializeInterface(..).
      *  This function is intended to set up the communication between master and slave.
@@ -151,7 +148,7 @@ class EtherCatDevice {
     }
 
  protected:
-    const EtherCatDeviceOptions* options_ = nullptr;
+    const EtherCatSlaveOptions* options_ = nullptr;
 
     std::atomic<unsigned int> deviceTimeoutCounter_;
 

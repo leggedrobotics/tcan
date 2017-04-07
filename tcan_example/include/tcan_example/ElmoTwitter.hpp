@@ -2,10 +2,8 @@
 
 
 // tcan
-#include <tcan/EtherCatDevice.hpp>
-
-// tcan example
 #include <tcan_example/Dsp402.hpp>
+#include "../../../tcan/include/tcan/EtherCatSlave.hpp"
 
 
 namespace tcan_example {
@@ -133,11 +131,13 @@ inline ElmoTwitterIndata createIndata(const tcan::EtherCatDatagram& datagram)
 
 
 
-class ElmoTwitter : public tcan::EtherCatDevice {
+class ElmoTwitter : public tcan::EtherCatSlave {
  public:
     ElmoTwitter(const uint32_t address, const std::string& name);
 
     void printStatusInfo();
+
+    bool initDevice();
     bool initializeInterface();
 };
 

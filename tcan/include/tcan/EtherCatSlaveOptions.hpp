@@ -12,9 +12,9 @@
 
 namespace tcan {
 
-class EtherCatDeviceOptions {
+class EtherCatSlaveOptions {
  public:
-    EtherCatDeviceOptions() = delete; // TODO: why? the default constructor is not created if others are explicitly defined.
+    EtherCatSlaveOptions() = delete; // TODO: why? the default constructor is not created if others are explicitly defined.
 
     /*!
      * Constructor.
@@ -23,7 +23,7 @@ class EtherCatDeviceOptions {
      * @param maxDeviceTimeoutCounter   counter limit at which the device is considered as timed out. Set 0 to disable.
      *                                  If no message was received within this time, the device is considered as missing.
      */
-    EtherCatDeviceOptions(
+    EtherCatSlaveOptions(
         const uint32_t address,
         const std::string& name,
         const unsigned int maxDeviceTimeoutCounter = 20):
@@ -40,15 +40,15 @@ class EtherCatDeviceOptions {
      * @param timeout   timeout in seconds. If no message was received within this time, the device is considered as missing
      * @param looprate  loop rate [Hz] of the process calling checkSanity(..). In asynchrounous mode this is 10Hz by default (see BusOptions)
      */
-    EtherCatDeviceOptions(
+    EtherCatSlaveOptions(
         const uint32_t address,
         const std::string& name,
         const double timeout,
         const double looprate):
-        EtherCatDeviceOptions(address, name, static_cast<unsigned int>(timeout*looprate)) {
+        EtherCatSlaveOptions(address, name, static_cast<unsigned int>(timeout*looprate)) {
     }
 
-    virtual ~EtherCatDeviceOptions() { }
+    virtual ~EtherCatSlaveOptions() { }
 
     /*!
      * set the maxDeviceTimeoutCounter_

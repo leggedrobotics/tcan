@@ -2,7 +2,7 @@
 
 
 // tcan
-#include <tcan/EtherCatDevice.hpp>
+#include "../../../tcan/include/tcan/EtherCatSlave.hpp"
 
 
 namespace tcan_example {

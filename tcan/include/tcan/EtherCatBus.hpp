@@ -17,145 +17,19 @@
 
 #include <ethercat.h>
 
-
 #include "tcan/Bus.hpp"
 #include "tcan/CanMsg.hpp"
 #include "tcan/EtherCatBusOptions.hpp"
-#include "tcan/EtherCatDevice.hpp"
-#include "tcan/EtherCatDatagramData.hpp"
-#include "tcan/SdoMsg.hpp"
+#include "tcan/EtherCatDatagram.hpp"
+#include "tcan/EtherCatSlave.hpp"
 
 namespace tcan {
-
-
-class EtherCatDatagram {
- public:
-    inline void resize(const uint16_t length) {
-        uint8_t* oldData = data_;
-        data_ = new uint8_t[length];
-        std::copy(&oldData[0], &oldData[header_.lenRCM_.elements_.len_], data_);
-        header_.lenRCM_.elements_.len_ = length;
-        delete[] oldData;
-    }
-
-    template <typename T>
-    inline void write(const uint16_t memoryPosition, const T& data) {
-        // check if memoryPosition lies within data_?
-        std::copy(&data_[memoryPosition], &data_[memoryPosition + sizeof(T)], &data);
-    }
-
-    inline const uint16_t getTotalLength() const { return getDataLength() + 12; }
-    inline const uint16_t getDataLength() const { return header_.lenRCM_.elements_.len_; }
-    inline const uint8_t* getData() const { return data_; }
-    inline const uint16_t getWorkingCounter() const { return workingCounter_; }
-
-    inline void setZero() {
-        for (uint16_t i = 0; i < getDataLength(); i++) {
-            data_[i] = 0;
-        }
-    }
-
- private:
-
-    struct EtherCatDatagramHeader {
-        enum class Command : uint8_t {
-            NOP=0, // No operation
-            APRD=1, // Auto Increment Read
-            APWR=2, // Auto Increment Write
-            APRW=3, // Auto Increment Read Write
-            FPRD=4, // Configured Address Read
-            FPWR=5, // Configured Address Write
-            FPRW=6, // Configured Address Read Write
-            BRD=7, // Broadcast Read
-            BWR=8, // Broadcast Write
-            BRW=9, // Broadcast Read Write
-            LRD=10, // Logical Memory Read
-            LWR=11, // Logical Memory Write
-            LRW=12, // Logical Memory Read Write
-            ARMW=13, // Auto Increment Read Multiple Write
-            FRMW=14 // Configured Read Multiple Write
-        };
-        // Note: Bit field ordering depends on the Endianness which is implementation dependent.
-        struct LenRCMBits {
-          uint16_t len_           :11; // does this sub-byte work?
-          uint16_t reserved_      :3;
-          uint16_t circulating_   :1;
-          uint16_t more_          :1;
-        };
-        // Note: The constructor per default calls the initializer of the first element of a union.
-        union LenRCM {
-          uint16_t all_;
-          LenRCMBits elements_;
-        };
-
-        Command cmd_;
-        uint8_t idx_;
-        uint32_t address_;
-        LenRCM lenRCM_;
-        uint16_t irq_;
-
-//        DatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), len_(0), reserved_(0), circulating_(0), more_(0), irq_(0) { }
-        EtherCatDatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), lenRCM_{0}, irq_(0) { }
-
-//        uint16_t getLength() const {
-//            return (lenRCM_ & 0xFFE0) >> 5;
-//        }
-//
-//        void setLength(uint16_t length) {
-//            lenRCM_ &= ~0xFFE0; // clear bits first.
-//            lenRCM_ = (length << 5) & 0xFFE0;
-//        }
-//
-//        uint16_t getReserved() const {
-//            return (lenRCM_ & 0x001C) >> 2;
-//        }
-//
-//        void setReserved(uint16_t reserved) {
-//            lenRCM_ &= ~0x001C; // clear bits first.
-//            lenRCM_ = (reserved << 2) & 0x001C;
-//        }
-//
-//        uint16_t getCirculating() const {
-//            return (lenRCM_ & 0x0002) >> 1;
-//        }
-//
-//        void setCirculating(uint16_t circulating) {
-//            lenRCM_ &= ~0x0002; // clear bits first.
-//            lenRCM_ = (circulating << 1) & 0x0002;
-//        }
-//
-//        uint16_t getMore() const {
-//            return (lenRCM_ & 0x0001) >> 0;
-//        }
-//
-//        void setMore(uint16_t more) {
-//            lenRCM_ &= ~0x0001; // clear bits first.
-//            lenRCM_ = (more << 1) & 0x0001;
-//        }
-    } __attribute__((packed)); // prevent structure padding
-
-
- public:
-    EtherCatDatagramHeader header_;
-    uint8_t* data_ = nullptr;
-    uint16_t workingCounter_ = 0;
-
-    // have a map of (name string => memory address) to have human-readable access to the fields in data_? would need to update this on resize(..) calls..
-};
-
-
-class EtherCatDatagrams {
- public:
-    // TODO: function callbacks could be added here.
-    // TODO: avoid multiple pdos per address?
-    std::unordered_map<uint32_t, std::pair<EtherCatDatagram, EtherCatDatagram>> rxAndTxDatagrams_;
-};
 
 
 class EtherCatBus : public Bus<EtherCatDatagrams> {
  public:
     typedef std::function<bool(const EtherCatDatagram&)> CallbackPtr;
-    typedef std::unordered_map<uint32_t, std::pair<EtherCatDevice*, CallbackPtr>> AddressToFunctionMap;
+    typedef std::unordered_map<uint32_t, std::pair<EtherCatSlave*, CallbackPtr>> AddressToFunctionMap;
 
     EtherCatBus() = delete;
     EtherCatBus(EtherCatBusOptions* options)
@@ -197,20 +71,20 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      * @return true if successful
      */
     template <class C, typename TOptions>
-    inline std::pair<C*, bool> addDevice(TOptions* options) {
+    inline std::pair<C*, bool> addSlave(TOptions* options) {
         C* dev = new C(options);
         bool success = addDevice(dev);
         return std::make_pair(dev, success);
     }
 
-    /*! Adds a device to the device vector and calls its initDevice function
+    /*! Adds a slave to the device vector and calls its initDevice function
      * @param device    Pointer to the device
      * @return true if init was successful
      */
-    inline bool addDevice(EtherCatDevice* device) {
-        // asssign the device some id to calculate the offset in ethernet frame address
-        devices_.push_back(device);
-        return device->initDeviceInternal(this);
+    inline bool addSlave(EtherCatSlave* slave) {
+        // assign the slave some id to calculate the offset in ethernet frame address
+        slaves_.push_back(slave);
+        return slave->initDeviceInternal(this);
     }
 
 //    template <class T>
@@ -331,11 +205,11 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             MELO_INFO_STREAM(i << ": " << std::string(ecatContext_.slavelist[i].name));
         }
 
-        if (!allDevicesMatch()) {
-            MELO_ERROR_STREAM("Expected and discovered devices mismatch.");
+        if (!allSlavesMatch()) {
+            MELO_ERROR_STREAM("Expected and discovered slaves mismatch.");
             return false;
         }
-        MELO_INFO_STREAM("Expected and discovered devices match.");
+        MELO_INFO_STREAM("Expected and discovered slaves match.");
 
         /*!
          * We now have the network up and configured. Mailboxes are up for slaves that
@@ -381,13 +255,11 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
         printf("Calculated workcounter %d\n", wkcExpected_.load());
 
-
-
-
+        // Initialize the communication interfaces of all slaves.
         checkSlaveStates();
-        for (EtherCatDevice* device : devices_) {
-            if (!device->initializeInterface()) {
-                MELO_ERROR_STREAM("Device '" << device->getName() << "' was not initialized successfully.");
+        for (EtherCatSlave* slave : slaves_) {
+            if (!slave->initializeInterface()) {
+                MELO_ERROR_STREAM("Slave '" << slave->getName() << "' was not initialized successfully.");
                 return false;
             }
         }
@@ -423,16 +295,16 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
         receiveProcessData();
 
-        if (wkc_ < wkcExpected_) {
+        if (!checkWorkingCounter()) {
             MELO_WARN_STREAM("Working counter is too low (" << wkc_ << " < " << wkcExpected_ << ").");
             return false;
         }
 
         for (int i = 1; i <= *ecatContext_.slavecount; i++) {
             memcpy(
-                datagramsSent_->rxAndTxDatagrams_[i].second.data_,
+                datagramsSent_->rxAndTxPdoDatagrams_[i].second.data_,
                 ecatContext_.slavelist[i].inputs,
-                datagramsSent_->rxAndTxDatagrams_[i].second.getDataLength());
+                datagramsSent_->rxAndTxPdoDatagrams_[i].second.getDataLength());
         }
 
         // TODO fill this.
@@ -442,12 +314,12 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         return false; // TODO true?
     }
 
-    /*! write CAN message to the device driver
+    /*! write datagrams to the device driver
      * @return true if the message was successfully written
      */
     virtual bool writeData(const EtherCatDatagrams& msg) {
 
-        for (const auto& rxAndTxDatagram : msg.rxAndTxDatagrams_) {
+        for (const auto& rxAndTxDatagram : msg.rxAndTxPdoDatagrams_) {
             memcpy(
                 ecatContext_.slavelist[rxAndTxDatagram.second.first.header_.address_].outputs,
                 rxAndTxDatagram.second.first.getData(),
@@ -465,31 +337,30 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      */
     void sanityCheck() {
         uint8_t currentgroup = 0;
-        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup].docheckstate)) {
+        if (inOP_ && (checkWorkingCounter() || ecatContext_.grouplist[currentgroup].docheckstate)) {
             /* one ore more slaves are not responding */
             ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
             ecx_readstate(&ecatContext_);
             for (int slave = 1; slave <= *ecatContext_.slavecount; slave++) {
-                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
-                {
+                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL)) {
                     ecatContext_.grouplist[currentgroup].docheckstate = TRUE;
                     if (ecatContext_.slavelist[slave].state == (EC_STATE_SAFE_OP + EC_STATE_ERROR)) {
                         printf("ERROR : slave %d is in SAFE_OP + ERROR, attempting ack.\n", slave);
                         ecatContext_.slavelist[slave].state = (EC_STATE_SAFE_OP + EC_STATE_ACK);
                         ecx_writestate(&ecatContext_, slave);
                     }
-                    else if(ecatContext_.slavelist[slave].state == EC_STATE_SAFE_OP) {
+                    else if (ecatContext_.slavelist[slave].state == EC_STATE_SAFE_OP) {
                         printf("WARNING : slave %d is in SAFE_OP, change to OPERATIONAL.\n", slave);
                         ecatContext_.slavelist[slave].state = EC_STATE_OPERATIONAL;
                         ecx_writestate(&ecatContext_, slave);
                     }
-                    else if(ecatContext_.slavelist[slave].state > 0) {
+                    else if (ecatContext_.slavelist[slave].state > 0) {
                         if (ecx_reconfig_slave(&ecatContext_, slave, timeoutmon_)) {
                             ecatContext_.slavelist[slave].islost = FALSE;
                             printf("MESSAGE : slave %d reconfigured\n",slave);
                         }
                     }
-                    else if(!ecatContext_.slavelist[slave].islost) {
+                    else if (!ecatContext_.slavelist[slave].islost) {
                         /* re-check state */
                         ecx_statecheck(&ecatContext_, slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
                         if (!ecatContext_.slavelist[slave].state) {
@@ -499,9 +370,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                     }
                 }
                 if (ecatContext_.slavelist[slave].islost) {
-                    if(!ecatContext_.slavelist[slave].state) {
+                    if (!ecatContext_.slavelist[slave].state) {
                         if (ecx_recover_slave(&ecatContext_, slave, timeoutmon_)) {
-                          ecatContext_.slavelist[slave].islost = FALSE;
+                            ecatContext_.slavelist[slave].islost = FALSE;
                             printf("MESSAGE : slave %d recovered\n",slave);
                         }
                     }
@@ -511,7 +382,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                     }
                 }
             }
-            if(!ecatContext_.grouplist[currentgroup].docheckstate) {
+            if (!ecatContext_.grouplist[currentgroup].docheckstate) {
                 printf("OK : all slaves resumed OPERATIONAL.\n");
             }
         }
@@ -523,10 +394,10 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
         bool isMissingOrError = false;
         bool allActive = true;
-        for(auto device : devices_) {
-            device->sanityCheck();
-            isMissingOrError |= device->isMissing() | device->hasError();
-            allActive &= device->isActive();
+        for (auto slave : slaves_) {
+            slave->sanityCheck();
+            isMissingOrError |= slave->isMissing() | slave->hasError();
+            allActive &= slave->isActive();
         }
 
         isMissingDeviceOrHasError_ = isMissingOrError;
@@ -544,21 +415,21 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 //        return ptr;
 //    }
 
-    bool allDevicesMatch() {
+    bool allSlavesMatch() {
         // Verify the expected number of slaves
-        if (*ecatContext_.slavecount < static_cast<int>(devices_.size())) {
-            MELO_ERROR_STREAM("Found too few slaves (" << *ecatContext_.slavecount << " < " << static_cast<int>(devices_.size()) << ").")
+        if (*ecatContext_.slavecount < static_cast<int>(slaves_.size())) {
+            MELO_ERROR_STREAM("Found too few slaves (" << *ecatContext_.slavecount << " < " << static_cast<int>(slaves_.size()) << ").")
             return false;
         }
-        else if (*ecatContext_.slavecount > static_cast<int>(devices_.size())) {
-          MELO_ERROR_STREAM("Found too many slaves (" << *ecatContext_.slavecount << " < " << static_cast<int>(devices_.size()) << ").")
+        else if (*ecatContext_.slavecount > static_cast<int>(slaves_.size())) {
+          MELO_ERROR_STREAM("Found too many slaves (" << *ecatContext_.slavecount << " < " << static_cast<int>(slaves_.size()) << ").")
             return false;
         }
 
         // Verify slave by slave that the name is correct
-        for (const EtherCatDevice* device : devices_) {
-            if (std::string(ecatContext_.slavelist[device->getAddress()].name) != device->getName()) {
-                MELO_ERROR_STREAM("Device with address '" << device->getAddress() << "' expected name '" << device->getName() << "' but found '" << std::string(ecatContext_.slavelist[device->getAddress()].name) << "'.");
+        for (const EtherCatSlave* slave : slaves_) {
+            if (std::string(ecatContext_.slavelist[slave->getAddress()].name) != slave->getName()) {
+                MELO_ERROR_STREAM("Slave with address '" << slave->getAddress() << "' expected name '" << slave->getName() << "' but found '" << std::string(ecatContext_.slavelist[slave->getAddress()].name) << "'.");
                 return false;
             }
         }
@@ -597,7 +468,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             printf("    Description: %s\n", &odinfo.Name[k][0]);
             printf("    OE Entries = %d\n", odentryinfo.Entries);
             for (int j = 0; j < odentryinfo.Entries; j++) {
-                for (int n=0; n<Nsdo; n++) sdodata[n] = 0;
+                for (int n = 0; n < Nsdo; n++) {
+                    sdodata[n] = 0;
+                }
                 sdodatasize = Nsdo*sizeof(int);
                 ecx_SDOread(&ecatContext_, odinfo.Slave, odinfo.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
                 printf("    OE = %d\n", j);
@@ -607,7 +480,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                 printf("        ObjAccess  = %d\n", odentryinfo.ObjAccess[j]);
                 printf("        Name       = %s\n", &odentryinfo.Name[j][0]);
                 printf("        Value      =");
-                for (int n=0; n<sdodatasize; n++) printf(" 0x%x", (0xFF & databuf[n]));
+                for (int n=0; n<sdodatasize; n++) {
+                    printf(" 0x%x", (0xFF & databuf[n]));
+                }
                 printf("\n");
             }
         }
@@ -671,6 +546,10 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
     }
 
+    bool checkWorkingCounter() {
+        return wkc_ >= wkcExpected_;
+    }
+
     void setStatePreOp() { setState(EC_STATE_PRE_OP); }
     void setStateSafeOp() { setState(EC_STATE_SAFE_OP); }
     void setStateOperational() { setState(EC_STATE_OPERATIONAL); }
@@ -695,7 +574,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             printf("Not all slaves reached operational state.\n");
             ecx_readstate(&ecatContext_);
             for(int i = 1; i <= *ecatContext_.slavecount; i++) {
-                if(ecatContext_.slavelist[i].state != EC_STATE_OPERATIONAL) {
+                if (ecatContext_.slavelist[i].state != EC_STATE_OPERATIONAL) {
                     printf("Slave %d State=0x%2.2x StatusCode=0x%4.4x : %s\n",
                     i, ecatContext_.slavelist[i].state, ecatContext_.slavelist[i].ALstatuscode, ec_ALstatuscode2string(ecatContext_.slavelist[i].ALstatuscode));
                 }
@@ -720,8 +599,8 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
 protected:
-    // vector containing all devices
-    std::vector<EtherCatDevice*> devices_;
+    // vector containing all slaves
+    std::vector<EtherCatSlave*> slaves_;
 
     // map mapping COB id to parse functions
     AddressToFunctionMap addressToFunctionMap_;
