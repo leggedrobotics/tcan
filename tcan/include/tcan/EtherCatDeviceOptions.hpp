@@ -14,11 +14,10 @@ namespace tcan {
 
 class EtherCatDeviceOptions {
  public:
-
-    EtherCatDeviceOptions() = delete;
+    EtherCatDeviceOptions() = delete; // TODO: why? the default constructor is not created if others are explicitly defined.
 
     /*!
-     *
+     * Constructor.
      * @param address                   address of the device
      * @param name                      name of the device
      * @param maxDeviceTimeoutCounter   counter limit at which the device is considered as timed out. Set 0 to disable.
@@ -31,13 +30,11 @@ class EtherCatDeviceOptions {
         address_(address),
         name_(name),
         maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter),
-        printConfigInfo_(true)
-    {
-
+        printConfigInfo_(true) {
     }
 
     /*!
-     *
+     * Constructor.
      * @param address   address of the device
      * @param name      name of the device
      * @param timeout   timeout in seconds. If no message was received within this time, the device is considered as missing
@@ -48,9 +45,7 @@ class EtherCatDeviceOptions {
         const std::string& name,
         const double timeout,
         const double looprate):
-        EtherCatDeviceOptions(address, name, static_cast<unsigned int>(timeout*looprate))
-    {
-
+        EtherCatDeviceOptions(address, name, static_cast<unsigned int>(timeout*looprate)) {
     }
 
     virtual ~EtherCatDeviceOptions() { }

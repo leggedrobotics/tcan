@@ -12,7 +12,7 @@ ElmoTwitter::ElmoTwitter(const uint32_t address, const std::string& name)
 : tcan::EtherCatDevice(address, name) {}
 
 void ElmoTwitter::printStatusInfo() {
-    printf("\nDevice Errors: \n");
+    MELO_INFO_STREAM("Status info:");
     sendSdoReadAndPrint(0x1001, 0, false);
 
     sendSdoReadAndPrint(0x1002, 0, false);
@@ -32,14 +32,8 @@ void ElmoTwitter::printStatusInfo() {
 
 bool ElmoTwitter::initializeInterface() {
 
-//        dsp402_controlword_t controlword = {0};
-//        elmo_twitter_indata_t indata;
-//        elmo_twitter_outdata_t outdata;
-
     // Set state
     bus_->setStatePreOp();
-
-    printf("\nSetting device configuratons...\n");
 
     // RxPDO assignments in SM2
     sendSdoWrite(0x1c12, 0, false, uint8_t(1));
@@ -70,7 +64,7 @@ bool ElmoTwitter::initializeInterface() {
     // ecatcomm_slave_check_sdo(0x1c13, 3, TRUE);
 
     // DC Sync0
-    syncDc(true);
+    syncDistributedClocks(true);
 
     // // enable voltage + quick-stop + fault reset
     // controlword.bits.quick_stop = 1;

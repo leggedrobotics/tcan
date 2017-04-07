@@ -17,6 +17,7 @@
 #include "message_logger/message_logger.hpp"
 
 namespace tcan {
+
 class EtherCatBus;
 
 //! A device that is connected via EtherCat.
@@ -30,8 +31,8 @@ class EtherCatDevice {
     };
 
     /*! Constructor
-     * @param address	address of the device
-     * @param name		human-readable name of the device
+     *  @param address	address of the device
+     *  @param name		human-readable name of the device
      */
     EtherCatDevice() = delete;
 
@@ -39,8 +40,8 @@ class EtherCatDevice {
     :   EtherCatDevice(new EtherCatDeviceOptions(address, name)) {
     }
 
-    EtherCatDevice(EtherCatDeviceOptions* options):
-        options_(options),
+    EtherCatDevice(EtherCatDeviceOptions* options)
+    :   options_(options),
         deviceTimeoutCounter_(0),
         state_(Initializing),
         bus_(nullptr) {
@@ -48,40 +49,39 @@ class EtherCatDevice {
 
     //! Destructor
     virtual ~EtherCatDevice() {
-        delete options_; // TODO why are the options not destroyed where they are created?
+        delete options_; // TODO why are the options not (always) destroyed where they are created?
     }
 
-    /*! Initialize the device. This function is automatically called by Bus::addDevice(..)
-     *   (through initDeviceInternal(..))
-     * This function is intended to do some initial device initialization (register messages to be received,
-     *   restart remote node, ...)
-     * @return true if successfully initialized
+    /*! Initialize the device. This function is automatically called by EtherCatBus::addDevice(..).
+     *  (through initDeviceInternal(..))
+     *  This function is intended to do some initial device initialization (register messages to be received,
+     *  restart remote node, ...)
+     *  @return true if successfully initialized
      */
     virtual bool initDevice() {
         return true;
     }
 
-    /*! Initialize the slave. This function is automatically called by EtherCatBus::initializeInterface().
+    /*! Initialize the device's communication. This function is automatically called by EtherCatBus::initializeInterface(..).
      *  This function is intended to set up the communication between master and slave.
-     * @return true if successfully initialized
+     *  @return true if successfully initialized
      */
     virtual bool initializeInterface() = 0;
 
-    /*!
-     * Configure the device
-     * This function is automatically called after reception of a
-     * bootup message. (or more general: After reception of any message if the device was in state Missing or Initializing)
-     * @param msg   received message which caused the call of this function
-     * @return      true if device is active
+    /*! Configure the device
+     *  This function is automatically called after reception of a
+     *  bootup message. (or more general: After reception of any message if the device was in state Missing or Initializing)
+     *  @param msg   received message which caused the call of this function
+     *  @return      true if device is active
      */
-    virtual bool configureDevice(const CanMsg& msg) {
-        return true;
-    }
+//    virtual bool configureDevice(const CanMsg& msg) {
+//        return true;
+//    }
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
-     * and shall check heartbeats, SDO timeouts, ...
-     * This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0
-     * @return true if everything is ok.
+     *  and shall check heartbeats, SDO timeouts, ...
+     *  This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0
+     *  @return true if everything is ok.
      */
     virtual void sanityCheck() {
         if(!isMissing()) {
@@ -109,44 +109,43 @@ class EtherCatDevice {
 
  public: /// Internal functions
     /*! Initialize the device. This function is automatically called by EtherCatBus::addDevice(..).
-     * Calls the initDevice() function.
+     *  Calls the initDevice() function.
      */
     inline bool initDeviceInternal(EtherCatBus* bus) {
         bus_ = bus;
         return initDevice();
     }
 
-    inline void configureDeviceInternal(const CanMsg& msg) {
-        if(state_ != Active && state_ != Error) {
-            if(configureDevice(msg)) {
-                state_ = Active;
-                if(options_->printConfigInfo_) {
-                    MELO_INFO("Device %s configured successfully.", options_->name_.c_str());
-                }
-            }
-        }
-    }
+//    inline void configureDeviceInternal(const CanMsg& msg) {
+//        if(state_ != Active && state_ != Error) {
+//            if(configureDevice(msg)) {
+//                state_ = Active;
+//                if(options_->printConfigInfo_) {
+//                    MELO_INFO("Device %s configured successfully.", options_->name_.c_str());
+//                }
+//            }
+//        }
+//    }
 
     inline void resetDeviceTimeoutCounter() {
         deviceTimeoutCounter_ = 0;
     }
 
-    void syncDc(bool activate);
+    void syncDistributedClocks(const bool activate);
 
     template <typename Value>
-    void sendSdoWrite(uint16_t index, uint8_t subindex, bool completeAccess, Value value);
+    void sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value);
 
     template <typename Value>
-    void sendSdoRead(uint16_t index, uint8_t subindex, bool completeAccess, Value& value);
+    void sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value);
 
-    void sendSdoReadAndPrint(uint16_t index, uint8_t subindex, bool completeAccess);
+    void sendSdoReadAndPrint(const uint16_t index, const uint8_t subindex, const bool completeAccess);
 
  protected:
     /*!
      * @return True if the device timed out
      */
-    inline bool isTimedOut()
-    {
+    inline bool isTimedOut() {
         return (options_->maxDeviceTimeoutCounter_ != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter_) );
         // deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
     }
@@ -158,7 +157,7 @@ class EtherCatDevice {
 
     std::atomic<State> state_;
 
-    //!  reference to the EtherCat bus the device is connected to
+    //! Pointer to the EtherCat bus the device is connected to.
     EtherCatBus* bus_ = nullptr;
 };
 

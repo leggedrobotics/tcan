@@ -219,6 +219,7 @@ int main(int argc, char *argv[]) {
         AnydriveOutdata outdata;
         AnydriveIndata indata;
 
+        // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         bus.emplaceMessage(createDatagrams(outdata));
 
         if (bus.getData()) {
@@ -228,7 +229,7 @@ int main(int argc, char *argv[]) {
                 printf("Processdata cycle %4d", i++);
                 // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
                 printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.desired_joint_position);
-                printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d, %8d", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
+                printf(", Feedback Data: 0x%4x, %4d, %8d, %16d, %16d, %16d", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
                 printf("\r");
                 print_counter = 0;
             }
@@ -239,13 +240,12 @@ int main(int argc, char *argv[]) {
             print_counter_statusword = 0;
         }
 
-        // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         if (!asynchronous) {
             busManager.writeMessagesSynchronous();
         }
 
         nextStep += std::chrono::microseconds(1000);
-        std::this_thread::sleep_until( nextStep );
+        std::this_thread::sleep_until(nextStep);
     }
     return 0;
 }

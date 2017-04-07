@@ -28,51 +28,6 @@
 namespace tcan {
 
 
-
-//struct EthernetHeader {
-//    uint8_t destination_[6];
-//    uint8_t source_[6];
-//    uint8_t etherType_[2];
-//
-//    EthernetHeader()
-//    :   destination_{0,0,0,0,0,0},
-//        source_{0,0,0,0,0,0},
-//        etherType_{0,0} {}
-//};
-
-struct EtherCatHeader {
-    uint16_t data_ = 0;
-
-    EtherCatHeader() {}
-
-    uint16_t getLength() const {
-        return (data_ & 0xFFE0) >> 5;
-    }
-
-    void setLength(uint16_t length) {
-        data_ &= ~0xFFE0; // clear bits first.
-        data_ = (length << 5) & 0xFFE0;
-    }
-
-    uint16_t getReserved() const {
-        return (data_ & 0x0001) >> 4;
-    }
-
-    void setReserved(uint16_t reserved) {
-        data_ &= ~0x0001; // clear bits first.
-        data_ = (reserved << 4) & 0x0001;
-    }
-
-    uint16_t getType() const {
-        return (data_ & 0x000F) >> 0;
-    }
-
-    void setType(uint16_t type) {
-        data_ &= ~0x000F; // clear bits first.
-        data_ = (type << 0) & 0x000F;
-    }
-};
-
 class EtherCatDatagram {
  public:
     inline void resize(const uint16_t length) {
@@ -376,7 +331,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             MELO_INFO_STREAM(i << ": " << std::string(ecatContext_.slavelist[i].name));
         }
 
-        if (!allDeviceMatch()) {
+        if (!allDevicesMatch()) {
             MELO_ERROR_STREAM("Expected and discovered devices mismatch.");
             return false;
         }
@@ -509,57 +464,57 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     /*! Do a sanity check of all devices on this bus.
      */
     void sanityCheck() {
-//        uint8 currentgroup = 0;
-//        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup].docheckstate)) {
-//            /* one ore more slaves are not responding */
-//            ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
-//            ecx_readstate(&ecatContext_);
-//            for (int slave = 1; slave <= *ecatContext_.slavecount; slave++) {
-//                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
-//                {
-//                    ecatContext_.grouplist[currentgroup].docheckstate = TRUE;
-//                    if (ecatContext_.slavelist[slave].state == (EC_STATE_SAFE_OP + EC_STATE_ERROR)) {
-//                        printf("ERROR : slave %d is in SAFE_OP + ERROR, attempting ack.\n", slave);
-//                        ecatContext_.slavelist[slave].state = (EC_STATE_SAFE_OP + EC_STATE_ACK);
-//                        ecx_writestate(&ecatContext_, slave);
-//                    }
-//                    else if(ecatContext_.slavelist[slave].state == EC_STATE_SAFE_OP) {
-//                        printf("WARNING : slave %d is in SAFE_OP, change to OPERATIONAL.\n", slave);
-//                        ecatContext_.slavelist[slave].state = EC_STATE_OPERATIONAL;
-//                        ecx_writestate(&ecatContext_, slave);
-//                    }
-//                    else if(ecatContext_.slavelist[slave].state > 0) {
-//                        if (ecx_reconfig_slave(&ecatContext_, slave, timeoutmon_)) {
-//                            ecatContext_.slavelist[slave].islost = FALSE;
-//                            printf("MESSAGE : slave %d reconfigured\n",slave);
-//                        }
-//                    }
-//                    else if(!ecatContext_.slavelist[slave].islost) {
-//                        /* re-check state */
-//                        ecx_statecheck(&ecatContext_, slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
-//                        if (!ecatContext_.slavelist[slave].state) {
-//                            ecatContext_.slavelist[slave].islost = TRUE;
-//                            printf("ERROR : slave %d lost\n",slave);
-//                        }
-//                    }
-//                }
-//                if (ecatContext_.slavelist[slave].islost) {
-//                    if(!ecatContext_.slavelist[slave].state) {
-//                        if (ecx_recover_slave(&ecatContext_, slave, timeoutmon_)) {
-//                          ecatContext_.slavelist[slave].islost = FALSE;
-//                            printf("MESSAGE : slave %d recovered\n",slave);
-//                        }
-//                    }
-//                    else {
-//                        ecatContext_.slavelist[slave].islost = FALSE;
-//                        printf("MESSAGE : slave %d found\n",slave);
-//                    }
-//                }
-//            }
-//            if(!ecatContext_.grouplist[currentgroup].docheckstate) {
-//                printf("OK : all slaves resumed OPERATIONAL.\n");
-//            }
-//        }
+        uint8_t currentgroup = 0;
+        if(inOP_ && ((wkc_ < wkcExpected_) || ecatContext_.grouplist[currentgroup].docheckstate)) {
+            /* one ore more slaves are not responding */
+            ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
+            ecx_readstate(&ecatContext_);
+            for (int slave = 1; slave <= *ecatContext_.slavecount; slave++) {
+                if ((ecatContext_.slavelist[slave].group == currentgroup) && (ecatContext_.slavelist[slave].state != EC_STATE_OPERATIONAL))
+                {
+                    ecatContext_.grouplist[currentgroup].docheckstate = TRUE;
+                    if (ecatContext_.slavelist[slave].state == (EC_STATE_SAFE_OP + EC_STATE_ERROR)) {
+                        printf("ERROR : slave %d is in SAFE_OP + ERROR, attempting ack.\n", slave);
+                        ecatContext_.slavelist[slave].state = (EC_STATE_SAFE_OP + EC_STATE_ACK);
+                        ecx_writestate(&ecatContext_, slave);
+                    }
+                    else if(ecatContext_.slavelist[slave].state == EC_STATE_SAFE_OP) {
+                        printf("WARNING : slave %d is in SAFE_OP, change to OPERATIONAL.\n", slave);
+                        ecatContext_.slavelist[slave].state = EC_STATE_OPERATIONAL;
+                        ecx_writestate(&ecatContext_, slave);
+                    }
+                    else if(ecatContext_.slavelist[slave].state > 0) {
+                        if (ecx_reconfig_slave(&ecatContext_, slave, timeoutmon_)) {
+                            ecatContext_.slavelist[slave].islost = FALSE;
+                            printf("MESSAGE : slave %d reconfigured\n",slave);
+                        }
+                    }
+                    else if(!ecatContext_.slavelist[slave].islost) {
+                        /* re-check state */
+                        ecx_statecheck(&ecatContext_, slave, EC_STATE_OPERATIONAL, EC_TIMEOUTRET);
+                        if (!ecatContext_.slavelist[slave].state) {
+                            ecatContext_.slavelist[slave].islost = TRUE;
+                            printf("ERROR : slave %d lost\n",slave);
+                        }
+                    }
+                }
+                if (ecatContext_.slavelist[slave].islost) {
+                    if(!ecatContext_.slavelist[slave].state) {
+                        if (ecx_recover_slave(&ecatContext_, slave, timeoutmon_)) {
+                          ecatContext_.slavelist[slave].islost = FALSE;
+                            printf("MESSAGE : slave %d recovered\n",slave);
+                        }
+                    }
+                    else {
+                        ecatContext_.slavelist[slave].islost = FALSE;
+                        printf("MESSAGE : slave %d found\n",slave);
+                    }
+                }
+            }
+            if(!ecatContext_.grouplist[currentgroup].docheckstate) {
+                printf("OK : all slaves resumed OPERATIONAL.\n");
+            }
+        }
 
 
 
@@ -589,7 +544,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 //        return ptr;
 //    }
 
-    bool allDeviceMatch() {
+    bool allDevicesMatch() {
         // Verify the expected number of slaves
         if (*ecatContext_.slavecount < static_cast<int>(devices_.size())) {
             MELO_ERROR_STREAM("Found too few slaves (" << *ecatContext_.slavecount << " < " << static_cast<int>(devices_.size()) << ").")
@@ -613,11 +568,9 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
     void getSlaveInfo() {
         int ret = 0;
-        int wkc = 0;
         int Osize = 0, Isize = 0;
 
         #define Nsdo  16
-        #define Ndata 64
         int sdodata[Nsdo], sdodatasize;
         char *databuf;
         databuf = (char*)&sdodata[0];
@@ -629,28 +582,30 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         printf("Isize in bits = %d\n", Isize);
 
         // Get complete OD dump
-        ret = ecx_readODlist(&ecatContext_, 1, &odinfo_);
+        ec_ODlistt odinfo;
+        ec_OElistt odentryinfo;
+        ret = ecx_readODlist(&ecatContext_, 1, &odinfo);
         printf("\nc_readODlist returned %d\n", ret);
-        printf("Slave = %d, Entries = %d\n", odinfo_.Slave, odinfo_.Entries);
-        for (int k = 0; k < odinfo_.Entries; k++) {
-            wkc = ecx_readODdescription(&ecatContext_, k, &odinfo_);
-            wkc = ecx_readOE(&ecatContext_, k, &odinfo_, &odentryinfo_);
-            printf("\nIndex = 0x%x\n", odinfo_.Index[k]);
-            printf("    MaxSub     = %d\n", odinfo_.MaxSub[k]+1);
-            printf("    ObjectCode = %d\n", odinfo_.ObjectCode[k]);
-            printf("    DataType   = %d\n", odinfo_.DataType[k]);
-            printf("    Description: %s\n", &odinfo_.Name[k][0]);
-            printf("    OE Entries = %d\n", odentryinfo_.Entries);
-            for (int j = 0; j < odentryinfo_.Entries; j++) {
+        printf("Slave = %d, Entries = %d\n", odinfo.Slave, odinfo.Entries);
+        for (int k = 0; k < odinfo.Entries; k++) {
+            ecx_readODdescription(&ecatContext_, k, &odinfo);
+            ecx_readOE(&ecatContext_, k, &odinfo, &odentryinfo);
+            printf("\nIndex = 0x%x\n", odinfo.Index[k]);
+            printf("    MaxSub     = %d\n", odinfo.MaxSub[k]+1);
+            printf("    ObjectCode = %d\n", odinfo.ObjectCode[k]);
+            printf("    DataType   = %d\n", odinfo.DataType[k]);
+            printf("    Description: %s\n", &odinfo.Name[k][0]);
+            printf("    OE Entries = %d\n", odentryinfo.Entries);
+            for (int j = 0; j < odentryinfo.Entries; j++) {
                 for (int n=0; n<Nsdo; n++) sdodata[n] = 0;
                 sdodatasize = Nsdo*sizeof(int);
-                wkc = ecx_SDOread(&ecatContext_, odinfo_.Slave, odinfo_.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
+                ecx_SDOread(&ecatContext_, odinfo.Slave, odinfo.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
                 printf("    OE = %d\n", j);
-                printf("        ValueInfo  = %d\n", odentryinfo_.ValueInfo[j]);
-                printf("        DataType   = %d\n", odentryinfo_.DataType[j]);
-                printf("        BitLength  = %d\n", odentryinfo_.BitLength[j]);
-                printf("        ObjAccess  = %d\n", odentryinfo_.ObjAccess[j]);
-                printf("        Name       = %s\n", &odentryinfo_.Name[j][0]);
+                printf("        ValueInfo  = %d\n", odentryinfo.ValueInfo[j]);
+                printf("        DataType   = %d\n", odentryinfo.DataType[j]);
+                printf("        BitLength  = %d\n", odentryinfo.BitLength[j]);
+                printf("        ObjAccess  = %d\n", odentryinfo.ObjAccess[j]);
+                printf("        Name       = %s\n", &odentryinfo.Name[j][0]);
                 printf("        Value      =");
                 for (int n=0; n<sdodatasize; n++) printf(" 0x%x", (0xFF & databuf[n]));
                 printf("\n");
@@ -680,13 +635,14 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     template <typename Value>
-    void sendSdoWrite(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess, Value value) {
+    void sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
         const int size = sizeof(Value);
-        wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &value, EC_TIMEOUTRXM);
+        Value valueCopy = value; // copy value to make it modifiable
+        wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
     }
 
     template <typename Value>
-    void sendSdoRead(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess, Value& value) {
+    void sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
         int size = sizeof(Value);
         wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
         if (size != sizeof(Value)) {
@@ -694,17 +650,17 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         }
     }
 
-    void sendSdoReadAndPrint(uint16_t slave, uint16_t index, uint8_t subindex, bool completeAccess) {
+    void sendSdoReadAndPrint(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess) {
         int sdodata[4]={0,0,0,0};
         sendSdoRead(slave, index, subindex, completeAccess, sdodata);
         printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
     }
 
-    void syncDc(uint16_t slave, bool activate) {
-        MELO_INFO_STREAM("Starting synchronizing clock.")
+    void syncDistributedClocks(const uint16_t slave, const bool activate) {
+        MELO_INFO_STREAM("Starting synchronizing clocks ...")
         const double timeStep = 1e-3;
         ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), (int64)(timeStep*1e9), (int64)(timeStep*0.5*1e9));
-        MELO_INFO_STREAM("Finished synchronizing clock.")
+        MELO_INFO_STREAM("Finished synchronizing clocks.")
     }
 
     void sendProcessData() {
@@ -748,13 +704,13 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
  protected:
-    void setState(uint16_t state) {
+    void setState(const uint16_t state) {
         ecatContext_.slavelist[0].state = state;
         ecx_writestate(&ecatContext_, 0);
         ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 4);
     }
 
-    void waitForState(uint16_t state) {
+    void waitForState(const uint16_t state) {
         int chk = 40;
         do {
             sendProcessData();
@@ -762,26 +718,6 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             ecx_statecheck(&ecatContext_, 0, state,  50000);
         } while (chk-- && (ecatContext_.slavelist[0].state != state));
     }
-
-//    void sendSdo(uint32_t deviceAddress, tcan::SdoMsg& sdoMsg) {
-//        // TODO: tcan::CanMsg can only hold 4 bytes. In case of CoE this should not be limited.
-//
-//        switch (static_cast<tcan::SdoMsg::Command>(sdoMsg.getCommandByte())) {
-//            case tcan::SdoMsg::Command::READ:
-//                int sdodata = 0;
-//                int sdodatasize = static_cast<int>(sizeof(int));
-//                wkc_ = ecx_SDOread(&ecatContext_, deviceAddress, sdoMsg.getIndex(), sdoMsg.getSubIndex(), FALSE, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
-//                sdoMsg.setData(static_cast<uint8_t>(sdodatasize), static_cast<uint8_t*>(&sdodata));
-//                break;
-//            case tcan::SdoMsg::Command::WRITE_1_BYTE:
-//            case tcan::SdoMsg::Command::WRITE_2_BYTE:
-//            case tcan::SdoMsg::Command::WRITE_4_BYTE:
-//                wkc_ = ecx_SDOwrite(&ecatContext_, deviceAddress, sdoMsg.getIndex(), sdoMsg.getSubIndex(), FALSE, sdodatasize, sdodata, EC_TIMEOUTRXM);
-//                break;
-//            default:
-//                break;
-//        }
-//    }
 
 protected:
     // vector containing all devices
@@ -792,14 +728,19 @@ protected:
 
     std::shared_ptr<EtherCatDatagrams> datagramsSent_;
 
+    const int timeoutmon_ = 500;
+    char IOmap_[4096];
+    std::atomic<int> wkcExpected_;
+    std::atomic<int> wkc_;
+    std::atomic<bool> inOP_;
 
-
-    // EtherCAT Master Data
+    // EtherCAT Master Data TODO: make ecx_contextt contain its own data
     /** Main slave data array.
      *  Each slave found on the network gets its own record.
      *  ec_slave[0] is reserved for the master. Structure gets filled
      *  in by the configuration function ec_config().
      */
+    ecx_portt        ecat_port;
     ec_slavet        ecat_slave[EC_MAXSLAVE];
     /** number of slaves found on the network */
     int              ecat_slavecount;
@@ -813,6 +754,9 @@ protected:
     /** current slave for EEPROM cache buffer */
     ec_eringt        ecat_elist;
     ec_idxstackT     ecat_idxstack;
+    /** Global variable TRUE if error available in error stack */
+    boolean          ecat_error = FALSE;
+    int64            ecat_DCtime;
 
     /** SyncManager Communication Type struct to store data of one slave */
     ec_SMcommtypet   ecat_SMcommtype[EC_MAX_MAPT];
@@ -825,29 +769,10 @@ protected:
     ec_eepromSMt     ecat_SM;
     /** buffer for EEPROM FMMU data */
     ec_eepromFMMUt   ecat_FMMU;
-    /** Global variable TRUE if error available in error stack */
-    boolean          ecat_error = FALSE;
 
-    int64            ecat_DCtime;
-
-    ecx_portt        ecat_port;
-    ecx_redportt     ecat_redport;
-
+//    ecx_redportt     ecat_redport;
 
     ecx_contextt ecatContext_;
-
-
-
-
-
-    ec_ODlistt odinfo_;
-    ec_OElistt odentryinfo_;
-
-    const int timeoutmon_ = 500;
-    char IOmap_[4096];
-    std::atomic<int> wkcExpected_;
-    std::atomic<int> wkc_;
-    std::atomic<bool> inOP_;
 };
 
 } /* namespace tcan */

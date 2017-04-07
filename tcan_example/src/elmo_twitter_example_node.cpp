@@ -219,6 +219,7 @@ int main(int argc, char *argv[]) {
         ElmoTwitterOutdata outdata;
         ElmoTwitterIndata indata;
 
+        // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         bus.emplaceMessage(createDatagrams(outdata));
 
         if (bus.getData()) {
@@ -239,13 +240,12 @@ int main(int argc, char *argv[]) {
             print_counter_statusword = 0;
         }
 
-        // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         if (!asynchronous) {
             busManager.writeMessagesSynchronous();
         }
 
         nextStep += std::chrono::microseconds(1000);
-        std::this_thread::sleep_until( nextStep );
+        std::this_thread::sleep_until(nextStep);
     }
     return 0;
 }
