@@ -20,7 +20,6 @@
 #include "tcan/Bus.hpp"
 #include "tcan/CanMsg.hpp"
 #include "tcan/EtherCatBusOptions.hpp"
-#include "tcan/EtherCatDatagram.hpp"
 #include "tcan/EtherCatSlave.hpp"
 
 namespace tcan {

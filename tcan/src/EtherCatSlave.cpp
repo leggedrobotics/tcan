@@ -6,8 +6,7 @@
  */
 
 
-#include "../include/tcan/EtherCatSlave.hpp"
-
+#include "tcan/EtherCatSlave.hpp"
 #include "tcan/EtherCatBus.hpp"
 
 

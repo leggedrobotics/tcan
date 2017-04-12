@@ -11,8 +11,8 @@
 #include <string>
 #include <atomic>
 
-#include "EtherCatSlaveOptions.hpp"
-#include "tcan/CanMsg.hpp"
+#include "tcan/EtherCatSlaveOptions.hpp"
+#include "tcan/EtherCatDatagram.hpp"
 
 #include "message_logger/message_logger.hpp"
 

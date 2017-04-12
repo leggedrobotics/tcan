@@ -2,8 +2,10 @@
 
 
 // tcan
+#include <tcan/EtherCatSlave.hpp>
+
+// tcan example
 #include <tcan_example/Dsp402.hpp>
-#include "../../../tcan/include/tcan/EtherCatSlave.hpp"
 
 
 namespace tcan_example {

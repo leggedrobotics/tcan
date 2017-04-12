@@ -166,7 +166,7 @@ tcan::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
     tcan::EtherCatDatagram txDatagram;
     txDatagram.resize(56);
     txDatagram.setZero();
-    memcpy(rxDatagram.data_, &databuffer[0], 4);
+    memcpy(rxDatagram.data_, &databuffer[0], 32);
     datagrams.rxAndTxPdoDatagrams_.insert({1, {rxDatagram, txDatagram}});
     return datagrams;
 }

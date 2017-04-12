@@ -8,6 +8,10 @@
 #pragma once
 
 
+// c++
+#include <unordered_map>
+
+
 namespace tcan {
 
 
@@ -128,6 +132,7 @@ class EtherCatDatagram {
 
 class EtherCatDatagrams {
  public:
+    // Map from slave address to according Rx and TxPDOs.
     std::unordered_map<uint32_t, std::pair<EtherCatDatagram, EtherCatDatagram>> rxAndTxPdoDatagrams_;
 };
 
