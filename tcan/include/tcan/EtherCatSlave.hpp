@@ -84,7 +84,7 @@ class EtherCatSlave {
         if(!isMissing()) {
             if(isTimedOut()) {
                 state_ = Missing;
-                MELO_WARN("Device %s timed out!", getName().c_str());
+                MELO_WARN("Slave %s timed out!", getName().c_str());
             }
         }
     }

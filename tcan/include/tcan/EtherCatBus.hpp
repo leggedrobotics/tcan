@@ -27,8 +27,8 @@ namespace tcan {
 
 class EtherCatBus : public Bus<EtherCatDatagrams> {
  public:
-    typedef std::function<bool(const EtherCatDatagram&)> CallbackPtr;
-    typedef std::unordered_map<uint32_t, std::pair<EtherCatSlave*, CallbackPtr>> AddressToFunctionMap;
+    typedef std::function<bool(const EtherCatDatagram&)> TxPdoCallbackPtr;
+    typedef std::unordered_map<EtherCatSlave*, TxPdoCallbackPtr> TxPdoCallbackMap;
 
     EtherCatBus() = delete;
     EtherCatBus(EtherCatBusOptions* options)
@@ -149,6 +149,11 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
  public:/// INTERNAL FUNCTIONS
+    template <class T>
+    inline bool addTxPdoCallback(T* device, bool(std::common_type<T>::type::*fp)(const EtherCatDatagram&)) {
+        return txPdoCallbackMap_.emplace(device, std::bind(fp, device, std::placeholders::_1)).second;
+    }
+
     /*! Is called after reception of a message. Routes the message to the callback.
      * @param cmsg    reference to the can message
      */
@@ -158,12 +163,19 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
         // check time the frame took to travel through the physical bus
         // check working counters
         // extract datagrams from ethernet frame and map datagrams to device callback
+        for (EtherCatSlave* slave : slaves_) {
+            slave->resetDeviceTimeoutCounter();
+            auto callback = txPdoCallbackMap_.find(slave);
+            if (callback != txPdoCallbackMap_.end()) {
+                callback->second(msg.rxAndTxPdoDatagrams_.at(slave->getAddress()).second); //TODO improve access
+            }
+        }
     }
 
     /*! Initialize the device driver
      * @return true if successful
      */
-    virtual bool initializeInterface() {
+    bool initializeInterface() {
         printf("Starting simple test\n");
         inOP_ = false;
 
@@ -183,6 +195,10 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
 
         MELO_INFO_STREAM("EtherCAT initialization on '" << ifname << "' succeeded.");
 
+        return true;
+    }
+
+    bool setupCommunication() {
         /*
          * SOEM is a light weight ethercat master library used in embedded systems,
          * It supports only runtime configuration. It requests a BRD (Broad Cast Read)
@@ -234,12 +250,12 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
             printf("State EC_STATE_SAFE_OP has not been reached.\n");
         }
 
-//        int oloop_ = ecatContext_.slavelist[0].Obytes;
-//        if ((oloop_ == 0) && (ecatContext_.slavelist[0].Obits > 0)) oloop_ = 1;
-////        if (oloop_ > 8) oloop_ = 8;
-//        int iloop_ = ecatContext_.slavelist[0].Ibytes;
-//        if ((iloop_ == 0) && (ecatContext_.slavelist[0].Ibits > 0)) iloop_ = 1;
-////        if (iloop_ > 8) iloop_ = 8;
+  //        int oloop_ = ecatContext_.slavelist[0].Obytes;
+  //        if ((oloop_ == 0) && (ecatContext_.slavelist[0].Obits > 0)) oloop_ = 1;
+  ////        if (oloop_ > 8) oloop_ = 8;
+  //        int iloop_ = ecatContext_.slavelist[0].Ibytes;
+  //        if ((iloop_ == 0) && (ecatContext_.slavelist[0].Ibits > 0)) iloop_ = 1;
+  ////        if (iloop_ > 8) iloop_ = 8;
 
         printf("segments : %d : %d %d %d %d\n",
             ecatContext_.grouplist[0].nsegments,
@@ -272,15 +288,23 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     void cleanupInterface() {
-        /* request INIT state for all slaves */
-        printf("\nRequest init state for all slaves\n");
-        ecatContext_.slavelist[0].state = EC_STATE_INIT;
-        ecx_writestate(&ecatContext_, 0);
-
-        /* stop SOEM, close socket */
-        printf("End simple test, close socket\n");
-        ecx_close(&ecatContext_);
-        printf("Closed socket\n");
+//        /* request INIT state for all slaves */
+//        printf("\nRequest init state for all slaves\n");
+//        ecatContext_.slavelist[0].state = EC_STATE_INIT;
+//        ecx_writestate(&ecatContext_, 0);
+//
+//        /* stop SOEM, close socket */
+//        printf("End simple test, close socket\n");
+//        if (ecatContext_.port) {
+//            ecx_close(&ecatContext_);
+//            printf("Closed socket\n");
+//        }
+//
+//        for (auto slave : slaves_) {
+//            std::cout << slave << std::endl;
+//            delete slave;
+//        }
+//        printf("Deleted slaves.\n");
     }
 
     /*! read CAN message from the device driver
@@ -288,7 +312,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      */
     virtual bool readData() {
         if (!datagramsSent_) {
-            MELO_WARN_STREAM("No data has been sent yet.");
+            MELO_WARN_STREAM("Nothing to read, since no data has been sent yet.");
             return false;
         }
 
@@ -306,9 +330,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
                 datagramsSent_->rxAndTxPdoDatagrams_[i].second.getDataLength());
         }
 
-        // TODO fill this.
-//        EtherCatDatagrams etherCatDatagrams;
-//        handleMessage(etherCatDatagrams);
+        handleMessage(*datagramsSent_);
 
         return false; // TODO true?
     }
@@ -602,7 +624,7 @@ protected:
     std::vector<EtherCatSlave*> slaves_;
 
     // map mapping COB id to parse functions
-    AddressToFunctionMap addressToFunctionMap_;
+    TxPdoCallbackMap txPdoCallbackMap_;
 
     std::shared_ptr<EtherCatDatagrams> datagramsSent_;
 

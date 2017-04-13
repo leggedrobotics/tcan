@@ -203,6 +203,10 @@ int main(int argc, char *argv[]) {
         MELO_ERROR_STREAM("Bus could not be added.");
         return 0;
     }
+    if (!bus.setupCommunication()) {
+        MELO_ERROR_STREAM("Bus communication could not be setup.");
+        return 0;
+    }
 
     auto nextStep = std::chrono::steady_clock::now();
 
