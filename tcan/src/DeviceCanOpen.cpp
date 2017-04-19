@@ -198,7 +198,9 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
                   std::lock_guard<std::mutex> mapGuard(sdoAnswerMapMutex_);
                   sdoAnswerMap_[getSdoAnswerId(index, subindex)] = static_cast<const SdoMsg&>(cmsg);
                 }
+                guard.unlock(); // unlock guard here, otherwise the user will not be able to put any sdo in the sdo ouput queue
                 handleReadSdoAnswer( static_cast<const SdoMsg&>(cmsg) );
+                guard.lock();
             }else if(responseMode == 0x80) { // error response
                 guard.unlock(); // unlock guard here, otherwise the user will not be able to put any sdo in the sdo ouput queue
                 handleSdoError(sdo, static_cast<const SdoMsg&>(cmsg));
