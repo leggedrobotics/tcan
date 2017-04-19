@@ -36,6 +36,10 @@ add_library(${PROJECT_NAME}
   src/IpBus.cpp
   src/DeviceCanOpen.cpp
 )
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  pthread
+)
 
 #############
 ## Install ##
