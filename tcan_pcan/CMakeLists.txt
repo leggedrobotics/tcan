@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
-project(tcan)
+project(tcan_pcan)
 
 find_package(catkin REQUIRED COMPONENTS
-  message_logger
+  tcan
 )
 
 ###################################
@@ -10,8 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS message_logger
+  LIBRARIES ${PROJECT_NAME} pthread pcan
+  CATKIN_DEPENDS tcan
 )
 
 ###########
@@ -27,18 +27,12 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/CanBusManager.cpp
-  src/UniversalSerialBusManager.cpp
-  src/IpBusManager.cpp
-  src/CanBus.cpp
-  src/SocketBus.cpp
-  src/UniversalSerialBus.cpp
-  src/IpBus.cpp
-  src/DeviceCanOpen.cpp
+  src/PcanBus.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   pthread
+  pcan
 )
 
 #############

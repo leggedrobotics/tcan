@@ -142,13 +142,18 @@ class Bus {
      * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked
      * @return true if a message was successfully written to the bus
      */
-    inline bool writeMessage()
+    inline bool writeMessage(bool& writeError)
     {
+        writeError = false;
         if(outgoingMsgs_.size() != 0) {
             const bool writeSuccess = isPassive_ ? true : writeData( outgoingMsgs_.front() );
             if(writeSuccess) {
                 outgoingMsgs_.pop();
                 return true;
+            }
+            else {
+              writeError = true;
+              return false;
             }
         }
 

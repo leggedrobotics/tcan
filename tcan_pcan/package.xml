@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tcan_pcan</name>
+  <version>0.0.1</version>
+  <description>The tcan package</description>
+  <maintainer email="gehrinch@ethz.ch">Christian Gehring</maintainer>
+  <license>Proprietary</license>
+  <author email="gehrinch@ethz.ch">Christian Gehring</author>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>tcan</depend>
+</package>

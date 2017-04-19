@@ -1,8 +1,8 @@
 /*
- * SocketBusOptions.hpp
+ * PcanBusOptions.hpp
  *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
+ *  Created on: Mar 15, 2017
+ *      Author: Christian Gehring
  */
 
 #pragma once
@@ -14,30 +14,23 @@
 
 namespace tcan {
 
-struct SocketBusOptions : public CanBusOptions {
-    SocketBusOptions():
-        SocketBusOptions(std::string())
+struct PcanBusOptions : public CanBusOptions {
+    PcanBusOptions():
+        PcanBusOptions(std::string())
     {
     }
 
-    SocketBusOptions(const std::string& interface_name):
+    PcanBusOptions(const std::string& interface_name):
         CanBusOptions(interface_name),
         loopback_(false),
         sndBufLength_(0),
         canErrorMask_(CAN_ERR_MASK),
         canFilters_(),
-        setReadTimeout_(true),
-        setWriteTimeout_(true),
-        usePoll_(true),
         canErrorThrottleTime_(0.0)
     {
-      readTimeout_.tv_sec = 1;
-      readTimeout_.tv_usec = 0;
-      writeTimeout_.tv_sec = 1;
-      writeTimeout_.tv_usec = 0;
     }
 
-    virtual ~SocketBusOptions() { }
+    virtual ~PcanBusOptions() { }
 
     //! loop back sent messages
     bool loopback_;
@@ -56,13 +49,6 @@ struct SocketBusOptions : public CanBusOptions {
     // see https://www.kernel.org/doc/Documentation/networking/can.txt
     std::vector<can_filter> canFilters_;
 
-    bool setReadTimeout_;
-    timeval readTimeout_;
-
-    bool setWriteTimeout_;
-    timeval writeTimeout_;
-
-    bool usePoll_;
     double canErrorThrottleTime_;
 };
 
