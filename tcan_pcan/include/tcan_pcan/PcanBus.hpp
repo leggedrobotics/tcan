@@ -7,11 +7,10 @@
 
 #pragma once
 
-#include <libpcan.h>
-#include <pcan.h>
 #include "tcan/CanBus.hpp"
 #include "tcan_pcan/PcanBusOptions.hpp"
 
+#include "pcan_driver/libpcan.h"
 
 namespace tcan {
 
