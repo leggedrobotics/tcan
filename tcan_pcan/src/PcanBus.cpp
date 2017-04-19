@@ -10,31 +10,16 @@
 #include <linux/can/raw.h>
 #include <linux/can/error.h>
 
-#include <string.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
+//#include <string.h>
+//#include <sys/ioctl.h>
+//#include <unistd.h>
 #include <fcntl.h>
-
-#include <libpcan.h>
 
 #include "tcan_pcan/PcanBus.hpp"
 
 #include "message_logger/message_logger.hpp"
 #include <sstream>
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 namespace tcan {
 
 PcanBus::PcanBus(const std::string& interface):
