@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <libpcan.h>
+#include <pcan.h>
 #include "tcan/CanBus.hpp"
 #include "tcan_pcan/PcanBusOptions.hpp"
-
-#include <string>
 
 
 namespace tcan {
@@ -27,10 +27,17 @@ class PcanBus : public CanBus {
  protected:
     bool initializeInterface();
     bool readData();
-    bool writeData(std::unique_lock<std::mutex>* lock);
+    bool writeData(const CanMsg& cmsg);
+
+    /*!
+     * Is called on reception of a bus error message. Sets the flag
+     * @param msg  reference to the bus error message
+     */
+    void handleBusError(const can_frame& msg);
 
  protected:
-    int fd_;
+    HANDLE handle_;
+//    pcan_handle pcanHandle_;
 };
 
 } /* namespace tcan */

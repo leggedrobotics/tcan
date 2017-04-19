@@ -11,13 +11,13 @@
 
 namespace tcan {
 
-struct PcanBusOptions : public CanBusOptions {
-    PcanBusOptions():
+struct PcanfdBusOptions : public CanBusOptions {
+    PcanfdBusOptions():
         PcanBusOptions(std::string())
     {
     }
 
-    PcanBusOptions(const std::string& interface_name):
+    PcanfdBusOptions(const std::string& interface_name):
         CanBusOptions(interface_name),
         loopback_(false),
         maxMessagesPassed_(10),
@@ -25,7 +25,7 @@ struct PcanBusOptions : public CanBusOptions {
     {
     }
 
-    virtual ~PcanBusOptions() { }
+    virtual ~PcanfdBusOptions() { }
 
     //! loop back sent messages
     bool loopback_;

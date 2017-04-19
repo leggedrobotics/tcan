@@ -6,7 +6,7 @@
  */
 
 
-#include "tcan_pcan/PcanBus.hpp"
+#include "tcan_pcanfd/PcanfdBus.hpp"
 
 #include "message_logger/message_logger.hpp"
 
@@ -15,26 +15,26 @@
 
 namespace tcan {
 
-PcanBus::PcanBus(const std::string& interface):
-    PcanBus(new PcanBusOptions(interface))
+PcanfdBus::PcanfdBus(const std::string& interface):
+    PcanfdBus(new PcanfdBusOptions(interface))
 {
 }
 
-PcanBus::PcanBus(PcanBusOptions* options):
+PcanfdBus::PcanfdBus(PcanBusOptions* options):
     CanBus(options),
     fd_(0)
 {
 }
 
-PcanBus::~PcanBus()
+PcanfdBus::~PcanfdBus()
 {
     stopThreads();
     pcanfd_close(fd_);
 }
 
-bool PcanBus::initializeInterface()
+bool PcanfdBus::initializeInterface()
 {
-    const PcanBusOptions* options = static_cast<const PcanBusOptions*>(options_);
+    const PcanBusOptions* options = static_cast<const PcanfdBusOptions*>(options_);
     const char* interface = options->name_.c_str();
 
     unsigned int flags = OFD_BITRATE;
@@ -56,10 +56,10 @@ bool PcanBus::initializeInterface()
 }
 
 
-bool PcanBus::readData() {
+bool PcanfdBus::readData() {
     // todo: does return when bus is down?
 
-    const unsigned int maxMsgs = static_cast<const PcanBusOptions*>(options_)->maxMessagesPassed_;
+    const unsigned int maxMsgs = static_cast<const PcanfdBusOptions*>(options_)->maxMessagesPassed_;
     pcanfd_msg inMsgs[maxMsgs];
     const int numReceived = pcanfd_recv_msgs_list(fd_, maxMsgs, inMsgs);
 
@@ -78,10 +78,10 @@ bool PcanBus::readData() {
 }
 
 
-bool PcanBus::writeData(std::unique_lock<std::mutex>* lock) {
+bool PcanfdBus::writeData(std::unique_lock<std::mutex>* lock) {
     // todo: does return when bus is down?
     
-    const unsigned int numMsgs = std::min(static_cast<const PcanBusOptions*>(options_)->maxMessagesPassed_, static_cast<unsigned int>(outgoingMsgs_.size()));
+    const unsigned int numMsgs = std::min(static_cast<const PcanfdBusOptions*>(options_)->maxMessagesPassed_, static_cast<unsigned int>(outgoingMsgs_.size()));
     pcanfd_msg outMsgs[numMsgs];
     
     for(unsigned int i=0; i<numMsgs; ++i) {

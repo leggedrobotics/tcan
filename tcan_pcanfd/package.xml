@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>tcan_pcan</name>
+  <name>tcan_pcanfd</name>
   <version>0.0.1</version>
-  <description>The tcan package</description>
+  <description>Tcan driver for pcan fd driver API</description>
   <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
   <license>Proprietary</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
