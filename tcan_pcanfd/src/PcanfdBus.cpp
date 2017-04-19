@@ -20,7 +20,7 @@ PcanfdBus::PcanfdBus(const std::string& interface):
 {
 }
 
-PcanfdBus::PcanfdBus(PcanBusOptions* options):
+PcanfdBus::PcanfdBus(PcanfdBusOptions* options):
     CanBus(options),
     fd_(0)
 {
@@ -34,7 +34,7 @@ PcanfdBus::~PcanfdBus()
 
 bool PcanfdBus::initializeInterface()
 {
-    const PcanBusOptions* options = static_cast<const PcanfdBusOptions*>(options_);
+    const PcanfdBusOptions* options = static_cast<const PcanfdBusOptions*>(options_);
     const char* interface = options->name_.c_str();
 
     unsigned int flags = OFD_BITRATE;

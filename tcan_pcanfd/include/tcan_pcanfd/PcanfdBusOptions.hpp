@@ -13,7 +13,7 @@ namespace tcan {
 
 struct PcanfdBusOptions : public CanBusOptions {
     PcanfdBusOptions():
-        PcanBusOptions(std::string())
+        PcanfdBusOptions(std::string())
     {
     }
 

@@ -20,7 +20,7 @@ class PcanfdBus : public CanBus {
 
     PcanfdBus(const std::string& interface);
     PcanfdBus(BusOptions* options) = delete;
-    PcanfdBus(PcanBusOptions* options);
+    PcanfdBus(PcanfdBusOptions* options);
 
     virtual ~PcanfdBus();
 
