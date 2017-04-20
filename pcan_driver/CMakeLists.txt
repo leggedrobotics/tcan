@@ -26,7 +26,9 @@ configure_file(${EXTRACTED_DIR}/driver/pcanfd.h ${DEVEL_INCLUDE_DIR}/pcan_driver
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-  INCLUDE_DIRS ${DEVEL_INCLUDE_DIR}
+  INCLUDE_DIRS
+    ${DEVEL_INCLUDE_DIR}
+    ${DEVEL_INCLUDE_DIR}/pcan_driver # add include directory directly, because include directives in API source are not catkin style packaged based
   LIBRARIES ${PROJECT_NAME}
 )
 
