@@ -164,7 +164,7 @@ bool SocketBus::readData() {
     } else {
 //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
-        if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG && !(static_cast<const CanBusOptions*>(options_)->ignoreErrorFrames_)) {
+        if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
             handleBusError( frame );
         }else{
             handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
@@ -211,6 +211,10 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
 }
 
 void SocketBus::handleBusError(const can_frame& msg) {
+
+    if(static_cast<const CanBusOptions*>(options_)->ignoreErrorFrames_) {
+        return;
+    }
 
     // todo: really ignore arbitration lost?
     //if(msg.can_id & CAN_ERR_LOSTARB) {
