@@ -205,6 +205,10 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
 
 void SocketBus::handleBusError(const can_frame& msg) {
 
+    if(static_cast<const CanBusOptions*>(options_)->ignoreErrorFrames_) {
+        return;
+    }
+
     // todo: really ignore arbitration lost?
     //if(msg.can_id & CAN_ERR_LOSTARB) {
     //    return;

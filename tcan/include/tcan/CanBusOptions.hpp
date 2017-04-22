@@ -20,7 +20,8 @@ struct CanBusOptions : public BusOptions {
     CanBusOptions(const std::string& name):
         BusOptions(name),
         passivateOnBusError_(false),
-        passivateIfNoDevices_(false)
+        passivateIfNoDevices_(false),
+        ignoreErrorFrames_(false)
     {
     }
 
@@ -33,6 +34,10 @@ struct CanBusOptions : public BusOptions {
 
     //! If set to true, bus goes to passive mode (no messages are sent on the bus) if all devices are missing.
     bool passivateIfNoDevices_;
+
+    //! Set to true if CAN error frames should be ignored. BAD OPTION, ONLY USE THIS IF YOU KNOW WHAT YOU ARE DOING!
+    //! Overwrites the passivateOnBusError_ behavior.
+    bool ignoreErrorFrames_;
 };
 
 } /* namespace tcan */
