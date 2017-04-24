@@ -87,7 +87,7 @@ public:
 		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
 //		options->canErrorMask = 0;
 
-		auto bus = new SocketBus(options);
+		auto bus = new SocketBus(std::unique_ptr<SocketBusOptions>(options));
 		if(!addBus( bus )) {
 			std::cout << "failed to add Bus " << interface << std::endl;
 			exit(-1);

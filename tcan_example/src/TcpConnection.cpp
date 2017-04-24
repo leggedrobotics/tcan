@@ -11,8 +11,8 @@
 
 namespace tcan_example {
 
-TcpConnection::TcpConnection(tcan::IpBusOptions* options):
-    tcan::IpBus(options)
+TcpConnection::TcpConnection(std::unique_ptr<tcan::IpBusOptions>&& options):
+    tcan::IpBus(std::move(options))
 {
 
 }

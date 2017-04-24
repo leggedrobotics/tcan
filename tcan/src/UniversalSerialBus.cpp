@@ -15,8 +15,8 @@
 
 namespace tcan {
 
-UniversalSerialBus::UniversalSerialBus(UniversalSerialBusOptions* options):
-    Bus<UsbMsg>(options),
+UniversalSerialBus::UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions>&& options):
+    Bus<UsbMsg>(std::unique_ptr<BusOptions>(options.release())),
     fileDescriptor_(0),
     deviceTimeoutCounter_(0)
 {
@@ -27,14 +27,14 @@ UniversalSerialBus::~UniversalSerialBus()
 {
     stopThreads(true);
 
-    if( !(static_cast<const UniversalSerialBusOptions*>(options_)->skipConfiguration) ) {
+    if( !(static_cast<const UniversalSerialBusOptions*>(options_.get())->skipConfiguration) ) {
         tcsetattr (fileDescriptor_, TCSANOW, &savedAttributes_);
     }
     close(fileDescriptor_);
 }
 
 void UniversalSerialBus::sanityCheck() {
-    const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_)->maxDeviceTimeoutCounter;
+    const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_.get())->maxDeviceTimeoutCounter;
     isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDeviceOrHasError_;
 }
@@ -71,7 +71,7 @@ bool UniversalSerialBus::readData() {
         // poll timed out, without being able to read => return silently
         return false;
     }else{
-        const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_)->bufferSize;
+        const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_.get())->bufferSize;
         uint8_t buf[bufSize+1]; // +1 to have space for terminating \0
         const int bytes_read = read( fileDescriptor_, &buf, bufSize);
         //  printf("CanManager_ bytes read: %i\n", bytes_read);
@@ -114,7 +114,7 @@ bool UniversalSerialBus::writeData(const UsbMsg& msg) {
 /** code from CuteCom */
 void UniversalSerialBus::configureInterface()
 {
-    const UniversalSerialBusOptions* options = static_cast<const UniversalSerialBusOptions*>(options_);
+    const UniversalSerialBusOptions* options = static_cast<const UniversalSerialBusOptions*>(options_.get());
     if( options->skipConfiguration ) {
         return;
     }

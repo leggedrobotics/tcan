@@ -14,7 +14,7 @@ namespace tcan_example {
 class TcpConnection : public tcan::IpBus {
  public:
     TcpConnection() = delete;
-    TcpConnection(tcan::IpBusOptions* options);
+    TcpConnection(std::unique_ptr<tcan::IpBusOptions>&& options);
 
     virtual ~TcpConnection();
 

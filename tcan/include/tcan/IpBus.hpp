@@ -16,7 +16,7 @@ namespace tcan {
 class IpBus : public Bus<IpMsg> {
  public:
 	IpBus() = delete;
-	IpBus(IpBusOptions* options);
+	IpBus(std::unique_ptr<IpBusOptions>&& options);
 
     virtual ~IpBus();
 

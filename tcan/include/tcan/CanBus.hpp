@@ -29,7 +29,7 @@ class CanBus : public Bus<CanMsg> {
     using DeviceContainer = std::vector<CanDevice*>;
 
     CanBus() = delete;
-    CanBus(CanBusOptions* options);
+    CanBus(std::unique_ptr<CanBusOptions>&& options);
 
     virtual ~CanBus();
 

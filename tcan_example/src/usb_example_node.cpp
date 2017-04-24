@@ -37,7 +37,7 @@ public:
 #endif
 		options->name_ = interface;
 
-		auto bus = new XbeeUsb(options);
+		auto bus = new XbeeUsb(std::unique_ptr<tcan::UniversalSerialBusOptions>(options));
 		if(!addBus( bus )) {
 			std::cout << "failed to add Bus " << interface << std::endl;
 			exit(-1);

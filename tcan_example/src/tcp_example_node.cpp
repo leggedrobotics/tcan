@@ -26,7 +26,6 @@ public:
 
 	virtual ~TcpManager()
 	{
-		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destructed object (parseIncomingSync(..) in this case)
 		closeBuses();
 	}
 
@@ -36,7 +35,7 @@ public:
 		options->asynchronous = false;
 #endif
 
-		auto connection = new TcpConnection(options);
+		auto connection = new TcpConnection(std::unique_ptr<tcan::IpBusOptions>(options));
 		if(!addBus( connection )) {
 			std::cout << "failed to add Bus " << host << std::endl;
 			exit(-1);

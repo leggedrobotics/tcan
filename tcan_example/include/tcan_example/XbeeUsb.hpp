@@ -14,7 +14,7 @@ namespace tcan_example {
 class XbeeUsb : public tcan::UniversalSerialBus {
  public:
     XbeeUsb() = delete;
-    XbeeUsb(tcan::UniversalSerialBusOptions* options);
+    XbeeUsb(std::unique_ptr<tcan::UniversalSerialBusOptions>&&);
 
     virtual ~XbeeUsb();
 

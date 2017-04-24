@@ -18,8 +18,8 @@ class SocketBus : public CanBus {
  public:
 
     SocketBus(const std::string& interface);
-    SocketBus(BusOptions* options) = delete;
-    SocketBus(SocketBusOptions* options);
+    SocketBus(std::unique_ptr<BusOptions>&& options) = delete;
+    SocketBus(std::unique_ptr<SocketBusOptions>&& options);
 
     virtual ~SocketBus();
 

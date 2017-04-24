@@ -23,12 +23,12 @@
 namespace tcan {
 
 PcanBus::PcanBus(const std::string& interface):
-    PcanBus(new PcanBusOptions(interface))
+    PcanBus(std::unique_ptr<PcanBusOptions>(new PcanBusOptions(interface)))
 {
 }
 
-PcanBus::PcanBus(PcanBusOptions* options):
-    CanBus(options),
+PcanBus::PcanBus(std::unique_ptr<PcanBusOptions>&& options):
+    CanBus(std::unique_ptr<CanBusOptions>(options.release())),
     handle_(NULL)
 {
 }
@@ -41,7 +41,7 @@ PcanBus::~PcanBus()
 
 bool PcanBus::initializeInterface()
 {
-    const PcanBusOptions* options = static_cast<const PcanBusOptions*>(options_);
+    const PcanBusOptions* options = static_cast<const PcanBusOptions*>(options_.get());
     const char* interface = options->name_.c_str();
     MELO_INFO("Reading device: %s", interface);
 
@@ -165,7 +165,7 @@ void PcanBus::handleBusError(const can_frame& msg) {
 
     busErrorFlag_ = true;
 
-    if(static_cast<const CanBusOptions*>(options_)->passivateOnBusError_) {
+    if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
         passivate();
         MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
     }
@@ -410,7 +410,7 @@ void PcanBus::handleBusError(const can_frame& msg) {
     // bit 5-7
     errorMsg << " / controller specific additional information: 0x" << std::hex << static_cast<int>(msg.data[5]) << " 0x" <<  std::hex << static_cast<int>(msg.data[6]) << " 0x" <<  std::hex << static_cast<int>(msg.data[7]);
 
-    MELO_ERROR_THROTTLE_STREAM(static_cast<const PcanBusOptions*>(options_)->canErrorThrottleTime_, errorMsg.str());
+    MELO_ERROR_THROTTLE_STREAM(static_cast<const PcanBusOptions*>(options_.get())->canErrorThrottleTime_, errorMsg.str());
 }
 
 } /* namespace tcan */
