@@ -68,6 +68,13 @@ class CanMsg {
     inline uint8_t getLength() const { return length_; }
 
 
+    /*!
+     * Set length of the message. Note that the data is not set (but was initialized to 0)
+     * @param length    length of the message in bytes [0,8]
+     */
+    inline void setLength(const uint8_t length) { length_ = length; }
+
+
     /*! Sets the stack of values
      * @param value	 array of length 8
      */
