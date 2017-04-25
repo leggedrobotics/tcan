@@ -16,12 +16,12 @@
 namespace tcan {
 
 PcanfdBus::PcanfdBus(const std::string& interface):
-    PcanfdBus(new PcanfdBusOptions(interface))
+    PcanfdBus(std::unique_ptr<PcanfdBusOptions>(new PcanfdBusOptions(interface)))
 {
 }
 
-PcanfdBus::PcanfdBus(PcanfdBusOptions* options):
-    CanBus(options),
+PcanfdBus::PcanfdBus(std::unique_ptr<PcanfdBusOptions>&& options):
+    CanBus(std::move(options)),
     fd_(0)
 {
 }
@@ -34,7 +34,7 @@ PcanfdBus::~PcanfdBus()
 
 bool PcanfdBus::initializeInterface()
 {
-    const PcanfdBusOptions* options = static_cast<const PcanfdBusOptions*>(options_);
+    const PcanfdBusOptions* options = static_cast<const PcanfdBusOptions*>(options_.get());
     const char* interface = options->name_.c_str();
 
     unsigned int flags = OFD_BITRATE;
@@ -59,7 +59,7 @@ bool PcanfdBus::initializeInterface()
 bool PcanfdBus::readData() {
     // todo: does return when bus is down?
 
-    const unsigned int maxMsgs = static_cast<const PcanfdBusOptions*>(options_)->maxMessagesPassed_;
+    const unsigned int maxMsgs = static_cast<const PcanfdBusOptions*>(options_.get())->maxMessagesPassed_;
     pcanfd_msg inMsgs[maxMsgs];
     const int numReceived = pcanfd_recv_msgs_list(fd_, maxMsgs, inMsgs);
 
@@ -81,7 +81,7 @@ bool PcanfdBus::readData() {
 bool PcanfdBus::writeData(std::unique_lock<std::mutex>* lock) {
     // todo: does return when bus is down?
     
-    const unsigned int numMsgs = std::min(static_cast<const PcanfdBusOptions*>(options_)->maxMessagesPassed_, static_cast<unsigned int>(outgoingMsgs_.size()));
+    const unsigned int numMsgs = std::min(static_cast<const PcanfdBusOptions*>(options_.get())->maxMessagesPassed_, static_cast<unsigned int>(outgoingMsgs_.size()));
     pcanfd_msg outMsgs[numMsgs];
     
     for(unsigned int i=0; i<numMsgs; ++i) {

@@ -11,6 +11,7 @@
 #include "tcan_pcanfd/PcanfdBusOptions.hpp"
 
 #include <string>
+#include <memory>
 
 
 namespace tcan {
@@ -19,8 +20,7 @@ class PcanfdBus : public CanBus {
  public:
 
     PcanfdBus(const std::string& interface);
-    PcanfdBus(BusOptions* options) = delete;
-    PcanfdBus(PcanfdBusOptions* options);
+    PcanfdBus(std::unique_ptr<PcanfdBusOptions>&& options);
 
     virtual ~PcanfdBus();
 
