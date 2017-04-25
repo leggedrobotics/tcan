@@ -28,7 +28,7 @@ PcanBus::PcanBus(const std::string& interface):
 }
 
 PcanBus::PcanBus(std::unique_ptr<PcanBusOptions>&& options):
-    CanBus(std::unique_ptr<CanBusOptions>(options.release())),
+    CanBus(std::move(options)),
     handle_(NULL)
 {
 }

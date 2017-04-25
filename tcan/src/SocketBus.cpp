@@ -28,7 +28,7 @@ SocketBus::SocketBus(const std::string& interface):
 }
 
 SocketBus::SocketBus(std::unique_ptr<SocketBusOptions>&& options):
-    CanBus(std::unique_ptr<CanBusOptions>(options.release())),
+    CanBus(std::move(options)),
     socket_()
 {
 }

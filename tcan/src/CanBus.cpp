@@ -11,7 +11,7 @@
 namespace tcan {
 
 CanBus::CanBus(std::unique_ptr<CanBusOptions>&& options):
-    Bus<CanMsg>(std::unique_ptr<BusOptions>(options.release())),
+    Bus<CanMsg>( std::move(options) ),
     devices_(),
     cobIdToFunctionMap_(),
     busErrorFlag_(false)

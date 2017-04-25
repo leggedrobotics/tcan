@@ -30,12 +30,12 @@ public:
 	}
 
 	void addConnection(const IpId ipId, const std::string& host, const unsigned int port) {
-		tcan::IpBusOptions* options = new tcan::IpBusOptions(host, port);
+	    std::unique_ptr<tcan::IpBusOptions> options(new tcan::IpBusOptions(host, port));
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
 
-		auto connection = new TcpConnection(std::unique_ptr<tcan::IpBusOptions>(options));
+		auto connection = new TcpConnection(std::move(options));
 		if(!addBus( connection )) {
 			std::cout << "failed to add Bus " << host << std::endl;
 			exit(-1);

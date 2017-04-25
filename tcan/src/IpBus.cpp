@@ -22,7 +22,7 @@ namespace tcan {
 constexpr uint16_t maxMessageSize = 512;
 
 IpBus::IpBus(std::unique_ptr<IpBusOptions>&& options):
-    Bus<IpMsg>(std::unique_ptr<BusOptions>(options.release())),
+    Bus<IpMsg>(std::move(options)),
 	socket_(-1),
     deviceTimeoutCounter_(0)
 {

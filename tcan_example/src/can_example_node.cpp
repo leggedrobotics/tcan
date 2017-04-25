@@ -76,7 +76,7 @@ public:
 	}
 
 	void addSocketBus(const BusId busId, const std::string& interface) {
-		SocketBusOptions* options = new SocketBusOptions();
+	    std::unique_ptr<SocketBusOptions> options(new SocketBusOptions());
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
@@ -87,7 +87,7 @@ public:
 		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
 //		options->canErrorMask = 0;
 
-		auto bus = new SocketBus(std::unique_ptr<SocketBusOptions>(options));
+		auto bus = new SocketBus(std::move(options));
 		if(!addBus( bus )) {
 			std::cout << "failed to add Bus " << interface << std::endl;
 			exit(-1);

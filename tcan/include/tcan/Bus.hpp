@@ -30,7 +30,7 @@ class Bus {
         isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
         isPassive_(options->startPassive_),
-        options_(options.release()),
+        options_(std::move(options)),
         outgointMsgsMutex_(),
         outgoingMsgs_(),
         receiveThread_(),
@@ -134,6 +134,8 @@ class Bus {
     inline bool allDevicesActive() const { return allDevicesActive_; }
 
     inline bool isAsynchronous() const { return options_->asynchronous_; }
+
+    const BusOptions* getOptions() const { return options_.get(); }
 
  public: /// Internal functions
 

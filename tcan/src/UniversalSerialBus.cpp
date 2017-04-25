@@ -16,7 +16,7 @@
 namespace tcan {
 
 UniversalSerialBus::UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions>&& options):
-    Bus<UsbMsg>(std::unique_ptr<BusOptions>(options.release())),
+    Bus<UsbMsg>(std::move(options)),
     fileDescriptor_(0),
     deviceTimeoutCounter_(0)
 {
