@@ -8,6 +8,7 @@
 #pragma once
 
 #include <poll.h>
+#include <memory>
 
 #include "tcan/CanBus.hpp"
 #include "tcan/SocketBusOptions.hpp"

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <termios.h> // tcgettatr
+#include <memory>
 
 #include "tcan/Bus.hpp"
 #include "tcan/UniversalSerialBusOptions.hpp"

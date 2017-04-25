@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "tcan/Bus.hpp"
 #include "tcan/IpBusOptions.hpp"
 #include "tcan/IpMsg.hpp"

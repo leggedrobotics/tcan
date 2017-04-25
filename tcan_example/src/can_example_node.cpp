@@ -67,11 +67,11 @@ public:
 	void addDeviceExample(const BusId busId, const DeviceExampleId deviceId, const NodeId nodeId) {
 		const std::string name = "EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId));
 
-		auto options = new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
+		std::unique_ptr<example_can::CanDeviceExampleOptions> options(new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name));
 		options->someParameter = 37;
 		options->maxDeviceTimeoutCounter_ = 1000;
 
-		auto ret_pair = getCanBus(static_cast<unsigned int>(busId))->addDevice<example_can::CanDeviceExample>( options );
+		auto ret_pair = getCanBus(static_cast<unsigned int>(busId))->addDevice<example_can::CanDeviceExample>( std::move(options) );
 		deviceExampleContainer_.insert({static_cast<unsigned int>(deviceId), ret_pair.first});
 	}
 
