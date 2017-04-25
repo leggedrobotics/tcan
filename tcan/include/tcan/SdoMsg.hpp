@@ -166,7 +166,7 @@ class SdoMsg : public CanMsg {
         return name;
     }
 
- private:
+ protected:
     //! if true, message will stay in the SDO queue until answer was received or timed out.
     bool requiresAnswer_;
 };

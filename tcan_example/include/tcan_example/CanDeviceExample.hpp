@@ -10,8 +10,9 @@
 
 #pragma once
 
+#include "tcan/DeviceCanOpen.hpp"
+
 #include <stdint.h>
-#include <tcan/DeviceCanOpen.hpp>
 #include <atomic>
 
 
@@ -50,7 +51,7 @@ public:
 
 	virtual bool initDevice();
 
-	virtual void configureDevice();
+	virtual bool configureDevice(const CanMsg& msg);
 
 	void setCommand(const float value);
 

@@ -25,7 +25,9 @@ struct BusOptions {
         priorityTransmitThread_(98),
         prioritySanityCheckThread_(1),
         maxQueueSize_(1000),
-        name_(name)
+        name_(name),
+        startPassive_(false),
+        activateBusOnReception_(false)
     {
 
     }
@@ -47,6 +49,12 @@ struct BusOptions {
 
     //! name of the interface
     std::string name_;
+
+    //! start the bus in passive state (outgoing messages are not sent)
+    bool startPassive_;
+
+    //! if true, the bus will automatically switch from passive to active state as soon as a message is received
+    bool activateBusOnReception_;
 };
 
 } /* namespace tcan */

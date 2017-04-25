@@ -35,8 +35,8 @@ UniversalSerialBus::~UniversalSerialBus()
 
 void UniversalSerialBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_)->maxDeviceTimeoutCounter;
-    isMissingDevice_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
-    allDevicesActive_ = !isMissingDevice_;
+    isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
+    allDevicesActive_ = !isMissingDeviceOrHasError_;
 }
 
 

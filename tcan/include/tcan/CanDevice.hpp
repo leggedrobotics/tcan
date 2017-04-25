@@ -14,6 +14,8 @@
 #include "tcan/CanMsg.hpp"
 #include "tcan/CanDeviceOptions.hpp"
 
+#include "message_logger/message_logger.hpp"
+
 namespace tcan {
 class CanBus;
 
@@ -60,11 +62,14 @@ class CanDevice {
      */
     virtual bool initDevice() = 0;
 
-    /*! Configure the device
+    /*!
+     * Configure the device
      * This function is automatically called after reception of a
-     * bootup message. (or more general: After reception of any message if the device was missing)
+     * bootup message. (or more general: After reception of any message if the device was in state Missing or Initializing)
+     * @param msg   received message which caused the call of this function
+     * @return      true if device is active
      */
-    virtual void configureDevice() = 0;
+    virtual bool configureDevice(const CanMsg& msg) = 0;
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
@@ -72,8 +77,11 @@ class CanDevice {
      * @return true if everything is ok.
      */
     virtual void sanityCheck() {
-        if(isTimedOut()) {
-            state_ = Missing;
+        if(!isMissing()) {
+            if(isTimedOut()) {
+                state_ = Missing;
+                MELO_WARN("Device %s timed out!", getName().c_str());
+            }
         }
     }
 
@@ -85,21 +93,34 @@ class CanDevice {
     inline bool hasError() const { return (state_ == Error); }
     inline bool isMissing() const { return (state_ == Missing); }
 
+    virtual int getStatus() const { return static_cast<int>(state_.load()); }
+
+    /*!
+     * Resets the device to Initializing state
+     */
+    virtual void resetDevice() { state_ = Initializing; }
 
  public: /// Internal functions
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..).
      * Calls the initDevice() function.
      */
-    bool initDeviceInternal(CanBus* bus) {
+    inline bool initDeviceInternal(CanBus* bus) {
         bus_ = bus;
         return initDevice();
     }
 
-    inline void resetDeviceTimeoutCounter() {
+    inline void configureDeviceInternal(const CanMsg& msg) {
         if(state_ != Active && state_ != Error) {
-            configureDevice();
-            state_ = Active;
+            if(configureDevice(msg)) {
+                state_ = Active;
+                if(options_->printConfigInfo_) {
+                    MELO_INFO("Device %s configured successfully.", options_->name_.c_str());
+                }
+            }
         }
+    }
+
+    inline void resetDeviceTimeoutCounter() {
         deviceTimeoutCounter_ = 0;
     }
 
