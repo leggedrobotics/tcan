@@ -18,8 +18,8 @@ class PcanBus : public CanBus {
  public:
 
     PcanBus(const std::string& interface);
-    PcanBus(BusOptions* options) = delete;
-    PcanBus(PcanBusOptions* options);
+    PcanBus(std::unique_ptr<BusOptions>&& options) = delete;
+    PcanBus(std::unique_ptr<PcanBusOptions>&& options);
 
     virtual ~PcanBus();
 

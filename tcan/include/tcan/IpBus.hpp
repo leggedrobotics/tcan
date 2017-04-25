@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "tcan/Bus.hpp"
 #include "tcan/IpBusOptions.hpp"
 #include "tcan/IpMsg.hpp"
@@ -16,7 +18,7 @@ namespace tcan {
 class IpBus : public Bus<IpMsg> {
  public:
 	IpBus() = delete;
-	IpBus(IpBusOptions* options);
+	IpBus(std::unique_ptr<IpBusOptions>&& options);
 
     virtual ~IpBus();
 

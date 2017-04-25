@@ -12,6 +12,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <memory>
 
 #include "tcan/BusOptions.hpp"
 
@@ -27,11 +28,11 @@ class Bus {
     using MsgQueue = std::deque<Msg>;
 
     Bus() = delete;
-    Bus(BusOptions* options):
+    Bus(std::unique_ptr<BusOptions>&& options):
         isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
         isPassive_(options->startPassive_),
-        options_(options),
+        options_(std::move(options)),
         outgoingMsgsMutex_(),
         outgoingMsgs_(),
         receiveThread_(),
@@ -46,8 +47,6 @@ class Bus {
     virtual ~Bus()
     {
         stopThreads(true);
-
-        delete options_;
     }
 
 
@@ -142,6 +141,8 @@ class Bus {
      * @return  number of messages in the output queue
      */
     unsigned int getNumOutogingMessagesWithoutLock() const { return outgoingMsgs_.size(); }
+
+    const BusOptions* getOptions() const { return options_.get(); }
 
  public: /// Internal functions
 
@@ -312,7 +313,7 @@ class Bus {
     // if true, the outgoing messages are not sent to the physical bus
     std::atomic<bool> isPassive_;
 
-    const BusOptions* options_;
+    const std::unique_ptr<BusOptions> options_;
 
     // output queue containing all messages to be sent by the transmitThread_
     std::mutex outgoingMsgsMutex_;

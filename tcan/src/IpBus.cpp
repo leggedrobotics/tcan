@@ -21,8 +21,8 @@ namespace tcan {
 
 constexpr uint16_t maxMessageSize = 512;
 
-IpBus::IpBus(IpBusOptions* options):
-    Bus<IpMsg>(options),
+IpBus::IpBus(std::unique_ptr<IpBusOptions>&& options):
+    Bus<IpMsg>(std::move(options)),
 	socket_(-1),
 	recvFlag_(0),
 	sendFlag_(0),
@@ -39,7 +39,7 @@ IpBus::~IpBus()
 }
 
 void IpBus::sanityCheck() {
-    const unsigned int maxTimeout = static_cast<const IpBusOptions*>(options_)->maxDeviceTimeoutCounter_;
+    const unsigned int maxTimeout = static_cast<const IpBusOptions*>(options_.get())->maxDeviceTimeoutCounter_;
     isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDeviceOrHasError_;
 }
@@ -47,7 +47,7 @@ void IpBus::sanityCheck() {
 
 bool IpBus::initializeInterface() {
 
-	const IpBusOptions* options = static_cast<const IpBusOptions*>(options_);
+	const IpBusOptions* options = static_cast<const IpBusOptions*>(options_.get());
 	const char* interface = options->name_.c_str();
 
 	/* open socket */

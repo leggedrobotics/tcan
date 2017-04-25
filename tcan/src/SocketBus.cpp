@@ -23,12 +23,12 @@
 namespace tcan {
 
 SocketBus::SocketBus(const std::string& interface):
-    SocketBus(new SocketBusOptions(interface))
+    SocketBus(std::unique_ptr<SocketBusOptions>(new SocketBusOptions(interface)))
 {
 }
 
-SocketBus::SocketBus(SocketBusOptions* options):
-    CanBus(options),
+SocketBus::SocketBus(std::unique_ptr<SocketBusOptions>&& options):
+    CanBus(std::move(options)),
     socket_(-1),
     recvFlag_(0),
     sendFlag_(0)
@@ -43,7 +43,7 @@ SocketBus::~SocketBus()
 
 bool SocketBus::initializeInterface()
 {
-    const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_);
+    const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_.get());
     const char* interface = options->name_.c_str();
 
     /* open socket */
@@ -205,7 +205,7 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
 
 void SocketBus::handleBusError(const can_frame& msg) {
 
-    if(static_cast<const CanBusOptions*>(options_)->ignoreErrorFrames_) {
+    if(static_cast<const CanBusOptions*>(options_.get())->ignoreErrorFrames_) {
         return;
     }
 
@@ -216,7 +216,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
 
     busErrorFlag_ = true;
 
-    if(static_cast<const CanBusOptions*>(options_)->passivateOnBusError_) {
+    if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
         passivate();
         MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
     }
