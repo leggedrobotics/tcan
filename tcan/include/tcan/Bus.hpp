@@ -92,18 +92,18 @@ class Bus {
     /*! Copy a message to be sent to the output queue
      * @param msg	const reference to the message to be sent
      */
-    inline void sendMessage(const Msg& msg) {
+    inline bool sendMessage(const Msg& msg) {
         std::lock_guard<std::mutex> guard(outgoingMsgsMutex_);
-        sendMessageWithoutLock(msg);
+        return sendMessageWithoutLock(msg);
     }
 
     /*!
      * Move a massage to be sent to the output queue
      * @param msg   message to be sent
      */
-    inline void emplaceMessage(Msg&& msg) {
+    inline bool emplaceMessage(Msg&& msg) {
         std::lock_guard<std::mutex> guard(outgoingMsgsMutex_);
-        emplaceMessageWithoutLock(std::forward<Msg>(msg));
+        return emplaceMessageWithoutLock(std::forward<Msg>(msg));
     }
 
     /*!
@@ -153,7 +153,7 @@ class Bus {
      */
     inline bool writeMessagesWithoutLock()
     {
-        return isPassive_ ? clearOutputQueueWithoutLock() : writeData( nullptr );
+        return isPassive_ ? true : writeData( nullptr );
     }
 
     /*! read and parse a message from the bus
@@ -230,12 +230,6 @@ class Bus {
      */
     virtual void handleMessage(const Msg& msg) = 0;
 
-    bool clearOutputQueueWithoutLock() {
-        outgoingMsgs_.clear();
-        return true;
-    }
-
-
     /*! Helper function for transmission thread.
      * @return  True if message(s) were successfully sent.
      */
@@ -252,25 +246,35 @@ class Bus {
             return true;
         }
 
-        return isPassive_ ? clearOutputQueueWithoutLock() : writeData( &lock );
+        return isPassive_ ? true : writeData( &lock );
     }
 
-    inline void checkOutgoingMsgsSize() const {
+    inline bool checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
-            MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            MELO_WARN_THROTTLE(options_->errorThrottleTime_, "Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            return false;
         }
+        return true;
     }
 
-    inline void sendMessageWithoutLock(const Msg& msg) {
-        checkOutgoingMsgsSize();
-        outgoingMsgs_.push_back( msg );
-        condTransmitThread_.notify_all();
+    inline bool sendMessageWithoutLock(const Msg& msg) {
+        if(checkOutgoingMsgsSize()) {
+            outgoingMsgs_.push_back( msg );
+            condTransmitThread_.notify_all();
+            return true;
+        }
+
+        return false;
     }
 
-    inline void emplaceMessageWithoutLock(Msg&& msg) {
-        checkOutgoingMsgsSize();
-        outgoingMsgs_.emplace_back( std::forward<Msg>(msg) );
-        condTransmitThread_.notify_all();
+    inline bool emplaceMessageWithoutLock(Msg&& msg) {
+        if(checkOutgoingMsgsSize()) {
+            outgoingMsgs_.emplace_back( std::forward<Msg>(msg) );
+            condTransmitThread_.notify_all();
+            return true;
+        }
+
+        return false;
     }
 
     // thread loop functions
