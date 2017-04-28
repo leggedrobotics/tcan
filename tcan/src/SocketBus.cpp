@@ -219,8 +219,11 @@ void SocketBus::handleBusError(const can_frame& msg) {
     busErrorFlag_ = true;
 
     if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
+        if(!isPassive_) {
+            MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+        }
         passivate();
-        MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+
     }
 
     std::stringstream errorMsg;
