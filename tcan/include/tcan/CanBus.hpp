@@ -130,6 +130,7 @@ class CanBus : public Bus<CanMsg> {
 
     // flag to indicate the reception of a bus error message
     std::atomic<bool> busErrorFlag_;
+
 };
 
 } /* namespace tcan */

@@ -40,7 +40,8 @@ class Bus {
         sanityCheckThread_(),
         running_(false),
         condTransmitThread_(),
-        condOutputQueueEmpty_()
+        condOutputQueueEmpty_(),
+        lastMsgWasError_(false)
     {
     }
 
@@ -162,7 +163,7 @@ class Bus {
     inline bool readMessage()
     {
         if(readData()) {
-            if(isPassive_ && options_->activateBusOnReception_) {
+            if(isPassive_ && options_->activateBusOnReception_ && !lastMsgWasError_) {
                 isPassive_ = false;
                 MELO_WARN("Auto-activated bus %s", options_->name_.c_str());
             }
@@ -214,7 +215,8 @@ class Bus {
     virtual bool initializeInterface() = 0;
 
     /*! read CAN message from the device driver. This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
-     * @return true if a message was successfully read and parsed
+     * It shall also set lastMsgWasError_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
+     * @return true if a non-error-message was successfully read and parsed
      */
     virtual bool readData() = 0;
 
@@ -334,6 +336,9 @@ class Bus {
 
     // variable to wait for empty output queues (required for global sync)
     std::condition_variable condOutputQueueEmpty_;
+
+    // flag indicating that the last received message was an error message and should not auto-activate the bus
+    bool lastMsgWasError_;
 };
 
 } /* namespace tcan */
