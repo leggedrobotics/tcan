@@ -210,9 +210,9 @@ void SocketBus::handleBusError(const can_frame& msg) {
     }
 
     // todo: really ignore arbitration lost?
-    //if(msg.can_id & CAN_ERR_LOSTARB) {
-    //    return;
-    //}
+    if(msg.can_id & CAN_ERR_LOSTARB) {
+        return;
+    }
 
     busErrorFlag_ = true;
 
