@@ -39,7 +39,8 @@ struct SocketBusOptions : public CanBusOptions {
     // The minimum length is 1024, set 0 to keep the default
     unsigned int sndBufLength_;
 
-    //! error mask. By default, subscribe to all error messages
+    //! error mask. By default, subscribe to all error messages. It may be a good idea to disable CAN_ERR_LOSTARB, as this is normal
+    // bus behavior.
     // see https://www.kernel.org/doc/Documentation/networking/can.txt
     unsigned int canErrorMask_;
 
