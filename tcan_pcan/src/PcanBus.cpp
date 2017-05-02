@@ -158,16 +158,15 @@ bool PcanBus::writeData(const CanMsg& cmsg) {
 
 void PcanBus::handleBusError(const can_frame& msg) {
 
-    // todo: really ignore arbitration lost?
-    //if(msg.can_id & CAN_ERR_LOSTARB) {
-    //    return;
-    //}
-
-    busErrorFlag_ = true;
+    errorFlagPersistent_ = true;
+    errorFlag_ = true;
 
     if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
+        if(!isPassive_) {
+            MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+        }
         passivate();
-        MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+
     }
 
     std::stringstream errorMsg;

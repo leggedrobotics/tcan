@@ -13,8 +13,7 @@ namespace tcan {
 CanBus::CanBus(std::unique_ptr<CanBusOptions>&& options):
     Bus<CanMsg>( std::move(options) ),
     devices_(),
-    cobIdToFunctionMap_(),
-    busErrorFlag_(false)
+    cobIdToFunctionMap_()
 {
 
 }
@@ -27,6 +26,9 @@ CanBus::~CanBus()
 }
 
 void CanBus::handleMessage(const CanMsg& msg) {
+
+    errorFlag_ = false;
+
     // Check if CAN message is handled.
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
     if (it != cobIdToFunctionMap_.end()) {

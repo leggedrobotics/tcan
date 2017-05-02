@@ -41,7 +41,8 @@ class Bus {
         running_(false),
         condTransmitThread_(),
         condOutputQueueEmpty_(),
-        lastMsgWasError_(false)
+        errorFlagPersistent_(false),
+        errorFlag_(false)
     {
     }
 
@@ -145,7 +146,23 @@ class Bus {
 
     const BusOptions* getOptions() const { return options_.get(); }
 
- public: /// Internal functions
+    /*!
+     * @return true if a bus error message has been received
+     */
+    inline bool getErrorFlag() const { return errorFlagPersistent_; }
+
+    /*!
+     * resets the bus error flag and returns its previous value.
+     * @return true if a bus error message has been received
+     */
+    inline bool resetErrorFlag() {
+        bool tmp = errorFlagPersistent_;
+        errorFlagPersistent_ = false;
+        return tmp;
+    }
+
+
+public: /// Internal functions
 
     /*! write the message(s) at the front of the queue to the CAN bus
      * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked,
@@ -163,7 +180,7 @@ class Bus {
     inline bool readMessage()
     {
         if(readData()) {
-            if(isPassive_ && options_->activateBusOnReception_ && !lastMsgWasError_) {
+            if(isPassive_ && options_->activateBusOnReception_ && !errorFlag_) {
                 isPassive_ = false;
                 MELO_WARN("Auto-activated bus %s", options_->name_.c_str());
             }
@@ -215,8 +232,9 @@ class Bus {
     virtual bool initializeInterface() = 0;
 
     /*! read CAN message from the device driver. This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
-     * It shall also set lastMsgWasError_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
-     * @return true if a non-error-message was successfully read and parsed
+     * It shall set errorFlag_ and errorFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
+     * and set errorFlag_ to false on successfull reads of non-error messages.
+     * @return true if a message was successfully read and parsed
      */
     virtual bool readData() = 0;
 
@@ -310,35 +328,39 @@ class Bus {
     }
 
  protected:
-    // true if a device is in 'Missing' or 'Error' state.
+    //! true if a device is in 'Missing' or 'Error' state.
     std::atomic<bool> isMissingDeviceOrHasError_;
 
-    // true if all devices are in active state (we received a message within the timeout)
+    //! true if all devices are in active state (we received a message within the timeout)
     std::atomic<bool> allDevicesActive_;
 
-    // if true, the outgoing messages are not sent to the physical bus
+    //! if true, the outgoing messages are not sent to the physical bus
     std::atomic<bool> isPassive_;
 
     const std::unique_ptr<BusOptions> options_;
 
-    // output queue containing all messages to be sent by the transmitThread_
+    //! output queue containing all messages to be sent by the transmitThread_
     std::mutex outgoingMsgsMutex_;
     MsgQueue outgoingMsgs_;
 
-    // threads for message reception and transmission and device sanity checking
+    //! threads for message reception and transmission and device sanity checking
     std::thread receiveThread_;
     std::thread transmitThread_;
     std::thread sanityCheckThread_;
     std::atomic<bool> running_;
 
-    // variable to wake the transmitThread after inserting something to the message output queue
+    //! variable to wake the transmitThread after inserting something to the message output queue
     std::condition_variable condTransmitThread_;
 
-    // variable to wait for empty output queues (required for global sync)
+    //! variable to wait for empty output queues (required for global sync)
     std::condition_variable condOutputQueueEmpty_;
 
-    // flag indicating that the last received message was an error message and should not auto-activate the bus
-    bool lastMsgWasError_;
+    //! flag to indicate the reception of an error message. Can be cleared with resetError().
+    std::atomic<bool> errorFlagPersistent_;
+
+    //! flag indicating that the last received message was an error message. This flag is reset upon successfull
+    // reception of a non-error message.
+    bool errorFlag_;
 };
 
 } /* namespace tcan */

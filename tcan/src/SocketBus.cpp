@@ -165,10 +165,8 @@ bool SocketBus::readData() {
 //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
 
         if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
-            lastMsgWasError_ = true;
             handleBusError( frame );
         }else{
-            lastMsgWasError_ = false;
             handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
         }
     }
@@ -207,7 +205,8 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
 
 void SocketBus::handleBusError(const can_frame& msg) {
 
-    busErrorFlag_ = true;
+    errorFlagPersistent_ = true;
+    errorFlag_ = true;
 
     if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
         if(!isPassive_) {
