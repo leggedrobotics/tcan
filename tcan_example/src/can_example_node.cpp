@@ -67,16 +67,16 @@ public:
 	void addDeviceExample(const BusId busId, const DeviceExampleId deviceId, const NodeId nodeId) {
 		const std::string name = "EXAMPLE_DEVICE" + std::to_string(static_cast<unsigned int>(deviceId));
 
-		auto options = new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name);
+		std::unique_ptr<example_can::CanDeviceExampleOptions> options(new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name));
 		options->someParameter = 37;
 		options->maxDeviceTimeoutCounter_ = 1000;
 
-		auto ret_pair = getCanBus(static_cast<unsigned int>(busId))->addDevice<example_can::CanDeviceExample>( options );
+		auto ret_pair = getCanBus(static_cast<unsigned int>(busId))->addDevice<example_can::CanDeviceExample>( std::move(options) );
 		deviceExampleContainer_.insert({static_cast<unsigned int>(deviceId), ret_pair.first});
 	}
 
 	void addSocketBus(const BusId busId, const std::string& interface) {
-		SocketBusOptions* options = new SocketBusOptions();
+	    std::unique_ptr<SocketBusOptions> options(new SocketBusOptions());
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
@@ -87,7 +87,7 @@ public:
 		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
 //		options->canErrorMask = 0;
 
-		auto bus = new SocketBus(options);
+		auto bus = new SocketBus(std::move(options));
 		if(!addBus( bus )) {
 			std::cout << "failed to add Bus " << interface << std::endl;
 			exit(-1);

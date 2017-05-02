@@ -10,8 +10,8 @@
 
 namespace tcan {
 
-CanBus::CanBus(CanBusOptions* options):
-    Bus<CanMsg>(options),
+CanBus::CanBus(std::unique_ptr<CanBusOptions>&& options):
+    Bus<CanMsg>( std::move(options) ),
     devices_(),
     cobIdToFunctionMap_(),
     busErrorFlag_(false)
@@ -53,7 +53,7 @@ void CanBus::sanityCheck() {
         allActive &= device->isActive();
     }
 
-    if(!isPassive() && allMissing && static_cast<const CanBusOptions*>(options_)->passivateIfNoDevices_) {
+    if(!isPassive() && allMissing && static_cast<const CanBusOptions*>(options_.get())->passivateIfNoDevices_) {
         passivate();
         MELO_WARN("All devices missing on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
     }

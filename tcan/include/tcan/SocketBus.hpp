@@ -8,6 +8,7 @@
 #pragma once
 
 #include <poll.h>
+#include <memory>
 
 #include "tcan/CanBus.hpp"
 #include "tcan/SocketBusOptions.hpp"
@@ -18,8 +19,7 @@ class SocketBus : public CanBus {
  public:
 
     SocketBus(const std::string& interface);
-    SocketBus(BusOptions* options) = delete;
-    SocketBus(SocketBusOptions* options);
+    SocketBus(std::unique_ptr<SocketBusOptions>&& options);
 
     virtual ~SocketBus();
 

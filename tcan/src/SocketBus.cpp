@@ -23,12 +23,12 @@
 namespace tcan {
 
 SocketBus::SocketBus(const std::string& interface):
-    SocketBus(new SocketBusOptions(interface))
+    SocketBus(std::unique_ptr<SocketBusOptions>(new SocketBusOptions(interface)))
 {
 }
 
-SocketBus::SocketBus(SocketBusOptions* options):
-    CanBus(options),
+SocketBus::SocketBus(std::unique_ptr<SocketBusOptions>&& options):
+    CanBus(std::move(options)),
     socket_()
 {
 }
@@ -41,7 +41,7 @@ SocketBus::~SocketBus()
 
 bool SocketBus::initializeInterface()
 {
-    const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_);
+    const SocketBusOptions* options = static_cast<const SocketBusOptions*>(options_.get());
     const char* interface = options->name_.c_str();
 
     /* open socket */
@@ -179,7 +179,7 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
     // poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
     // If asynchronous, we set the socket to blocking and have a separate thread writing to it.
 
-    if(!options_->asynchronous_ && static_cast<const SocketBusOptions*>(options_)->usePoll_) {
+    if(!options_->asynchronous_ && static_cast<const SocketBusOptions*>(options_.get())->usePoll_) {
         socket_.revents = 0;
 
         const int ret = poll( &socket_, 1, 1000 );
@@ -212,7 +212,7 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
 
 void SocketBus::handleBusError(const can_frame& msg) {
 
-    if(static_cast<const CanBusOptions*>(options_)->ignoreErrorFrames_) {
+    if(static_cast<const CanBusOptions*>(options_.get())->ignoreErrorFrames_) {
         return;
     }
 
@@ -223,7 +223,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
 
     busErrorFlag_ = true;
 
-    if(static_cast<const CanBusOptions*>(options_)->passivateOnBusError_) {
+    if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
         passivate();
         MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
     }
@@ -468,7 +468,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
     // bit 5-7
     errorMsg << " / controller specific additional information: 0x" << std::hex << static_cast<int>(msg.data[5]) << " 0x" <<  std::hex << static_cast<int>(msg.data[6]) << " 0x" <<  std::hex << static_cast<int>(msg.data[7]);
 
-    MELO_ERROR_THROTTLE_STREAM(static_cast<const SocketBusOptions*>(options_)->canErrorThrottleTime_, errorMsg.str());
+    MELO_ERROR_THROTTLE_STREAM(static_cast<const SocketBusOptions*>(options_.get())->canErrorThrottleTime_, errorMsg.str());
 }
 
 } /* namespace tcan */

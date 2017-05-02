@@ -13,13 +13,13 @@
 namespace tcan {
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
-    DeviceCanOpen(new DeviceCanOpenOptions(nodeId, name))
+    DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>(new DeviceCanOpenOptions(nodeId, name)))
 {
 
 }
 
-DeviceCanOpen::DeviceCanOpen(DeviceCanOpenOptions* options):
-    CanDevice(options),
+DeviceCanOpen::DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options):
+    CanDevice(std::move(options)),
     nmtState_(NMTStates::preOperational),
     sdoTimeoutCounter_(0),
     sdoSentCounter_(0),
@@ -105,7 +105,7 @@ void DeviceCanOpen::setNmtEnterPreOperational() {
 
     // the remote device will not tell us in which state it is if heartbeat message is disabled
     //   => assume that the state switch will be successful
-    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
+    if(static_cast<const DeviceCanOpenOptions*>(options_.get())->producerHeartBeatTime_ == 0) {
         nmtState_ = NMTStates::preOperational;
     }
 }
@@ -115,7 +115,7 @@ void DeviceCanOpen::setNmtStartRemoteDevice() {
 
     // the remote device will not tell us in which state it is if heartbeat message is disabled
     //   => assume that the state switch will be successful
-    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
+    if(static_cast<const DeviceCanOpenOptions*>(options_.get())->producerHeartBeatTime_ == 0) {
         nmtState_ = NMTStates::operational;
     }
 }
@@ -125,7 +125,7 @@ void DeviceCanOpen::setNmtStopRemoteDevice() {
 
     // the remote device will not tell us in which state it is if heartbeat message is disabled
     //   => assume that the state switch will be successful
-    if(static_cast<const DeviceCanOpenOptions*>(options_)->producerHeartBeatTime_ == 0) {
+    if(static_cast<const DeviceCanOpenOptions*>(options_.get())->producerHeartBeatTime_ == 0) {
         nmtState_ = NMTStates::stopped;
     }
 }
@@ -219,7 +219,7 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 
 
 bool DeviceCanOpen::checkSdoTimeout() {
-    const DeviceCanOpenOptions* options = static_cast<const DeviceCanOpenOptions*>(options_);
+    const DeviceCanOpenOptions* options = static_cast<const DeviceCanOpenOptions*>(options_.get());
 
     if(options->maxSdoTimeoutCounter_ != 0 && sdoMsgs_.size() != 0 && (sdoTimeoutCounter_++ > options->maxSdoTimeoutCounter_) ) {
         // sdoTimeoutCounter_ is only increased if options_->maxSdoTimeoutCounter != 0 and sdoMsgs_.size() != 0

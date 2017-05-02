@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string>
 #include <atomic>
+#include <memory>
 
 #include "tcan/CanMsg.hpp"
 #include "tcan/CanDeviceOptions.hpp"
@@ -36,12 +37,12 @@ class CanDevice {
     CanDevice() = delete;
 
     CanDevice(const uint32_t nodeId, const std::string& name):
-        CanDevice(new CanDeviceOptions(nodeId, name))
+        CanDevice(std::unique_ptr<CanDeviceOptions>(new CanDeviceOptions(nodeId, name)))
     {
     }
 
-    CanDevice(CanDeviceOptions* options):
-        options_(options),
+    CanDevice(std::unique_ptr<CanDeviceOptions>&& options):
+        options_(std::move(options)),
         deviceTimeoutCounter_(0),
         state_(Initializing),
         bus_(nullptr)
@@ -51,7 +52,6 @@ class CanDevice {
     //! Destructor
     virtual ~CanDevice()
     {
-        delete options_;
     }
 
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..)
@@ -135,7 +135,7 @@ class CanDevice {
     }
 
  protected:
-    const CanDeviceOptions* options_;
+    const std::unique_ptr<CanDeviceOptions> options_;
 
     std::atomic<unsigned int> deviceTimeoutCounter_;
 
