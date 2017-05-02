@@ -42,12 +42,12 @@ class CanBusManager : public BusManager<CanMsg> {
     /*! Checks if a error message was received on one of the buses.
      * @return true if a error message was received
      */
-    bool getErrorFlag() const;
+    bool getErrorMsgFlag() const;
 
     /*! Checks if a error message was received on one of the buses and resets the flag.
      * @return true if a error message was received
      */
-    bool resetErrorFlag();
+    bool resetErrorMsgFlag();
 
     /*!
      * Resets all devices handled by all buses to Initializing state and sends appropriate restart commands to the devices

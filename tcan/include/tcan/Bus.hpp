@@ -41,8 +41,8 @@ class Bus {
         running_(false),
         condTransmitThread_(),
         condOutputQueueEmpty_(),
-        errorFlagPersistent_(false),
-        errorFlag_(false)
+        errorMsgFlagPersistent_(false),
+        errorMsgFlag_(false)
     {
     }
 
@@ -149,15 +149,15 @@ class Bus {
     /*!
      * @return true if a bus error message has been received
      */
-    inline bool getErrorFlag() const { return errorFlagPersistent_; }
+    inline bool getErrorMsgFlag() const { return errorMsgFlagPersistent_; }
 
     /*!
      * resets the bus error flag and returns its previous value.
      * @return true if a bus error message has been received
      */
-    inline bool resetErrorFlag() {
-        bool tmp = errorFlagPersistent_;
-        errorFlagPersistent_ = false;
+    inline bool resetErrorMsgFlag() {
+        bool tmp = errorMsgFlagPersistent_;
+        errorMsgFlagPersistent_ = false;
         return tmp;
     }
 
@@ -180,7 +180,7 @@ public: /// Internal functions
     inline bool readMessage()
     {
         if(readData()) {
-            if(isPassive_ && options_->activateBusOnReception_ && !errorFlag_) {
+            if(isPassive_ && options_->activateBusOnReception_ && !errorMsgFlag_) {
                 isPassive_ = false;
                 MELO_WARN("Auto-activated bus %s", options_->name_.c_str());
             }
@@ -232,8 +232,8 @@ public: /// Internal functions
     virtual bool initializeInterface() = 0;
 
     /*! read CAN message from the device driver. This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
-     * It shall set errorFlag_ and errorFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
-     * and set errorFlag_ to false on successfull reads of non-error messages.
+     * It shall set errorMsgFlag_ and errorMsgFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
+     * and set errorMsgFlag_ to false on successfull reads of non-error messages.
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() = 0;
@@ -356,11 +356,11 @@ public: /// Internal functions
     std::condition_variable condOutputQueueEmpty_;
 
     //! flag to indicate the reception of an error message. Can be cleared with resetError().
-    std::atomic<bool> errorFlagPersistent_;
+    std::atomic<bool> errorMsgFlagPersistent_;
 
     //! flag indicating that the last received message was an error message. This flag is reset upon successfull
     // reception of a non-error message.
-    bool errorFlag_;
+    bool errorMsgFlag_;
 };
 
 } /* namespace tcan */

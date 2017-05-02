@@ -41,19 +41,19 @@ void CanBusManager::sendSync(const unsigned int busIndex) {
     }
 }
 
-bool CanBusManager::getErrorFlag() const {
+bool CanBusManager::getErrorMsgFlag() const {
     for(auto bus : buses_) {
-        if(static_cast<CanBus*>(bus)->getErrorFlag()) {
+        if(static_cast<CanBus*>(bus)->getErrorMsgFlag()) {
             return true;
         }
     }
     return false;
 }
 
-bool CanBusManager::resetErrorFlag() {
+bool CanBusManager::resetErrorMsgFlag() {
     bool hadBusError = false;
     for(auto bus : buses_) {
-        if(static_cast<CanBus*>(bus)->resetErrorFlag()) {
+        if(static_cast<CanBus*>(bus)->resetErrorMsgFlag()) {
             hadBusError = true;
         }
     }

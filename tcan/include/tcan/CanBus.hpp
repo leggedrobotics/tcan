@@ -97,7 +97,7 @@ class CanBus : public Bus<CanMsg> {
         sendMessageWithoutLock(CanMsg(0x80, 0, nullptr));
     }
 
-    /*! Is called after reception of a message. Routes the message to the callback.
+    /*! Is called after reception of a message. Routes the message to the callback and clears the errorMsgFlag_
      * @param cmsg	reference to the can message
      */
     void handleMessage(const CanMsg& cmsg);

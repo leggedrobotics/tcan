@@ -205,8 +205,8 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
 
 void SocketBus::handleBusError(const can_frame& msg) {
 
-    errorFlagPersistent_ = true;
-    errorFlag_ = true;
+    errorMsgFlagPersistent_ = true;
+    errorMsgFlag_ = true;
 
     if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
         if(!isPassive_) {

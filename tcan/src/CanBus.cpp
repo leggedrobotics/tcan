@@ -27,7 +27,7 @@ CanBus::~CanBus()
 
 void CanBus::handleMessage(const CanMsg& msg) {
 
-    errorFlag_ = false;
+    errorMsgFlag_ = false;
 
     // Check if CAN message is handled.
     CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());

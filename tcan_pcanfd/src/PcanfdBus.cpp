@@ -71,6 +71,7 @@ bool PcanfdBus::readData() {
     }
     
     for(unsigned int i=0; i<maxMsgs; ++i) {
+        // todo: handle error messages
         handleMessage( CanMsg(inMsgs[i].id, inMsgs[i].data_len, inMsgs[i].data) );
     }
  
