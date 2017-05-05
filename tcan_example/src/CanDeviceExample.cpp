@@ -19,14 +19,14 @@ namespace tcan {
 namespace example_can {
 
 CanDeviceExample::CanDeviceExample(const uint32_t nodeId, const std::string& name):
-	CanDeviceExample(new CanDeviceExampleOptions(nodeId, name))
+	CanDeviceExample(std::unique_ptr<CanDeviceExampleOptions>(new CanDeviceExampleOptions(nodeId, name)))
 
 {
 
 }
 
-CanDeviceExample::CanDeviceExample(CanDeviceExampleOptions* options):
-	DeviceCanOpen(options),
+CanDeviceExample::CanDeviceExample(std::unique_ptr<CanDeviceExampleOptions>&& options):
+	DeviceCanOpen(std::move(options)),
 	myMeasurement_(0.f)
 {
 
@@ -63,7 +63,7 @@ bool CanDeviceExample::configureDevice(const CanMsg& msg) {
     // explicitly set it to preoperational, just to make sure..
 	printf("configureDevice called\n");
 	setNmtEnterPreOperational();
-	sendSdo(mySdo(getNodeId(), static_cast<const CanDeviceExampleOptions*>(options_)->someParameter));
+	sendSdo(mySdo(getNodeId(), static_cast<const CanDeviceExampleOptions*>(options_.get())->someParameter));
 	setNmtStartRemoteDevice();
 
 	// when returning true, the device is considered as beeing 'active'. return false to leave it in 'missing'

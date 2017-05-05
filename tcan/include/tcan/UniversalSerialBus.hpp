@@ -8,6 +8,7 @@
 #pragma once
 
 #include <termios.h> // tcgettatr
+#include <memory>
 
 #include "tcan/Bus.hpp"
 #include "tcan/UniversalSerialBusOptions.hpp"
@@ -18,7 +19,7 @@ namespace tcan {
 class UniversalSerialBus : public Bus<UsbMsg> {
  public:
     UniversalSerialBus() = delete;
-    UniversalSerialBus(UniversalSerialBusOptions* options);
+    UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions>&& options);
 
     virtual ~UniversalSerialBus();
 

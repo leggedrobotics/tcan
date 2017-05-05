@@ -12,6 +12,7 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_map>
+#include <memory>
 
 #include "tcan/DeviceCanOpenOptions.hpp"
 #include "tcan/CanDevice.hpp"
@@ -50,8 +51,7 @@ class DeviceCanOpen : public CanDevice {
      * @param name		name of the device
      */
     DeviceCanOpen(const uint32_t nodeId, const std::string& name);
-    DeviceCanOpen(CanDeviceOptions* options) = delete;
-    DeviceCanOpen(DeviceCanOpenOptions* options);
+    DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options);
 
     //! Destructor
     virtual ~DeviceCanOpen();

@@ -192,10 +192,10 @@ int main(int argc, char *argv[]) {
 
     Anydrive slave(1, "ANYdrive");
 
-    tcan::EtherCatBusOptions* busOptions = new tcan::EtherCatBusOptions(); // TODO: Why are the options destroyed in the bus destructor?
+    std::unique_ptr<tcan::EtherCatBusOptions> busOptions(new tcan::EtherCatBusOptions());
     busOptions->name_ = argv[1];
     busOptions->asynchronous_ = asynchronous;
-    tcan::EtherCatBus bus(busOptions);
+    tcan::EtherCatBus bus(std::move(busOptions));
     bus.addSlave(&slave);
 
     tcan::EtherCatBusManager busManager;

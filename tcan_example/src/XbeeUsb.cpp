@@ -11,8 +11,8 @@
 
 namespace tcan_example {
 
-XbeeUsb::XbeeUsb(tcan::UniversalSerialBusOptions* options):
-    tcan::UniversalSerialBus(options)
+XbeeUsb::XbeeUsb(std::unique_ptr<tcan::UniversalSerialBusOptions>&& options):
+    tcan::UniversalSerialBus(std::move(options))
 {
 
 }

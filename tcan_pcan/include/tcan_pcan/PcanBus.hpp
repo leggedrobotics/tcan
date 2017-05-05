@@ -1,5 +1,5 @@
 /*
- * SocketBus.hpp
+ * PcanBus.hpp
  *
  *  Created on: Mar 27, 2016
  *      Author: Philipp Leemann
@@ -7,21 +7,21 @@
 
 #pragma once
 
-#include <poll.h>
-#include <memory>
-
 #include "tcan/CanBus.hpp"
-#include "tcan/SocketBusOptions.hpp"
+#include "tcan_pcan/PcanBusOptions.hpp"
+
+#include "pcan_driver/libpcan.h"
 
 namespace tcan {
 
-class SocketBus : public CanBus {
+class PcanBus : public CanBus {
  public:
 
-    SocketBus(const std::string& interface);
-    SocketBus(std::unique_ptr<SocketBusOptions>&& options);
+    PcanBus(const std::string& interface);
+    PcanBus(std::unique_ptr<BusOptions>&& options) = delete;
+    PcanBus(std::unique_ptr<PcanBusOptions>&& options);
 
-    virtual ~SocketBus();
+    virtual ~PcanBus();
 
  protected:
     bool initializeInterface();
@@ -35,7 +35,8 @@ class SocketBus : public CanBus {
     void handleBusError(const can_frame& msg);
 
  protected:
-    pollfd socket_;
+    HANDLE handle_;
+//    pcan_handle pcanHandle_;
 };
 
 } /* namespace tcan */

@@ -12,6 +12,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <memory>
 
 #include "tcan/BusOptions.hpp"
 
@@ -25,11 +26,11 @@ class Bus {
  public:
 
     Bus() = delete;
-    Bus(BusOptions* options):
+    Bus(std::unique_ptr<BusOptions>&& options):
         isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
         isPassive_(options->startPassive_),
-        options_(options),
+        options_(std::move(options)),
         outgointMsgsMutex_(),
         outgoingMsgs_(),
         receiveThread_(),
@@ -44,8 +45,6 @@ class Bus {
     virtual ~Bus()
     {
         stopThreads(true);
-
-        delete options_;
     }
 
 
@@ -136,19 +135,26 @@ class Bus {
 
     inline bool isAsynchronous() const { return options_->asynchronous_; }
 
+    const BusOptions* getOptions() const { return options_.get(); }
+
  public: /// Internal functions
 
     /*! write the message at the front of the queue to the CAN bus
      * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked
      * @return true if a message was successfully written to the bus
      */
-    inline bool writeMessage()
+    inline bool writeMessage(bool& writeError)
     {
+        writeError = false;
         if(outgoingMsgs_.size() != 0) {
             const bool writeSuccess = isPassive_ ? true : writeData( outgoingMsgs_.front() );
             if(writeSuccess) {
                 outgoingMsgs_.pop();
                 return true;
+            }
+            else {
+              writeError = true;
+              return false;
             }
         }
 
@@ -314,7 +320,7 @@ class Bus {
     // if true, the outgoing messages are not sent to the physical bus
     std::atomic<bool> isPassive_;
 
-    const BusOptions* options_;
+    const std::unique_ptr<BusOptions> options_;
 
     // output queue containing all messages to be sent by the transmitThread_
     std::mutex outgointMsgsMutex_;

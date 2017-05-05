@@ -31,8 +31,8 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     typedef std::unordered_map<EtherCatSlave*, TxPdoCallbackPtr> TxPdoCallbackMap;
 
     EtherCatBus() = delete;
-    EtherCatBus(EtherCatBusOptions* options)
-    : Bus<EtherCatDatagrams>(options),
+    EtherCatBus(std::unique_ptr<EtherCatBusOptions>&& options)
+    : Bus<EtherCatDatagrams>(std::move(options)),
       wkcExpected_(0),
       wkc_(0),
       inOP_(false),

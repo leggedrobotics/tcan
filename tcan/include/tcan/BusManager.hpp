@@ -48,18 +48,21 @@ class BusManager {
     }
     /*! Send the messages in the output queue on all buses. Call this function in the control loop if synchronous mode is used.
      */
-    void writeMessagesSynchronous() {
+    bool writeMessagesSynchronous() {
         bool sendingData = true;
-
+        bool writeError = false;
         while(sendingData) {
             sendingData = false;
 
             for(auto bus : buses_) {
                 if(!bus->isAsynchronous()) {
-                    sendingData |= bus->writeMessage();
+                    bool writeErrorLocal;
+                    sendingData |= bus->writeMessage(writeErrorLocal);
+                    writeError |=  writeErrorLocal;
                 }
             }
         }
+        return !writeError;
     }
 
     /*! Call sanityCheck(..) on all buses. Call this function in the control loop if synchronous mode is used.
