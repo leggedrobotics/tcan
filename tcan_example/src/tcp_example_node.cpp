@@ -26,17 +26,16 @@ public:
 
 	virtual ~TcpManager()
 	{
-		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destructed object (parseIncomingSync(..) in this case)
 		closeBuses();
 	}
 
 	void addConnection(const IpId ipId, const std::string& host, const unsigned int port) {
-		tcan::IpBusOptions* options = new tcan::IpBusOptions(host, port);
+	    std::unique_ptr<tcan::IpBusOptions> options(new tcan::IpBusOptions(host, port));
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
 
-		auto connection = new TcpConnection(options);
+		auto connection = new TcpConnection(std::move(options));
 		if(!addBus( connection )) {
 			std::cout << "failed to add Bus " << host << std::endl;
 			exit(-1);

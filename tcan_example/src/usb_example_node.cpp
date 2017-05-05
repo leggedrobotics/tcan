@@ -31,13 +31,13 @@ public:
 	}
 
 	void addUsb(const UsbId usbId, const std::string& interface) {
-		tcan::UniversalSerialBusOptions* options = new tcan::UniversalSerialBusOptions();
+		std::unique_ptr<tcan::UniversalSerialBusOptions> options(new tcan::UniversalSerialBusOptions());
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
 		options->name_ = interface;
 
-		auto bus = new XbeeUsb(options);
+		auto bus = new XbeeUsb(std::move(options));
 		if(!addBus( bus )) {
 			std::cout << "failed to add Bus " << interface << std::endl;
 			exit(-1);

@@ -29,7 +29,7 @@ class CanBus : public Bus<CanMsg> {
     using DeviceContainer = std::vector<CanDevice*>;
 
     CanBus() = delete;
-    CanBus(CanBusOptions* options);
+    CanBus(std::unique_ptr<CanBusOptions>&& options);
 
     virtual ~CanBus();
 
@@ -39,8 +39,8 @@ class CanBus : public Bus<CanMsg> {
      * @return true if successful
      */
     template <class C, typename TOptions>
-    inline std::pair<C*, bool> addDevice(TOptions* options) {
-        C* dev = new C(options);
+    inline std::pair<C*, bool> addDevice(std::unique_ptr<TOptions>&& options) {
+        C* dev = new C(std::move(options));
         bool success = addDevice(dev);
         return std::make_pair(dev, success);
     }
