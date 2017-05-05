@@ -42,6 +42,7 @@ void IpBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const IpBusOptions*>(options_.get())->maxDeviceTimeoutCounter_;
     isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDeviceOrHasError_;
+    allDevicesMissing_ = isMissingDeviceOrHasError_.load();
 }
 
 

@@ -31,6 +31,7 @@ class Bus {
     Bus(std::unique_ptr<BusOptions>&& options):
         isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
+        allDevicesMissing_(false),
         isPassive_(options->startPassive_),
         options_(std::move(options)),
         outgoingMsgsMutex_(),
@@ -116,7 +117,7 @@ class Bus {
     }
 
     /*!
-     * Passivates the bus, thus discarding all outgoing messages
+     * Passivates the bus, thus holding back all outgoing messages until the bus is active again
      */
     inline void passivate() {
         isPassive_ = true;
@@ -137,6 +138,14 @@ class Bus {
      */
     inline bool allDevicesActive() const { return allDevicesActive_; }
 
+    /*!
+     * @return true if all devices are missing
+     */
+    inline bool allDevicesMissing() const { return allDevicesMissing_; }
+
+    /*!
+     * @return true if the bus is configured to be asynchronous
+     */
     inline bool isAsynchronous() const { return options_->asynchronous_; }
 
     /*!
@@ -333,6 +342,9 @@ public: /// Internal functions
 
     //! true if all devices are in active state (we received a message within the timeout)
     std::atomic<bool> allDevicesActive_;
+
+    //! true if all devices handeled by this bus are missing
+    std::atomic<bool> allDevicesMissing_;
 
     //! if true, the outgoing messages are not sent to the physical bus
     std::atomic<bool> isPassive_;

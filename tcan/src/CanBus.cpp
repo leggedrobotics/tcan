@@ -62,6 +62,7 @@ void CanBus::sanityCheck() {
 
     isMissingDeviceOrHasError_ = isMissingOrError;
     allDevicesActive_ = allActive;
+    allDevicesMissing_ = allMissing;
 }
 
 void CanBus::resetAllDevices() {
