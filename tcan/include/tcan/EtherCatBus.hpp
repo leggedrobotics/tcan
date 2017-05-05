@@ -358,7 +358,7 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
      */
     void sanityCheck() {
         uint8_t currentgroup = 0;
-        if (inOP_ && (checkWorkingCounter() || ecatContext_.grouplist[currentgroup].docheckstate)) {
+        if (inOP_ && (!checkWorkingCounter() || ecatContext_.grouplist[currentgroup].docheckstate)) {
             /* one ore more slaves are not responding */
             ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
             ecx_readstate(&ecatContext_);
@@ -520,13 +520,15 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     void checkSlaveErrors() {
-        printf("\nERROR REPORT:\n");
         if (ecx_iserror(&ecatContext_)) {
+            printf("Error report:\n");
             int i = 0;
             do {
                 char* errstr = ecx_elist2string(&ecatContext_);
                 printf("    Error %d: %s", ++i, errstr);
             } while(ecx_iserror(&ecatContext_));
+        } else {
+            printf("No errors.\n");
         }
     }
 
@@ -553,10 +555,10 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     }
 
     void syncDistributedClocks(const uint16_t slave, const bool activate) {
-        MELO_INFO_STREAM("Starting synchronizing clocks ...")
+        MELO_INFO_STREAM((activate ? "Activating" : "Deactivating") << " distributed clock synchronization ...")
         const double timeStep = 1e-3;
         ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), (int64)(timeStep*1e9), (int64)(timeStep*0.5*1e9));
-        MELO_INFO_STREAM("Finished synchronizing clocks.")
+        MELO_INFO_STREAM("Finished " << (activate ? "activating" : "deactivating") << " distributed clock synchronization.")
     }
 
     void sendProcessData() {
@@ -575,6 +577,8 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     void setStateSafeOp() { setState(EC_STATE_SAFE_OP); }
     void setStateOperational() { setState(EC_STATE_OPERATIONAL); }
 
+    void waitForStatePreOp() { waitForState(EC_STATE_PRE_OP); }
+    void waitForStateSafeOp() { waitForState(EC_STATE_SAFE_OP); }
     void waitForStateOperational() { waitForState(EC_STATE_OPERATIONAL); }
 
     void strangeFunction() {
@@ -607,16 +611,25 @@ class EtherCatBus : public Bus<EtherCatDatagrams> {
     void setState(const uint16_t state) {
         ecatContext_.slavelist[0].state = state;
         ecx_writestate(&ecatContext_, 0);
+        MELO_INFO_STREAM("State " << state << " has been set.");
         ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 4);
     }
 
     void waitForState(const uint16_t state) {
-        int chk = 40;
+        const unsigned int maxChecks = 40;
+        unsigned int check = 0;
         do {
             sendProcessData();
             receiveProcessData();
             ecx_statecheck(&ecatContext_, 0, state,  50000);
-        } while (chk-- && (ecatContext_.slavelist[0].state != state));
+            check++;
+        } while (check <= maxChecks && (ecatContext_.slavelist[0].state != state));
+
+        if (check > maxChecks) {
+          MELO_WARN_STREAM("State " << state << " has not been reached.");
+        } else {
+          MELO_INFO_STREAM("State " << state << " has been reached.");
+        }
     }
 
 protected:
