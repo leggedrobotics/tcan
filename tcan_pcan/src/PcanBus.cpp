@@ -140,7 +140,12 @@ bool PcanBus::readData() {
 }
 
 
-bool PcanBus::writeData(const CanMsg& cmsg) {
+bool PcanBus::writeData(std::unique_lock<std::mutex>* lock) {
+    CanMsg cmsg = outgoingMsgs_.front();
+    if(lock != nullptr) {
+        lock->unlock();
+    }
+
     DWORD status;
     TPCANMsg msg;
     msg.ID = cmsg.getCobId();
@@ -150,9 +155,11 @@ bool PcanBus::writeData(const CanMsg& cmsg) {
 
     status = LINUX_CAN_Write_Timeout(handle_, &msg, 20);
 
-//    if(status != CAN_ERR_OK) {
-//      return false;
-//    }
+    if(lock != nullptr) {
+        lock->lock();
+    }
+    outgoingMsgs_.pop_front();
+
     return true;
 }
 
