@@ -4,11 +4,11 @@
 // tcan
 #include <tcan/EtherCatSlave.hpp>
 
-// tcan example
-#include <tcan_example/Dsp402.hpp>
+// tcan ethercat example
+#include "tcan_ethercat_example/Dsp402.hpp"
 
 
-namespace tcan_example {
+namespace tcan_ethercat_example {
 
 
 struct AnydriveIndata

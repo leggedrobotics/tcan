@@ -6,18 +6,24 @@
 
 The source code is released under a [proprietary license](LICENSE).
 
-**Author(s):** Philipp Leemann, Christian Gehring
+**Author(s):** Philipp Leemann, Christian Gehring, Remo Diethelm
 
 ## Dependencies
 
-- [message_logger](https://bitbucket.org/ethz-asl-lr/message_logger)
+Common
+
+- [message_logger](https://bitbucket.org/leggedrobotics/message_logger)
+
+Ethercat
+
+- [openethercat_soem](https://bitbucket.org/leggedrobotics/openethercat_soem)
 
 
-## Usage ##
+## Usage
 
 See tcan_example for an easy example how to use tcan library. tcan has two modes: synchronous and asynchronous:
 
-- In asynchronous mode, the library creates three threads for each bus: a thread that handles incoming CAN messages, one that sends outgoing CAN messages and one that checks if devices/SDOs have timed out (sanityCheck). 
+- In asynchronous mode, the library creates three threads for each bus: a thread that handles incoming CAN messages, one that sends outgoing CAN messages and one that checks if devices/SDOs have timed out (sanityCheck).
 - In synchronous mode, it is up to the user to call the BusManagers readMessagesSynchrounous(), writeMessagesSynchronous() and sanityCheckSynchronous() functions in his main loop.
 
 
@@ -120,7 +126,7 @@ To set the baudrate, the above ```ip``` command cannot be used, do the following
 echo "i 0x001C" > /dev/pcan0
 ```
 
-where ```0x001C``` is a hex representation of the baudrate, which can be taken from the following table: 
+where ```0x001C``` is a hex representation of the baudrate, which can be taken from the following table:
 
 | hex | bitrate |
 |---|---|

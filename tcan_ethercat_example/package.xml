@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tcan_ethercat_example</name>
+  <version>0.0.1</version>
+  <description>The tcan_ethercat_example package</description>
+
+  <maintainer email="diethelm@mavt.ethz.ch">Remo Diethelm</maintainer>
+  <license>Proprietary</license>
+  <author email="pleemann@ethz.ch">Philipp Leemann</author>
+  <author email="diethelm@mavt.ethz.ch">Remo Diethelm</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>tcan_ethercat</depend>
+
+  <export>
+  </export>
+</package>

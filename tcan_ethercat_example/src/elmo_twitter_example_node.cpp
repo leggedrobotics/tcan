@@ -4,13 +4,13 @@
 #include "tcan/EtherCatBus.hpp"
 #include "tcan/EtherCatBusManager.hpp"
 
-#include "tcan_example/Anydrive.hpp"
+#include "tcan_ethercat_example/ElmoTwitter.hpp"
 
 
-using namespace tcan_example;
+using namespace tcan_ethercat_example;
 
 
-tcan::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
+tcan::EtherCatDatagrams createDatagrams(ElmoTwitterOutdata& outdata) {
 
     static int test_step=0;
     static int step_counter=0;
@@ -153,20 +153,20 @@ tcan::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
     step_counter++;
 
     // Write to output buffer
-    uint8_t databuffer[32];
-    for (unsigned int i = 0; i < 32; i++)
-      databuffer[i] = 0;
+    char databuffer[4];
     databuffer[0] = ((outdata.controlword.all >> 0) & 0xff);
     databuffer[1] = ((outdata.controlword.all >> 8) & 0xff);
+    databuffer[2] = ((outdata.torque >> 0) & 0xff);
+    databuffer[3] = ((outdata.torque >> 8) & 0xff);
 
     tcan::EtherCatDatagrams datagrams;
     tcan::EtherCatDatagram rxDatagram;
-    rxDatagram.resize(32);
+    rxDatagram.resize(4);
     rxDatagram.setZero();
     tcan::EtherCatDatagram txDatagram;
-    txDatagram.resize(56);
+    txDatagram.resize(21);
     txDatagram.setZero();
-    memcpy(rxDatagram.data_, &databuffer[0], 32);
+    memcpy(rxDatagram.data_, &databuffer[0], 4);
     datagrams.rxAndTxPdoDatagrams_.insert({1, {rxDatagram, txDatagram}});
     return datagrams;
 }
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, signal_handler);
 
-    Anydrive slave(1, "ANYdrive");
+    ElmoTwitter slave(1, "? M:0000009a I:00030924");
 
     std::unique_ptr<tcan::EtherCatBusOptions> busOptions(new tcan::EtherCatBusOptions());
     busOptions->name_ = argv[1];
@@ -220,8 +220,8 @@ int main(int argc, char *argv[]) {
             busManager.sanityCheckSynchronous();
         }
 
-        AnydriveOutdata outdata;
-        AnydriveIndata indata;
+        ElmoTwitterOutdata outdata;
+        ElmoTwitterIndata indata;
 
         // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
         bus.emplaceMessage(createDatagrams(outdata));
@@ -232,8 +232,8 @@ int main(int argc, char *argv[]) {
             if(++print_counter >= 5) {
                 printf("Processdata cycle %4d", i++);
                 // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
-                printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.desired_joint_position);
-                printf(", Feedback Data: 0x%4x, %4d, %8d, %16d, %16d, %16d", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
+                printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.torque);
+                printf(", Feedback Data: 0x%4x, %8d, %8d, %8d, %8d", indata.statusword.all, indata.position, indata.velocity, indata.busvoltage, indata.motorcurrent);
                 printf("\r");
                 print_counter = 0;
             }

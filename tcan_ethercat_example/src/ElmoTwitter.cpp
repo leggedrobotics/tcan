@@ -2,10 +2,10 @@
 #include <tcan/EtherCatBus.hpp>
 
 // tcan example
-#include "tcan_example/ElmoTwitter.hpp"
+#include "tcan_ethercat_example/ElmoTwitter.hpp"
 
 
-namespace tcan_example {
+namespace tcan_ethercat_example {
 
 
 ElmoTwitter::ElmoTwitter(const uint32_t address, const std::string& name)

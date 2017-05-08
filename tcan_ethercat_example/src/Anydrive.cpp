@@ -1,11 +1,11 @@
 // tcan
 #include <tcan/EtherCatBus.hpp>
 
-// tcan example
-#include "tcan_example/Anydrive.hpp"
+// tcan ethercat example
+#include "tcan_ethercat_example/Anydrive.hpp"
 
 
-namespace tcan_example {
+namespace tcan_ethercat_example {
 
 
 Anydrive::Anydrive(const uint32_t address, const std::string& name)

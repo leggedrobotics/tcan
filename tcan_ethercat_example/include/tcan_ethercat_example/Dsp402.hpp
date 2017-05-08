@@ -1,11 +1,11 @@
 #pragma once
 
 
-// tcan
-#include "../../../tcan/include/tcan/EtherCatSlave.hpp"
+// tcan ethercat
+#include "tcan_ethercat/EtherCatSlave.hpp"
 
 
-namespace tcan_example {
+namespace tcan_ethercat_example {
 
 enum class Dsp402Command
 {
@@ -107,4 +107,4 @@ inline void printControlword(Dsp402Controlword controlword)
 
 
 
-} // tcan_example
+} // tcan_ethercat_example
