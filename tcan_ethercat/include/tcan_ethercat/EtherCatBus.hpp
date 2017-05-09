@@ -242,7 +242,14 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
          * When the mapping is done SOEM requests slaves to enter SAFE_OP.
          */
         ecx_config_map_group(&ecatContext_, &IOmap_, 0);
-        ecx_configdc(&ecatContext_);
+        printDcState();
+        MELO_INFO_STREAM("Locating and measuring distributed clocks ...");
+        if (ecx_configdc(&ecatContext_)) {
+            MELO_INFO_STREAM("Distributed clocks located and measured.");
+        } else {
+            MELO_INFO_STREAM("No distributed clocks located and measured.");
+        }
+        printDcState();
 
         printf("Slaves mapped, state to SAFE_OP.\n");
         /* wait for all slaves to reach SAFE_OP state */
@@ -271,6 +278,8 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         printf("Calculated workcounter %d\n", wkcExpected_.load());
 
         // Initialize the communication interfaces of all slaves.
+        strangeFunction();
+        checkSlaveErrors();
         checkSlaveStates();
         for (EtherCatSlave* slave : slaves_) {
             if (!slave->initializeInterface()) {
@@ -509,9 +518,29 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
     }
 
+    void printDcState() {
+        MELO_INFO_STREAM("DC state:");
+        MELO_INFO_STREAM("DC time: " << *ecatContext_.DCtime);
+        MELO_INFO_STREAM("DC tO: " << ecatContext_.DCtO);
+        MELO_INFO_STREAM("DC l: " << ecatContext_.DCl);
+        for (int i = 0; i <= *ecatContext_.slavecount; i++) {
+            MELO_INFO_STREAM("  Slave " << i << ": " << std::string(ecatContext_.slavelist[i].name));
+            MELO_INFO_STREAM("    Has DC: " << static_cast<bool>(ecatContext_.slavelist[i].hasdc));
+            MELO_INFO_STREAM("    DC active: " << static_cast<bool>(ecatContext_.slavelist[i].DCactive));
+            MELO_INFO_STREAM("    DC cycle: " << ecatContext_.slavelist[i].DCcycle);
+            MELO_INFO_STREAM("    DC previous: " << ecatContext_.slavelist[i].DCnext);
+            MELO_INFO_STREAM("    DC next: " << ecatContext_.slavelist[i].DCprevious);
+            MELO_INFO_STREAM("    DC rt A: " << ecatContext_.slavelist[i].DCrtA);
+            MELO_INFO_STREAM("    DC rt B: " << ecatContext_.slavelist[i].DCrtB);
+            MELO_INFO_STREAM("    DC rt C: " << ecatContext_.slavelist[i].DCrtC);
+            MELO_INFO_STREAM("    DC rt D: " << ecatContext_.slavelist[i].DCrtD);
+            MELO_INFO_STREAM("    DC shift: " << ecatContext_.slavelist[i].DCshift);
+        }
+    }
+
     void checkSlaveStates() {
         int slavestate = ecx_readstate(&ecatContext_);
-        printf("\nSlave EtherCAT StateMachine state is 0x%x\n", slavestate);
+        printf("Slave EtherCAT StateMachine state is 0x%x\n", slavestate);
 
         int sdodata = 0;
         int sdodatasize = sizeof(int);
@@ -520,15 +549,14 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     void checkSlaveErrors() {
+        MELO_INFO_STREAM("Error report:");
         if (ecx_iserror(&ecatContext_)) {
-            printf("Error report:\n");
             int i = 0;
             do {
-                char* errstr = ecx_elist2string(&ecatContext_);
-                printf("    Error %d: %s", ++i, errstr);
+                MELO_INFO_STREAM("  Error " << ++i << ": " << ecx_elist2string(&ecatContext_));
             } while(ecx_iserror(&ecatContext_));
         } else {
-            printf("No errors.\n");
+            MELO_INFO_STREAM("No errors.");
         }
     }
 
@@ -557,7 +585,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     void syncDistributedClocks(const uint16_t slave, const bool activate) {
         MELO_INFO_STREAM((activate ? "Activating" : "Deactivating") << " distributed clock synchronization ...")
         const double timeStep = 1e-3;
-        ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), (int64)(timeStep*1e9), (int64)(timeStep*0.5*1e9));
+        ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), static_cast<uint32>(timeStep*1e9), static_cast<int32>(timeStep*0.5*1e9));
         MELO_INFO_STREAM("Finished " << (activate ? "activating" : "deactivating") << " distributed clock synchronization.")
     }
 
@@ -612,7 +640,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         ecatContext_.slavelist[0].state = state;
         ecx_writestate(&ecatContext_, 0);
         MELO_INFO_STREAM("State " << state << " has been set.");
-        ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 4);
+        ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 2);
     }
 
     void waitForState(const uint16_t state) {
@@ -623,9 +651,10 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             receiveProcessData();
             ecx_statecheck(&ecatContext_, 0, state,  50000);
             check++;
+            MELO_INFO_STREAM("Check " << check);
         } while (check <= maxChecks && (ecatContext_.slavelist[0].state != state));
 
-        if (check > maxChecks) {
+        if (ecatContext_.slavelist[0].state != state) {
           MELO_WARN_STREAM("State " << state << " has not been reached.");
         } else {
           MELO_INFO_STREAM("State " << state << " has been reached.");

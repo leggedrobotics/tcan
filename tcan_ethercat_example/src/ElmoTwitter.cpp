@@ -1,7 +1,7 @@
-// tcan
-#include <tcan/EtherCatBus.hpp>
+// tcan ethercat
+#include <tcan_ethercat/EtherCatBus.hpp>
 
-// tcan example
+// tcan ethercat example
 #include "tcan_ethercat_example/ElmoTwitter.hpp"
 
 
@@ -9,7 +9,7 @@ namespace tcan_ethercat_example {
 
 
 ElmoTwitter::ElmoTwitter(const uint32_t address, const std::string& name)
-: tcan::EtherCatSlave(address, name) {}
+: tcan_ethercat::EtherCatSlave(address, name) {}
 
 void ElmoTwitter::printStatusInfo() {
     MELO_INFO_STREAM("Status info:");

@@ -3,7 +3,6 @@ project(tcan)
 
 find_package(catkin REQUIRED COMPONENTS
   message_logger
-  soem
 )
 
 ###################################
@@ -12,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS message_logger soem
+  CATKIN_DEPENDS message_logger
 )
 
 ###########
@@ -36,8 +35,6 @@ add_library(${PROJECT_NAME}
   src/UniversalSerialBus.cpp
   src/IpBus.cpp
   src/DeviceCanOpen.cpp
-  src/EtherCatBusManager.cpp
-  src/EtherCatSlave.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

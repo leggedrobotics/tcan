@@ -1,8 +1,8 @@
 #include <signal.h>
 #include <unordered_map>
 
-#include "tcan/EtherCatBus.hpp"
-#include "tcan/EtherCatBusManager.hpp"
+#include "tcan_ethercat/EtherCatBus.hpp"
+#include "tcan_ethercat/EtherCatBusManager.hpp"
 
 #include "tcan_ethercat_example/Anydrive.hpp"
 
@@ -10,7 +10,7 @@
 using namespace tcan_ethercat_example;
 
 
-tcan::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
+tcan_ethercat::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
 
     static int test_step=0;
     static int step_counter=0;
@@ -159,11 +159,11 @@ tcan::EtherCatDatagrams createDatagrams(AnydriveOutdata& outdata) {
     databuffer[0] = ((outdata.controlword.all >> 0) & 0xff);
     databuffer[1] = ((outdata.controlword.all >> 8) & 0xff);
 
-    tcan::EtherCatDatagrams datagrams;
-    tcan::EtherCatDatagram rxDatagram;
+    tcan_ethercat::EtherCatDatagrams datagrams;
+    tcan_ethercat::EtherCatDatagram rxDatagram;
     rxDatagram.resize(32);
     rxDatagram.setZero();
-    tcan::EtherCatDatagram txDatagram;
+    tcan_ethercat::EtherCatDatagram txDatagram;
     txDatagram.resize(56);
     txDatagram.setZero();
     memcpy(rxDatagram.data_, &databuffer[0], 32);
@@ -192,13 +192,13 @@ int main(int argc, char *argv[]) {
 
     Anydrive slave(1, "ANYdrive");
 
-    std::unique_ptr<tcan::EtherCatBusOptions> busOptions(new tcan::EtherCatBusOptions());
+    std::unique_ptr<tcan_ethercat::EtherCatBusOptions> busOptions(new tcan_ethercat::EtherCatBusOptions());
     busOptions->name_ = argv[1];
     busOptions->asynchronous_ = asynchronous;
-    tcan::EtherCatBus bus(std::move(busOptions));
+    tcan_ethercat::EtherCatBus bus(std::move(busOptions));
     bus.addSlave(&slave);
 
-    tcan::EtherCatBusManager busManager;
+    tcan_ethercat::EtherCatBusManager busManager;
     if (!busManager.addBus(&bus)) {
         MELO_ERROR_STREAM("Bus could not be added.");
         return 0;

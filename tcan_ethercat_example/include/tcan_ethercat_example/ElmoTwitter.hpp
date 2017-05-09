@@ -1,8 +1,8 @@
 #pragma once
 
 
-// tcan
-#include <tcan/EtherCatSlave.hpp>
+// tcan ethercat
+#include <tcan_ethercat/EtherCatSlave.hpp>
 
 // tcan ethercat example
 #include "tcan_ethercat_example/Dsp402.hpp"
@@ -104,7 +104,7 @@ void readValue(uint8_t* data, const uint16_t pos, Value& value) {
     }
 }
 
-inline ElmoTwitterIndata createIndata(const tcan::EtherCatDatagram& datagram)
+inline ElmoTwitterIndata createIndata(const tcan_ethercat::EtherCatDatagram& datagram)
 {
     // Get data
     uint8_t databuffer[21];
@@ -133,7 +133,7 @@ inline ElmoTwitterIndata createIndata(const tcan::EtherCatDatagram& datagram)
 
 
 
-class ElmoTwitter : public tcan::EtherCatSlave {
+class ElmoTwitter : public tcan_ethercat::EtherCatSlave {
  public:
     ElmoTwitter(const uint32_t address, const std::string& name);
 

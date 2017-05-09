@@ -1,8 +1,8 @@
 #pragma once
 
 
-// tcan
-#include <tcan/EtherCatSlave.hpp>
+// tcan ethercat
+#include <tcan_ethercat/EtherCatSlave.hpp>
 
 // tcan ethercat example
 #include "tcan_ethercat_example/Dsp402.hpp"
@@ -119,7 +119,7 @@ void readValue(uint8_t* data, const uint16_t pos, Value& value) {
     }
 }
 
-inline AnydriveIndata createIndata(const tcan::EtherCatDatagram& datagram)
+inline AnydriveIndata createIndata(const tcan_ethercat::EtherCatDatagram& datagram)
 {
     // Get data
     uint8_t databuffer[56];
@@ -145,7 +145,7 @@ inline AnydriveIndata createIndata(const tcan::EtherCatDatagram& datagram)
 
 
 
-class Anydrive : public tcan::EtherCatSlave {
+class Anydrive : public tcan_ethercat::EtherCatSlave {
  public:
     Anydrive(const uint32_t address, const std::string& name);
 
