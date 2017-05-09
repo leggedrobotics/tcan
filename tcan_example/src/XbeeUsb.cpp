@@ -23,6 +23,11 @@ XbeeUsb::~XbeeUsb()
 
 void XbeeUsb::handleMessage(const tcan::UsbMsg& msg) {
     std::cout << " got data: " << msg.getData() << std::endl;
+
+
+    // clear the error message flag, indicating that the received message is valid.
+    // This is used for the passive bus option
+    errorMsgFlag_ = false;
 }
 
 } /* namespace tcan */

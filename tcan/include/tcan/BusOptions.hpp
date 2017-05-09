@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <sys/time.h> // for timeval
 
 namespace tcan {
 
@@ -27,9 +28,12 @@ struct BusOptions {
         maxQueueSize_(1000),
         name_(name),
         startPassive_(false),
-        activateBusOnReception_(false)
+        activateBusOnReception_(false),
+        synchronousBlockingWrite_(true),
+        readTimeout_{1, 0},
+        writeTimeout_{1,0},
+        errorThrottleTime_(0.0)
     {
-
     }
 
     virtual ~BusOptions() { }
@@ -55,6 +59,17 @@ struct BusOptions {
 
     //! if true, the bus will automatically switch from passive to active state as soon as a message is received
     bool activateBusOnReception_;
+
+    //! Whether write calls are blocking in synchrounous mode. Doing so ensures that all messages in the
+    //! output queue are sent when calling BusManager::writeMessagesSynchronous(), but may increase its execution time.
+    bool synchronousBlockingWrite_;
+
+    //! timeouts for read and write operations on the interface. Set to zero to leave default (infinity)
+    timeval readTimeout_;
+    timeval writeTimeout_;
+
+    //! throttle time for MELO outputs
+    double errorThrottleTime_;
 };
 
 } /* namespace tcan */

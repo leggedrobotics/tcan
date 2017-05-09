@@ -37,6 +37,7 @@ void UniversalSerialBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_.get())->maxDeviceTimeoutCounter;
     isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDeviceOrHasError_;
+    allDevicesMissing_ = isMissingDeviceOrHasError_.load();
 }
 
 
@@ -52,62 +53,91 @@ bool UniversalSerialBus::initializeInterface() {
 
     configureInterface();
 
+    // note that there is no way (is there?) to have a read/write timout on file descriptors.
+    // so we have to make the fd nonblocking and poll depending on the mode (sync/async)
     // set nonblocking
-    int flags = fcntl(fileDescriptor_, F_GETFL, 0);
+    int flags;
+    if( (flags = fcntl(fileDescriptor_, F_GETFL, 0)) == -1) flags = 0;
     fcntl(fileDescriptor_, F_SETFL, flags | O_NONBLOCK);
 
     return true;
 }
 
 bool UniversalSerialBus::readData() {
-    pollfd fds = {fileDescriptor_, POLLIN, 0};
 
-    const int ret = poll( &fds, 1, 1000 );
+    int ret;
+    if(options_->asynchronous_) {
+        pollfd fds = {fileDescriptor_, POLLIN, 0};
 
-    if ( ret == -1 ) {
-        MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
-        return false;
-    }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
-        // poll timed out, without being able to read => return silently
-        return false;
-    }else{
-        const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_.get())->bufferSize;
-        uint8_t buf[bufSize+1]; // +1 to have space for terminating \0
-        const int bytes_read = read( fileDescriptor_, &buf, bufSize);
-        //  printf("CanManager_ bytes read: %i\n", bytes_read);
+        ret = poll( &fds, 1, calculateTimeoutMs(options_->readTimeout_) );
 
-        if(bytes_read<=0) {
-            // failed to read something even with poll(..) reporting availabe data => raise error
-            MELO_ERROR("read failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+        if ( ret == -1 ) {
+            MELO_ERROR("polling for fileDescriptor readability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
             return false;
-        } else {
-            buf[bytes_read] = '\0';
-            handleMessage( UsbMsg(bytes_read, buf) );
+        }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
+            // poll timed out, without being able to read => return silently
+            return false;
+        }else{
+            // there is something in the fd ready to be read -> continue
         }
+    }
+
+    const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_.get())->bufferSize;
+    uint8_t buf[bufSize+1]; // +1 to have space for terminating \0
+    const int bytes_read = read( fileDescriptor_, &buf, bufSize);
+    //  printf("CanManager_ bytes read: %i\n", bytes_read);
+
+    if(bytes_read <= 0) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
+            MELO_ERROR("read failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
+        }
+        return false;
+    } else {
+        buf[bytes_read] = '\0';
+        handleMessage( UsbMsg(bytes_read, buf) );
     }
 
     return true;
 }
 
-bool UniversalSerialBus::writeData(const UsbMsg& msg) {
-    pollfd fds = {fileDescriptor_, POLLOUT, 0};
+bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
 
-    int ret = poll( &fds, 1, 1000 );
+    UsbMsg msg = outgoingMsgs_.front();
+    if(lock != nullptr) {
+        lock->unlock();
+    }
 
-    if ( ret == -1 ) {
-        MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
-        return false;
-    }else if ( ret == 0 || !(fds.revents & POLLOUT) ) {
-        // poll timed out, without being able to read => raise error
-        MELO_WARN("polling for fileDescriptor writeability timed out for bus %s. Overflow?", options_->name_.c_str());
-        return false;
-    }else{
-        if( ( ret = write(fileDescriptor_, msg.getData(), msg.getLength()) ) != static_cast<int>(msg.getLength())) {
-            MELO_ERROR("Error at sending USB message on bus %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
+    int ret;
+    if(options_->asynchronous_ || options_->synchronousBlockingWrite_) {
+        pollfd fds = {fileDescriptor_, POLLOUT, 0};
+
+        ret = poll( &fds, 1, calculateTimeoutMs(options_->writeTimeout_) );
+
+        if ( ret == -1 ) {
+            MELO_ERROR("polling for fileDescriptor writeability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
             return false;
+        }else if ( ret == 0 || !(fds.revents & POLLOUT) ) {
+            // poll timed out, without being able to read => raise error
+            MELO_WARN("polling for fileDescriptor writeability timed out for interface %s. Overflow?", options_->name_.c_str());
+            return false;
+        }else{
+            // poll successful -> continue
         }
     }
-    return true;
+
+    if( ( ret = write(fileDescriptor_, msg.getData(), msg.getLength()) ) != static_cast<int>(msg.getLength())) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
+            MELO_ERROR("Error at sending USB message on interface %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
+        }
+    }else{
+        if(lock != nullptr) {
+            lock->lock();
+        }
+        outgoingMsgs_.pop_front();
+        return true;
+    }
+
+    return false;
 }
 
 

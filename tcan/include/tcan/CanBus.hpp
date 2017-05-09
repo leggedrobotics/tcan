@@ -80,21 +80,6 @@ class CanBus : public Bus<CanMsg> {
     }
 
     /*!
-     * @return true if a bus error message has been received
-     */
-    inline bool hadBusError() const { return busErrorFlag_; }
-
-    /*!
-     * resets the bus error flag and returns its previous value.
-     * @return true if a bus error message has been received
-     */
-    inline bool resetBusError() {
-        bool tmp = busErrorFlag_;
-        busErrorFlag_ = false;
-        return tmp;
-    }
-
-    /*!
      * @return  Container with all devices handled by this bus
      */
     const DeviceContainer& getDeviceContainer() const { return devices_; }
@@ -112,7 +97,7 @@ class CanBus : public Bus<CanMsg> {
         sendMessageWithoutLock(CanMsg(0x80, 0, nullptr));
     }
 
-    /*! Is called after reception of a message. Routes the message to the callback.
+    /*! Is called after reception of a message. Routes the message to the callback and clears the errorMsgFlag_
      * @param cmsg	reference to the can message
      */
     void handleMessage(const CanMsg& cmsg);
@@ -127,9 +112,6 @@ class CanBus : public Bus<CanMsg> {
 
     // map mapping COB id to parse functions
     CobIdToFunctionMap cobIdToFunctionMap_;
-
-    // flag to indicate the reception of a bus error message
-    std::atomic<bool> busErrorFlag_;
 };
 
 } /* namespace tcan */

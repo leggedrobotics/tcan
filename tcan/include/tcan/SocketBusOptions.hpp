@@ -25,16 +25,8 @@ struct SocketBusOptions : public CanBusOptions {
         loopback_(false),
         sndBufLength_(0),
         canErrorMask_(CAN_ERR_MASK),
-        canFilters_(),
-        setReadTimeout_(true),
-        setWriteTimeout_(true),
-        usePoll_(true),
-        canErrorThrottleTime_(0.0)
+        canFilters_()
     {
-      readTimeout_.tv_sec = 1;
-      readTimeout_.tv_usec = 0;
-      writeTimeout_.tv_sec = 1;
-      writeTimeout_.tv_usec = 0;
     }
 
     virtual ~SocketBusOptions() { }
@@ -47,7 +39,8 @@ struct SocketBusOptions : public CanBusOptions {
     // The minimum length is 1024, set 0 to keep the default
     unsigned int sndBufLength_;
 
-    //! error mask. By default, subscribe to all error messages
+    //! error mask. By default, subscribe to all error messages. It may be a good idea to disable CAN_ERR_LOSTARB, as this is normal
+    // bus behavior.
     // see https://www.kernel.org/doc/Documentation/networking/can.txt
     unsigned int canErrorMask_;
 
@@ -55,15 +48,6 @@ struct SocketBusOptions : public CanBusOptions {
     //! vector of can filters to be applied
     // see https://www.kernel.org/doc/Documentation/networking/can.txt
     std::vector<can_filter> canFilters_;
-
-    bool setReadTimeout_;
-    timeval readTimeout_;
-
-    bool setWriteTimeout_;
-    timeval writeTimeout_;
-
-    bool usePoll_;
-    double canErrorThrottleTime_;
 };
 
 } /* namespace tcan */

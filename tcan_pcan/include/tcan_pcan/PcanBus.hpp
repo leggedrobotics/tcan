@@ -26,7 +26,7 @@ class PcanBus : public CanBus {
  protected:
     bool initializeInterface();
     bool readData();
-    bool writeData(const CanMsg& cmsg);
+    bool writeData(std::unique_lock<std::mutex>* lock);
 
     /*!
      * Is called on reception of a bus error message. Sets the flag

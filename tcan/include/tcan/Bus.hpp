@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <queue>
+#include <deque>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -25,20 +25,25 @@ template <class Msg>
 class Bus {
  public:
 
+    using MsgQueue = std::deque<Msg>;
+
     Bus() = delete;
     Bus(std::unique_ptr<BusOptions>&& options):
         isMissingDeviceOrHasError_(false),
         allDevicesActive_(false),
+        allDevicesMissing_(false),
         isPassive_(options->startPassive_),
         options_(std::move(options)),
-        outgointMsgsMutex_(),
+        outgoingMsgsMutex_(),
         outgoingMsgs_(),
         receiveThread_(),
         transmitThread_(),
         sanityCheckThread_(),
         running_(false),
         condTransmitThread_(),
-        condOutputQueueEmpty_()
+        condOutputQueueEmpty_(),
+        errorMsgFlagPersistent_(false),
+        errorMsgFlag_(false)
     {
     }
 
@@ -90,18 +95,18 @@ class Bus {
     /*! Copy a message to be sent to the output queue
      * @param msg	const reference to the message to be sent
      */
-    inline void sendMessage(const Msg& msg) {
-        std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-        sendMessageWithoutLock(msg);
+    inline bool sendMessage(const Msg& msg) {
+        std::lock_guard<std::mutex> guard(outgoingMsgsMutex_);
+        return sendMessageWithoutLock(msg);
     }
 
     /*!
      * Move a massage to be sent to the output queue
      * @param msg   message to be sent
      */
-    inline void emplaceMessage(Msg&& msg) {
-        std::lock_guard<std::mutex> guard(outgointMsgsMutex_);
-        emplaceMessageWithoutLock(std::forward<Msg>(msg));
+    inline bool emplaceMessage(Msg&& msg) {
+        std::lock_guard<std::mutex> guard(outgoingMsgsMutex_);
+        return emplaceMessageWithoutLock(std::forward<Msg>(msg));
     }
 
     /*!
@@ -112,7 +117,7 @@ class Bus {
     }
 
     /*!
-     * Passivates the bus, thus discarding all outgoing messages
+     * Passivates the bus, thus holding back all outgoing messages until the bus is active again
      */
     inline void passivate() {
         isPassive_ = true;
@@ -133,32 +138,49 @@ class Bus {
      */
     inline bool allDevicesActive() const { return allDevicesActive_; }
 
+    /*!
+     * @return true if all devices are missing
+     */
+    inline bool allDevicesMissing() const { return allDevicesMissing_; }
+
+    /*!
+     * @return true if the bus is configured to be asynchronous
+     */
     inline bool isAsynchronous() const { return options_->asynchronous_; }
+
+    /*!
+     * @return  number of messages in the output queue
+     */
+    unsigned int getNumOutogingMessagesWithoutLock() const { return outgoingMsgs_.size(); }
 
     const BusOptions* getOptions() const { return options_.get(); }
 
- public: /// Internal functions
+    /*!
+     * @return true if a bus error message has been received
+     */
+    inline bool getErrorMsgFlag() const { return errorMsgFlagPersistent_; }
 
-    /*! write the message at the front of the queue to the CAN bus
-     * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked
+    /*!
+     * resets the bus error flag and returns its previous value.
+     * @return true if a bus error message has been received
+     */
+    inline bool resetErrorMsgFlag() {
+        bool tmp = errorMsgFlagPersistent_;
+        errorMsgFlagPersistent_ = false;
+        return tmp;
+    }
+
+
+public: /// Internal functions
+
+    /*! write the message(s) at the front of the queue to the CAN bus
+     * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked,
+     * and if there is something in the queue is NOT checked.
      * @return true if a message was successfully written to the bus
      */
-    inline bool writeMessage(bool& writeError)
+    inline bool writeMessagesWithoutLock()
     {
-        writeError = false;
-        if(outgoingMsgs_.size() != 0) {
-            const bool writeSuccess = isPassive_ ? true : writeData( outgoingMsgs_.front() );
-            if(writeSuccess) {
-                outgoingMsgs_.pop();
-                return true;
-            }
-            else {
-              writeError = true;
-              return false;
-            }
-        }
-
-        return false;
+        return isPassive_ ? true : writeData( nullptr );
     }
 
     /*! read and parse a message from the bus
@@ -167,7 +189,7 @@ class Bus {
     inline bool readMessage()
     {
         if(readData()) {
-            if(isPassive_ && options_->activateBusOnReception_) {
+            if(isPassive_ && options_->activateBusOnReception_ && !errorMsgFlag_) {
                 isPassive_ = false;
                 MELO_WARN("Auto-activated bus %s", options_->name_.c_str());
             }
@@ -208,7 +230,7 @@ class Bus {
      */
     void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
     {
-        lock = std::unique_lock<std::mutex>(outgointMsgsMutex_);
+        lock = std::unique_lock<std::mutex>(outgoingMsgsMutex_);
         condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
     }
 
@@ -218,66 +240,70 @@ class Bus {
      */
     virtual bool initializeInterface() = 0;
 
-    /*! read CAN message from the device driver
+    /*! read CAN message from the device driver. This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
+     * It shall set errorMsgFlag_ and errorMsgFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
+     * and set errorMsgFlag_ to false on successfull reads of non-error messages.
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() = 0;
 
-    /*! write CAN message to the device driver
-     * @return true if the message was successfully written
+    /*! write CAN message to the device driver.  This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
+     * @param lock      pointer to the lock protecting the output queue, which is in LOCKED state when the function is called.
+     *                  Use nullptr if queue is unprotected.
+     * @return          True if no error occured
      */
-    virtual bool writeData(const Msg& msg) = 0;
+    virtual bool writeData(std::unique_lock<std::mutex>* lock) = 0;
 
-    /*! Internal function. Is called after reception of a message.
-     * Routes the message to the callback.
+    /*! Is called after reception of a message, routes the message to the callbacks.
      * @param cmsg  reference to the can message
      */
     virtual void handleMessage(const Msg& msg) = 0;
 
-
+    /*! Helper function for transmission thread.
+     * @return  True if message(s) were successfully sent.
+     */
     bool processOutputQueue() {
-        std::unique_lock<std::mutex> lock(outgointMsgsMutex_);
+        std::unique_lock<std::mutex> lock(outgoingMsgsMutex_);
 
         while(outgoingMsgs_.size() == 0 && running_) {
             condOutputQueueEmpty_.notify_all();
             condTransmitThread_.wait(lock);
         }
-        // after the wait function we own the lock. copy data and unlock.
+        // after the wait function we own the lock.
 
         if(!running_) {
             return true;
         }
 
-        Msg msg = outgoingMsgs_.front();
-        lock.unlock();
-
-        const bool writeSuccess = isPassive_ ? true : writeData( msg );
-
-        if(writeSuccess) {
-            // only pop the message from the queue if sending was successful
-            lock.lock();
-            outgoingMsgs_.pop();
-        }
-
-        return writeSuccess;
+        return isPassive_ ? true : writeData( &lock );
     }
 
-    inline void checkOutgoingMsgsSize() const {
+    inline bool checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
-            MELO_WARN("Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            MELO_WARN_THROTTLE(options_->errorThrottleTime_, "Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            return false;
         }
+        return true;
     }
 
-    inline void sendMessageWithoutLock(const Msg& msg) {
-        checkOutgoingMsgsSize();
-        outgoingMsgs_.push( msg );
-        condTransmitThread_.notify_all();
+    inline bool sendMessageWithoutLock(const Msg& msg) {
+        if(checkOutgoingMsgsSize()) {
+            outgoingMsgs_.push_back( msg );
+            condTransmitThread_.notify_all();
+            return true;
+        }
+
+        return false;
     }
 
-    inline void emplaceMessageWithoutLock(Msg&& msg) {
-        checkOutgoingMsgsSize();
-        outgoingMsgs_.emplace( std::forward<Msg>(msg) );
-        condTransmitThread_.notify_all();
+    inline bool emplaceMessageWithoutLock(Msg&& msg) {
+        if(checkOutgoingMsgsSize()) {
+            outgoingMsgs_.emplace_back( std::forward<Msg>(msg) );
+            condTransmitThread_.notify_all();
+            return true;
+        }
+
+        return false;
     }
 
     // thread loop functions
@@ -311,32 +337,42 @@ class Bus {
     }
 
  protected:
-    // true if a device is in 'Missing' or 'Error' state.
+    //! true if a device is in 'Missing' or 'Error' state.
     std::atomic<bool> isMissingDeviceOrHasError_;
 
-    // true if all devices are in active state (we received a message within the timeout)
+    //! true if all devices are in active state (we received a message within the timeout)
     std::atomic<bool> allDevicesActive_;
 
-    // if true, the outgoing messages are not sent to the physical bus
+    //! true if all devices handeled by this bus are missing
+    std::atomic<bool> allDevicesMissing_;
+
+    //! if true, the outgoing messages are not sent to the physical bus
     std::atomic<bool> isPassive_;
 
     const std::unique_ptr<BusOptions> options_;
 
-    // output queue containing all messages to be sent by the transmitThread_
-    std::mutex outgointMsgsMutex_;
-    std::queue<Msg> outgoingMsgs_;
+    //! output queue containing all messages to be sent by the transmitThread_
+    std::mutex outgoingMsgsMutex_;
+    MsgQueue outgoingMsgs_;
 
-    // threads for message reception and transmission and device sanity checking
+    //! threads for message reception and transmission and device sanity checking
     std::thread receiveThread_;
     std::thread transmitThread_;
     std::thread sanityCheckThread_;
     std::atomic<bool> running_;
 
-    // variable to wake the transmitThread after inserting something to the message output queue
+    //! variable to wake the transmitThread after inserting something to the message output queue
     std::condition_variable condTransmitThread_;
 
-    // variable to wait for empty output queues (required for global sync)
+    //! variable to wait for empty output queues (required for global sync)
     std::condition_variable condOutputQueueEmpty_;
+
+    //! flag to indicate the reception of an error message. Can be cleared with resetError().
+    std::atomic<bool> errorMsgFlagPersistent_;
+
+    //! flag indicating that the last received message was an error message. This flag is reset upon successfull
+    // reception of a non-error message.
+    bool errorMsgFlag_;
 };
 
 } /* namespace tcan */
