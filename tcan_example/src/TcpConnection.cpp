@@ -23,6 +23,10 @@ TcpConnection::~TcpConnection()
 
 void TcpConnection::handleMessage(const tcan::IpMsg& msg) {
     std::cout << " got data: " << msg.getData() << std::endl;
+
+    // clear the error message flag, indicating that the received message is valid.
+    // This is used for the passive bus option
+    errorMsgFlag_ = false;
 }
 
 } /* namespace tcan */

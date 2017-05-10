@@ -34,10 +34,12 @@ class IpBus : public Bus<IpMsg> {
  protected:
     bool initializeInterface();
     bool readData();
-    bool writeData(const IpMsg& msg);
+    bool writeData(std::unique_lock<std::mutex>* lock);
 
  private:
     int socket_;
+    int recvFlag_;
+    int sendFlag_;
 
     unsigned int deviceTimeoutCounter_;
 };
