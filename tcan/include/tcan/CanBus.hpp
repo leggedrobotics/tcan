@@ -94,6 +94,7 @@ class CanBus : public Bus<CanMsg> {
      * @param callbackPtr std::function wrapper containing the callback function pointer
      */
     inline void setUnmappedMessageCallback(const CallbackPtr& callbackPtr) {
+        // todo: protect this with a mutex? (also inside handleMessage)
         unmappedMessageCallbackFunction_ = callbackPtr;
     }
 
