@@ -155,9 +155,9 @@ class BusManager {
 
                 if (sanityCheckInterval_ < options->sanityCheckInterval_) {
                     sanityCheckInterval_ = options->sanityCheckInterval_;
-                    MELO_WARN("Raising sanity check interval for bus manager to %d", sanityCheckInterval_);
+                    MELO_WARN("Rising sanity check interval for bus manager to %d", sanityCheckInterval_);
                 } else if (sanityCheckInterval_ > options->sanityCheckInterval_) {
-                    MELO_WARN("Bus manager sanity check interval (%d) is larger than sanity check interval of added bus %s (%d)",
+                    MELO_WARN("Bus manager sanity check interval (%d) is larger than sanity check interval of added bus %s (%d). Devices may wrongly be considered as timed out.",
                               sanityCheckInterval_, options->name_.c_str(), options->sanityCheckInterval_);
                 }
 
@@ -169,20 +169,18 @@ class BusManager {
             running_ = true;
 
             receiveThread_ = std::thread(&BusManager::receiveWorker, this);
-
             if (!setThreadPriority(receiveThread_, priorityReceiveThread)) {
                 MELO_WARN("Failed to set receive thread priority for bus manager\n  %s", strerror(errno));
             }
 
             if (sanityCheckInterval_ > 0) {
                 sanityCheckThread_ = std::thread(&BusManager::sanityCheckWorker, this);
-
                 if (!setThreadPriority(sanityCheckThread_, prioritySanityCheckThread)) {
                     MELO_WARN("Failed to set sanity check thread priority for bus manager\n  %s", strerror(errno));
                 }
             }
         }else{
-            MELO_INFO("No Bus is configured to be semi synchrounous. Not generating threads.");
+            MELO_INFO("No bus is configured to be semi synchrounous. Not starting threads.");
         }
     }
 
@@ -231,7 +229,7 @@ class BusManager {
  protected:
     std::vector<Bus<Msg>*> buses_;
 
-    //! threads for message reception and transmission and device sanity checking
+    //! threads for message reception and device sanity checking
     std::thread receiveThread_;
     std::thread sanityCheckThread_;
     std::atomic<bool> running_;

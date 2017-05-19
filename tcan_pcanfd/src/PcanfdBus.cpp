@@ -40,7 +40,7 @@ bool PcanfdBus::initializeInterface()
     unsigned int flags = OFD_BITRATE;
     
     // make read/write non-blocking in synchronous mode
-    if(!options->mode_ == Asynchronous) {
+    if(!isAsynchronous()) {
         flags |= OFD_NONBLOCKING;
     }
     fd_ = pcanfd_open(interface, flags, options->bitrate_);

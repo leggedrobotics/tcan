@@ -3,6 +3,9 @@
  *
  *  Created on: Mar 15, 2017
  *      Author: Christian Gehring
+ *
+ * fixme:
+ *  WARNING: THIS IMPLEMENTATION IS INCOMPLETE AND DOES NOT SUPPORT ALL BusOptions
  */
 
 

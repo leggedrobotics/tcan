@@ -67,19 +67,17 @@ class Bus {
 
         if(isAsynchronous()) {
             receiveThread_ = std::thread(&Bus::receiveWorker, this);
-            transmitThread_ = std::thread(&Bus::transmitWorker, this);
-
             if(!setThreadPriority(receiveThread_, options_->priorityReceiveThread_)) {
                 MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             }
 
-            if (!setThreadPriority(receiveThread_, options_->priorityTransmitThread_)) {
+            transmitThread_ = std::thread(&Bus::transmitWorker, this);
+            if (!setThreadPriority(transmitThread_, options_->priorityTransmitThread_)) {
                 MELO_WARN("Failed to set transmit thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             }
 
             if(options_->sanityCheckInterval_ > 0) {
                 sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
-
                 if (!setThreadPriority(sanityCheckThread_, options_->prioritySanityCheckThread_)) {
                     MELO_WARN("Failed to set sanity check thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
                 }
