@@ -247,6 +247,9 @@ public: /// Internal functions
         condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
     }
 
+    /*! Get a file descriptor, used for polling multiple buses for incoming messages. Required for semi-synchronous buses.
+     * @return  valid file descriptor
+     */
     virtual int getPollableFileDescriptor() {
         MELO_FATAL("Bus %s does not support semi-synchronous mode!", getName().c_str());
         return 0;
