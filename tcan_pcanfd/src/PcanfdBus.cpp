@@ -48,7 +48,7 @@ bool PcanfdBus::initializeInterface()
         MELO_FATAL("Opening CAN %s failed!", interface);
         return false;
     }
-    
+
     // todo: filter
 
     MELO_INFO("Opened CAN %s.", interface);

@@ -24,10 +24,16 @@ class PcanfdBus : public CanBus {
 
     virtual ~PcanfdBus();
 
+    int getPollableFileDescriptor() {
+        // todo: check if this is actually pollable!
+        return fd_;
+    }
+
  protected:
     bool initializeInterface();
     bool readData();
     bool writeData(std::unique_lock<std::mutex>* lock);
+
 
  protected:
     int fd_;

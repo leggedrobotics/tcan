@@ -11,6 +11,8 @@
 #include <poll.h>
 
 #include "tcan/UniversalSerialBus.hpp"
+#include "tcan/helper_functions.hpp"
+
 #include "message_logger/message_logger.hpp"
 
 namespace tcan {
@@ -70,7 +72,7 @@ bool UniversalSerialBus::readData() {
     if(isAsynchronous()) {
         pollfd fds = {fileDescriptor_, POLLIN, 0};
 
-        ret = poll( &fds, 1, calculateTimeoutMs(options_->readTimeout_) );
+        ret = poll( &fds, 1, calculatePollTimeoutMs(options_->readTimeout_) );
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor readability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
@@ -112,7 +114,7 @@ bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
     if(isAsynchronous() || options_->synchronousBlockingWrite_) {
         pollfd fds = {fileDescriptor_, POLLOUT, 0};
 
-        ret = poll( &fds, 1, calculateTimeoutMs(options_->writeTimeout_) );
+        ret = poll( &fds, 1, calculatePollTimeoutMs(options_->writeTimeout_) );
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor writeability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));

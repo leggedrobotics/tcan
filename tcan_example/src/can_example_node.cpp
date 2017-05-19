@@ -66,7 +66,7 @@ public:
 		}
 
 		// add a custom callback function
-		getCanBus(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSync);
+		getCanBus(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSyncBus1);
 
 		// add a second bus, semi-synchornous
 		options.mode_ = tcan::BusOptions::Mode::SemiSynchronous;
@@ -78,6 +78,8 @@ public:
 			addDeviceExample(BusId::BUS2, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
 		}
 
+		getCanBus(static_cast<unsigned int>(BusId::BUS2))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSyncBus2);
+
 		// add a third bus, asynchronous
 		options.mode_ = tcan::BusOptions::Mode::Synchronous;
 		options.name_ = "can2";
@@ -88,6 +90,8 @@ public:
 			addDeviceExample(BusId::BUS3, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
 		}
 
+		getCanBus(static_cast<unsigned int>(BusId::BUS3))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSyncBus3);
+
 		// start the threads for semi-synchronous buses
 		startThreads();
 	}
@@ -97,7 +101,7 @@ public:
 
 		std::unique_ptr<example_can::CanDeviceExampleOptions> options(new example_can::CanDeviceExampleOptions(static_cast<uint32_t>(nodeId), name));
 		options->someParameter = 37;
-		options->maxDeviceTimeoutCounter_ = 1000;
+		options->maxDeviceTimeoutCounter_ = 10;
 
 		auto ret_pair = getCanBus(static_cast<unsigned int>(busId))->addDevice<example_can::CanDeviceExample>( std::move(options) );
 		deviceExampleContainer_.insert({static_cast<unsigned int>(deviceId), ret_pair.first});
@@ -113,12 +117,18 @@ public:
 		busContainer_.insert({static_cast<unsigned int>(busId), bus});
 	}
 
-	bool parseIncomingSync(const CanMsg& cmsg) {
-		for(auto device : deviceExampleContainer_) {
-			device.second->setCommand(0.f);
-		}
+	bool parseIncomingSyncBus1(const CanMsg& cmsg) {
+		std::cout << "Bus1: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+		return true;
+	}
 
-//		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+	bool parseIncomingSyncBus2(const CanMsg& cmsg) {
+		std::cout << "Bus2: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
+		return true;
+	}
+
+	bool parseIncomingSyncBus3(const CanMsg& cmsg) {
+		std::cout << "Bus3: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
 		return true;
 	}
 
@@ -164,7 +174,7 @@ int main() {
 												// on all buses at the same time
 		canManager_.writeMessagesSynchronous(); // now write the SYNC messages to the synchronous and semi-synchronous buses
 
-		nextStep += std::chrono::microseconds(1000000);
+		nextStep += std::chrono::microseconds(100000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;

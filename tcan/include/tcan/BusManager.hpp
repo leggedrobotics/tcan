@@ -8,6 +8,7 @@
 #pragma once
 
 #include <vector>
+#include <poll.h>
 
 #include "tcan/Bus.hpp"
 #include "tcan/helper_functions.hpp"
@@ -202,8 +203,35 @@ class BusManager {
 
     // thread loop functions
     void receiveWorker() {
+        unsigned int numFds = 0;
+        pollfd fds[buses_.size()];
+        std::vector<unsigned int> busIndices;
+
+        for(unsigned int i=0; i<buses_.size(); ++i) {
+            if(buses_[i]->isSemiSynchronous()) {
+                fds[numFds] = {buses_[i]->getPollableFileDescriptor(), POLLIN, 0};
+                busIndices.push_back(i);
+                ++numFds;
+            }
+        }
+
         while(running_) {
-            sleep(1);
+            int ret = poll( fds, numFds, 500 /*timeout [ms]*/ );
+
+            if ( ret == -1 ) {
+                MELO_ERROR("polling for fileDescriptor readability failed in bus manager:\n  %s", strerror(errno));
+            }else if ( ret == 0 ) {
+                // poll timed out, without being able to read => continue silently
+            }else{
+                // there is something in the fd ready to be read
+                for(unsigned int i=0; i<numFds; ++i) {
+                    if(fds[i].revents & POLLIN) {
+                        buses_[busIndices[i]]->readMessage();
+                    }
+
+                    fds[i].revents = 0;
+                }
+            }
         }
 
         MELO_INFO("Receive thread for bus manager terminated");

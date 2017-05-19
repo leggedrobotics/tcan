@@ -247,20 +247,25 @@ public: /// Internal functions
         condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
     }
 
+    virtual int getPollableFileDescriptor() {
+        MELO_FATAL("Bus %s does not support semi-synchronous mode!", getName().c_str());
+        return 0;
+    }
+
  protected:
     /*! Initialized the device driver
      * @return true if successful
      */
     virtual bool initializeInterface() = 0;
 
-    /*! read CAN message from the device driver. This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
+    /*! read CAN message from the device driver. This function shall be blocking in asynchronous mode and non-blocking in synchronous and semi-synchronous!
      * It shall set errorMsgFlag_ and errorMsgFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
      * and set errorMsgFlag_ to false on successfull reads of non-error messages.
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() = 0;
 
-    /*! write CAN message to the device driver.  This function shall be blocking in asynchrounous mode and non-blocking in synchronous!
+    /*! write CAN message to the device driver.  This function shall be blocking in asynchronous mode and non-blocking in synchronous and semi-synchronous!
      * @param lock      pointer to the lock protecting the output queue, which is in LOCKED state when the function is called.
      *                  Use nullptr if queue is unprotected.
      * @return          True if no error occured
@@ -293,7 +298,7 @@ public: /// Internal functions
 
     inline bool checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
-            MELO_WARN_THROTTLE(options_->errorThrottleTime_, "Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            MELO_WARN_THROTTLE(options_->errorThrottleTime_, "Exceeding max queue size on bus %s! Dropping message!", getName().c_str());
             return false;
         }
         return true;

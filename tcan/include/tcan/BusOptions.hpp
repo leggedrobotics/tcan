@@ -50,6 +50,7 @@ struct BusOptions {
     //!              No threads are created.
     //! Semi-synchronous: The BusManager creates threads for receiving messages and sanity check. It us up to the user to call writeMessagesSynchronous()
     //!                   and to call startThreads() after all the buses have been added to the manager (addBus(..)).
+    //!                   Note that this mode may not be supported by all Bus implementations.
     //! Asynchronous: The bus will create threads for receiving, sending and sanity check, no further actions required by the user.
     Mode mode_;
 
