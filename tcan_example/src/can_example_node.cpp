@@ -11,14 +11,15 @@
 
 #include "tcan_example/CanDeviceExample.hpp"
 
-//#define USE_SYNCHRONOUS_MODE
+#include "message_logger/message_logger.hpp"
 
 namespace tcan {
 class CanManager : public CanBusManager {
 public:
 	enum class BusId : unsigned int {
 		BUS1=0,
-		BUS2=1
+		BUS2=1,
+		BUS3=2
 	};
 
 	enum class DeviceExampleId : unsigned int {
@@ -38,8 +39,26 @@ public:
 		busContainer_(),
 		deviceExampleContainer_()
 	{
-	    // add a CAN bus
-		addSocketBus(BusId::BUS1, "can0");
+
+	}
+
+	virtual ~CanManager()
+	{
+		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destructed object (parseIncomingSync(..) in this case)
+		closeBuses();
+	}
+
+	void init() {
+		// add a CAN bus, asynchronous
+		SocketBusOptions options;
+		options.mode_ = tcan::BusOptions::Mode::Asynchronous;
+		options.name_ = "can0";
+		options.loopback_ = true;
+		options.canErrorMask_ = CAN_ERR_MASK & ~CAN_ERR_LOSTARB; // report all errors but 'arbitration lost'
+		// add (multiple) can filters like this {can_id, can_msg}:
+		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
+
+		addSocketBus(BusId::BUS1, std::unique_ptr<SocketBusOptions>(new SocketBusOptions(options)));
 
 		// add some devices to the bus
 		for(unsigned int i=0; i<30; i++) {
@@ -47,21 +66,30 @@ public:
 		}
 
 		// add a custom callback function
-        getCanBus(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSync);
+		getCanBus(static_cast<unsigned int>(BusId::BUS1))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSync);
 
-		// add a second bus
-		addSocketBus(BusId::BUS2, "can1");
+		// add a second bus, semi-synchornous
+		options.mode_ = tcan::BusOptions::Mode::SemiSynchronous;
+		options.name_ = "can1";
+		addSocketBus(BusId::BUS2, std::unique_ptr<SocketBusOptions>(new SocketBusOptions(options)));
 
 		// add some devices to the second bus
 		for(unsigned int i=30; i<40; i++) {
 			addDeviceExample(BusId::BUS2, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
 		}
-	}
 
-	virtual ~CanManager()
-	{
-		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destructed object (parseIncomingSync(..) in this case)
-		closeBuses();
+		// add a third bus, asynchronous
+		options.mode_ = tcan::BusOptions::Mode::Synchronous;
+		options.name_ = "can2";
+		addSocketBus(BusId::BUS3, std::unique_ptr<SocketBusOptions>(new SocketBusOptions(options)));
+
+		// add some devices to the third bus
+		for(unsigned int i=40; i<50; i++) {
+			addDeviceExample(BusId::BUS3, static_cast<DeviceExampleId>(i), static_cast<NodeId>(i+1));
+		}
+
+		// start the threads for semi-synchronous buses
+		startThreads();
 	}
 
 	void addDeviceExample(const BusId busId, const DeviceExampleId deviceId, const NodeId nodeId) {
@@ -75,22 +103,11 @@ public:
 		deviceExampleContainer_.insert({static_cast<unsigned int>(deviceId), ret_pair.first});
 	}
 
-	void addSocketBus(const BusId busId, const std::string& interface) {
-	    std::unique_ptr<SocketBusOptions> options(new SocketBusOptions());
-#ifdef USE_SYNCHRONOUS_MODE
-		options->asynchronous = false;
-#endif
-		options->name_ = interface;
-		options->loopback_ = true;
-		options->sndBufLength_ = 0;
-		// add (multiple) can filters like this {can_id, can_msg}:
-		// options->canFilters.push_back({0x123, CAN_SFF_MASK});
-//		options->canErrorMask = 0;
+	void addSocketBus(const BusId busId, std::unique_ptr<SocketBusOptions>&& options) {
 
 		auto bus = new SocketBus(std::move(options));
 		if(!addBus( bus )) {
-			std::cout << "failed to add Bus " << interface << std::endl;
-			exit(-1);
+			MELO_FATAL_STREAM("failed to add bus " << bus->getName())
 		}
 
 		busContainer_.insert({static_cast<unsigned int>(busId), bus});
@@ -125,28 +142,29 @@ void signal_handler(int) {
 int main() {
 	signal(SIGINT, signal_handler);
 	tcan::CanManager canManager_;
+	canManager_.init();
 
 	auto nextStep = std::chrono::steady_clock::now();
 
 	while(g_running) {
-#ifdef USE_SYNCHRONOUS_MODE
-		canManager_.readMessagesSynchrounous();
-
+		// these two calls affect synchronous buses only, BUS3 in this case
+		canManager_.readMessagesSynchronous();
 		canManager_.sanityCheckSynchronous();
-#endif
+
 		for(auto device : canManager_.getDeviceExampleContainer()) {
-			std::cout << "Measurement=" << device.second->getMeasurement() << std::endl;
+//			MELO_INFO_STREAM("Measurement " << device.second->getName() << " = " << device.second->getMeasurement());
 			device.second->setCommand(0.f);
 		}
-#ifdef USE_SYNCHRONOUS_MODE
-		canManager_.writeMessagesSynchronous();
-      canManager_.sendSyncOnAllBuses();
-		canManager_.writeMessagesSynchronous();
-#else
-		canManager_.sendSyncOnAllBuses(true);
-#endif
 
-		nextStep += std::chrono::microseconds(10000);
+		// write the messages on the synchronous and semi-synchronous buses.
+		canManager_.writeMessagesSynchronous();
+
+      	canManager_.sendSyncOnAllBuses(true); 	// call this function after writeMessagesSynchronous() for synchronous and semi-synchonous buses,
+												// to ensure that the output queues are empty such that the SYNC messages can be put
+												// on all buses at the same time
+		canManager_.writeMessagesSynchronous(); // now write the SYNC messages to the synchronous and semi-synchronous buses
+
+		nextStep += std::chrono::microseconds(1000000);
 		std::this_thread::sleep_until( nextStep );
 	}
 	return 0;

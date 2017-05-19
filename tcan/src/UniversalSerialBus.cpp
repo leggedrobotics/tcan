@@ -66,7 +66,8 @@ bool UniversalSerialBus::initializeInterface() {
 bool UniversalSerialBus::readData() {
 
     int ret;
-    if(options_->asynchronous_) {
+    // only poll in asynchronous mode. No polling for synchronous mode, for semi-synchronous the polling is done elsewhere
+    if(isAsynchronous()) {
         pollfd fds = {fileDescriptor_, POLLIN, 0};
 
         ret = poll( &fds, 1, calculateTimeoutMs(options_->readTimeout_) );
@@ -108,7 +109,7 @@ bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
     }
 
     int ret;
-    if(options_->asynchronous_ || options_->synchronousBlockingWrite_) {
+    if(isAsynchronous() || options_->synchronousBlockingWrite_) {
         pollfd fds = {fileDescriptor_, POLLOUT, 0};
 
         ret = poll( &fds, 1, calculateTimeoutMs(options_->writeTimeout_) );

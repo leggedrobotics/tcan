@@ -124,7 +124,7 @@ bool SocketBus::initializeInterface()
     }
 
     // set nonblocking flags for synchrounous mode
-    if(!options_->asynchronous_) {
+    if(!isAsynchronous()) {
         recvFlag_ = MSG_DONTWAIT;
         if(!options_->synchronousBlockingWrite_) {
             sendFlag_ = MSG_DONTWAIT;
