@@ -84,8 +84,8 @@ bool IpBus::initializeInterface() {
         }
     }
 
-    // set nonblocking flags for synchrounous mode
-    if(!options_->asynchronous_) {
+    // set nonblocking flags for synchronous mode
+    if(!isAsynchronous()) {
         recvFlag_ = MSG_DONTWAIT;
         if(!options_->synchronousBlockingWrite_) {
             sendFlag_ = MSG_DONTWAIT;

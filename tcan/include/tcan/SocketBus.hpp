@@ -22,7 +22,9 @@ class SocketBus : public CanBus {
 
     virtual ~SocketBus();
 
- protected:
+    int getPollableFileDescriptor() { return socket_; }
+
+protected:
     bool initializeInterface();
     bool readData();
     bool writeData(std::unique_lock<std::mutex>* lock);
