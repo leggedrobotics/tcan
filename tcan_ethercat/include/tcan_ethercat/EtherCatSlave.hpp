@@ -37,19 +37,15 @@ class EtherCatSlave {
     EtherCatSlave() = delete;
 
     EtherCatSlave(const uint32_t address, const std::string& name)
-    :   EtherCatSlave(new EtherCatSlaveOptions(address, name)) {
-    }
+    :   EtherCatSlave(std::unique_ptr<EtherCatSlaveOptions>(new EtherCatSlaveOptions(address, name))) {}
 
-    EtherCatSlave(EtherCatSlaveOptions* options)
-    :   options_(options),
+    EtherCatSlave(std::unique_ptr<EtherCatSlaveOptions>&& options)
+    :   options_(std::move(options)),
         deviceTimeoutCounter_(0),
-        state_(Initializing) {
-    }
+        state_(Initializing) {}
 
     //! Destructor
-    virtual ~EtherCatSlave() {
-        delete options_; // TODO why are the options not (always) destroyed where they are created?
-    }
+    virtual ~EtherCatSlave() {}
 
     /*! Initialize the device. This function is automatically called by EtherCatBus::addDevice(..).
      *  (through initDeviceInternal(..))
@@ -148,7 +144,7 @@ class EtherCatSlave {
     }
 
  protected:
-    const EtherCatSlaveOptions* options_ = nullptr;
+    const std::unique_ptr<EtherCatSlaveOptions> options_;
 
     std::atomic<unsigned int> deviceTimeoutCounter_;
 

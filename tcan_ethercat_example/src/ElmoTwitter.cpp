@@ -119,10 +119,6 @@ bool ElmoTwitter::initializeInterface() {
     // Set state to EtherCat Operatoinal
     bus_->setStateOperational();
 
-    // send one valid process data to make outputs in slaves happy
-    bus_->sendProcessData();
-    bus_->receiveProcessData();
-
     // wait for all slaves to reach OP state
     bus_->waitForStateOperational();
 

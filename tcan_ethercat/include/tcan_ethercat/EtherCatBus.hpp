@@ -34,31 +34,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     EtherCatBus(std::unique_ptr<EtherCatBusOptions>&& options)
     : tcan::Bus<EtherCatDatagrams>(std::move(options)),
       wkcExpected_(0),
-      wkc_(0),
-      inOP_(false),
-      ecatContext_({
-          &ecat_port,          // .port          =
-          &ecat_slave[0],       // .slavelist     =
-          &ecat_slavecount,     // .slavecount    =
-          EC_MAXSLAVE,        // .maxslave      =
-          &ecat_group[0],       // .grouplist     =
-          EC_MAXGROUP,        // .maxgroup      =
-          &ecat_esibuf[0],      // .esibuf        =
-          &ecat_esimap[0],      // .esimap        =
-          0,                  // .esislave      =
-          &ecat_elist,          // .elist         =
-          &ecat_idxstack,       // .idxstack      =
-          &ecat_error,         // .ecaterror     =
-          0,                  // .DCtO          =
-          0,                  // .DCl           =
-          &ecat_DCtime,         // .DCtime        =
-          &ecat_SMcommtype[0],  // .SMcommtype    =
-          &ecat_PDOassign[0],   // .PDOassign     =
-          &ecat_PDOdesc[0],     // .PDOdesc       =
-          &ecat_SM,             // .eepSM         =
-          &ecat_FMMU,           // .eepFMMU       =
-          NULL                // .FOEhook()
-      }) {}
+      wkc_(0) {}
 
     virtual ~EtherCatBus() {
         cleanupInterface();
@@ -144,58 +120,9 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 //        sendMessage(msg);
 //    }
 
-    void discoverDevices() {
-        // do not add the devices by hand but get the topology and memory from the connected devices?
-    }
-
- public:/// INTERNAL FUNCTIONS
     template <class T>
     inline bool addTxPdoCallback(T* device, bool(std::common_type<T>::type::*fp)(const EtherCatDatagram&)) {
         return txPdoCallbackMap_.emplace(device, std::bind(fp, device, std::placeholders::_1)).second;
-    }
-
-    /*! Is called after reception of a message. Routes the message to the callback.
-     * @param cmsg    reference to the can message
-     */
-    void handleMessage(const EtherCatDatagrams& msg) {
-
-        // TODO:
-        // check time the frame took to travel through the physical bus
-        // check working counters
-        // extract datagrams from ethernet frame and map datagrams to device callback
-        for (EtherCatSlave* slave : slaves_) {
-            slave->resetDeviceTimeoutCounter();
-            auto callback = txPdoCallbackMap_.find(slave);
-            if (callback != txPdoCallbackMap_.end()) {
-                callback->second(msg.rxAndTxPdoDatagrams_.at(slave->getAddress()).second); //TODO improve access
-            }
-        }
-    }
-
-    /*! Initialize the device driver
-     * @return true if successful
-     */
-    bool initializeInterface() {
-        printf("Starting simple test\n");
-        inOP_ = false;
-
-        /*
-         * Followed by start of the application we need to set up the NIC to be used as
-         * EtherCAT Ethernet interface. In a simple setup we call ec_init(ifname) and if
-         * SOEM comes with support for cable redundancy we call ec_init_redundant that
-         * will open a second port as backup. You can send NULL as ifname if you have a
-         * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
-         */
-        const char* ifname = options_->name_.c_str();
-        if (ecx_init(&ecatContext_, ifname) <= 0) {
-            MELO_ERROR_STREAM("No socket connection on '" << ifname << "'.");
-            MELO_ERROR_STREAM("Excecute as root.");
-            return false;
-        }
-
-        MELO_INFO_STREAM("EtherCAT initialization on '" << ifname << "' succeeded.");
-
-        return true;
     }
 
     bool setupCommunication() {
@@ -241,15 +168,15 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
          *
          * When the mapping is done SOEM requests slaves to enter SAFE_OP.
          */
-        ecx_config_map_group(&ecatContext_, &IOmap_, 0);
-        printDcState();
+        ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+        printDistributedClockState();
         MELO_INFO_STREAM("Locating and measuring distributed clocks ...");
         if (ecx_configdc(&ecatContext_)) {
             MELO_INFO_STREAM("Distributed clocks located and measured.");
         } else {
             MELO_INFO_STREAM("No distributed clocks located and measured.");
         }
-        printDcState();
+        printDistributedClockState();
 
         printf("Slaves mapped, state to SAFE_OP.\n");
         /* wait for all slaves to reach SAFE_OP state */
@@ -296,6 +223,98 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         return true;
     }
 
+    void setStateInit() { setState(EC_STATE_INIT); }
+    void setStatePreOp() { setState(EC_STATE_PRE_OP); }
+    void setStateBoot() { setState(EC_STATE_BOOT); }
+    void setStateSafeOp() { setState(EC_STATE_SAFE_OP); }
+    void setStateOperational() { setState(EC_STATE_OPERATIONAL); }
+
+    void waitForStateInit() { waitForState(EC_STATE_INIT); }
+    void waitForStatePreOp() { waitForState(EC_STATE_PRE_OP); }
+    void waitForStateBoot() { waitForState(EC_STATE_BOOT); }
+    void waitForStateSafeOp() { waitForState(EC_STATE_SAFE_OP); }
+    void waitForStateOperational() { waitForState(EC_STATE_OPERATIONAL); }
+
+    void syncDistributedClocks(const uint16_t slave, const bool activate) {
+        MELO_INFO_STREAM((activate ? "Activating" : "Deactivating") << " distributed clock synchronization for slave " << slave << " ...")
+        const double timeStep = 1e-3;
+        ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), static_cast<uint32>(timeStep*1e9), static_cast<int32>(timeStep*0.5*1e9));
+        MELO_INFO_STREAM("Finished " << (activate ? "activating" : "deactivating") << " distributed clock synchronization.")
+    }
+
+    void printDistributedClockState() {
+        MELO_INFO_STREAM("DC state:");
+        MELO_INFO_STREAM("DC time: " << *ecatContext_.DCtime);
+        MELO_INFO_STREAM("DC tO: " << ecatContext_.DCtO);
+        MELO_INFO_STREAM("DC l: " << ecatContext_.DCl);
+        for (int i = 0; i <= *ecatContext_.slavecount; i++) {
+            MELO_INFO_STREAM("  Slave " << i << ": " << std::string(ecatContext_.slavelist[i].name));
+            MELO_INFO_STREAM("    Has DC: " << static_cast<bool>(ecatContext_.slavelist[i].hasdc));
+            MELO_INFO_STREAM("    DC active: " << static_cast<bool>(ecatContext_.slavelist[i].DCactive));
+            MELO_INFO_STREAM("    DC cycle: " << ecatContext_.slavelist[i].DCcycle);
+            MELO_INFO_STREAM("    DC previous: " << ecatContext_.slavelist[i].DCnext);
+            MELO_INFO_STREAM("    DC next: " << ecatContext_.slavelist[i].DCprevious);
+            MELO_INFO_STREAM("    DC rt A: " << ecatContext_.slavelist[i].DCrtA);
+            MELO_INFO_STREAM("    DC rt B: " << ecatContext_.slavelist[i].DCrtB);
+            MELO_INFO_STREAM("    DC rt C: " << ecatContext_.slavelist[i].DCrtC);
+            MELO_INFO_STREAM("    DC rt D: " << ecatContext_.slavelist[i].DCrtD);
+            MELO_INFO_STREAM("    DC shift: " << ecatContext_.slavelist[i].DCshift);
+        }
+    }
+
+    template <typename Value>
+    void sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
+        const int size = sizeof(Value);
+        Value valueCopy = value; // copy value to make it modifiable
+        wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
+    }
+
+    template <typename Value>
+    void sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
+        int size = sizeof(Value);
+        wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
+        if (size != sizeof(Value)) {
+            MELO_WARN_STREAM("Expected (" << sizeof(Value) << ") and read (" << size << ") SDO value size mismatch.");
+        }
+    }
+
+    void sendSdoReadAndPrint(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess) {
+        int sdodata[4]={0,0,0,0};
+        sendSdoRead(slave, index, subindex, completeAccess, sdodata);
+        printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
+    }
+
+    std::shared_ptr<EtherCatDatagrams> getData() {
+        return datagramsSent_;
+    }
+
+ protected:/// INTERNAL FUNCTIONS
+
+    /*! Initialize the device driver
+     * @return true if successful
+     */
+    bool initializeInterface() {
+        printf("Starting simple test\n");
+
+        /*
+         * Followed by start of the application we need to set up the NIC to be used as
+         * EtherCAT Ethernet interface. In a simple setup we call ec_init(ifname) and if
+         * SOEM comes with support for cable redundancy we call ec_init_redundant that
+         * will open a second port as backup. You can send NULL as ifname if you have a
+         * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
+         */
+        const char* ifname = options_->name_.c_str();
+        if (ecx_init(&ecatContext_, ifname) <= 0) {
+            MELO_ERROR_STREAM("No socket connection on '" << ifname << "'.");
+            MELO_ERROR_STREAM("Excecute as root.");
+            return false;
+        }
+
+        MELO_INFO_STREAM("EtherCAT initialization on '" << ifname << "' succeeded.");
+
+        return true;
+    }
+
     void cleanupInterface() {
 //        /* request INIT state for all slaves */
 //        printf("\nRequest init state for all slaves\n");
@@ -316,6 +335,32 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 //        printf("Deleted slaves.\n");
     }
 
+    /*! Is called after reception of a message. Routes the message to the callback.
+     * @param msg    reference to the ethercat message
+     */
+    void handleMessage(const EtherCatDatagrams& msg) {
+
+        // TODO:
+        // check time the frame took to travel through the physical bus
+        // check working counters
+        // extract datagrams from ethernet frame and map datagrams to device callback
+        for (EtherCatSlave* slave : slaves_) {
+            slave->resetDeviceTimeoutCounter();
+            auto callback = txPdoCallbackMap_.find(slave);
+            if (callback != txPdoCallbackMap_.end()) {
+                callback->second(msg.rxAndTxPdoDatagrams_.at(slave->getAddress()).second); //TODO improve access
+            }
+        }
+    }
+
+    void sendProcessData() {
+        ecx_send_processdata(&ecatContext_);
+    }
+
+    void receiveProcessData() {
+        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+    }
+
     /*! read CAN message from the device driver
      * @return true if a message was successfully read and parsed
      */
@@ -327,7 +372,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         receiveProcessData();
 
-        if (!checkWorkingCounter()) {
+        if (!workingCounterIsOk()) {
             MELO_WARN_STREAM("Working counter is too low (" << wkc_ << " < " << wkcExpected_ << ").");
             return false;
         }
@@ -376,7 +421,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     void sanityCheck() {
         uint8_t currentgroup = 0;
-        if (inOP_ && (!checkWorkingCounter() || ecatContext_.grouplist[currentgroup].docheckstate)) {
+        if (!workingCounterIsOk() || ecatContext_.grouplist[currentgroup].docheckstate) {
             /* one ore more slaves are not responding */
             ecatContext_.grouplist[currentgroup].docheckstate = FALSE;
             ecx_readstate(&ecatContext_);
@@ -394,7 +439,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                         ecx_writestate(&ecatContext_, slave);
                     }
                     else if (ecatContext_.slavelist[slave].state > 0) {
-                        if (ecx_reconfig_slave(&ecatContext_, slave, timeoutmon_)) {
+                        if (ecx_reconfig_slave(&ecatContext_, slave, EC_TIMEOUTRET)) {
                             ecatContext_.slavelist[slave].islost = FALSE;
                             printf("MESSAGE : slave %d reconfigured\n",slave);
                         }
@@ -410,7 +455,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                 }
                 if (ecatContext_.slavelist[slave].islost) {
                     if (!ecatContext_.slavelist[slave].state) {
-                        if (ecx_recover_slave(&ecatContext_, slave, timeoutmon_)) {
+                        if (ecx_recover_slave(&ecatContext_, slave, EC_TIMEOUTRET)) {
                             ecatContext_.slavelist[slave].islost = FALSE;
                             printf("MESSAGE : slave %d recovered\n",slave);
                         }
@@ -426,11 +471,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             }
         }
 
-
-
-
-
-
         bool isMissingOrError = false;
         bool allActive = true;
         for (auto slave : slaves_) {
@@ -441,10 +481,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         isMissingDeviceOrHasError_ = isMissingOrError;
         allDevicesActive_ = allActive;
-    }
-
-    std::shared_ptr<EtherCatDatagrams> getData() {
-        return datagramsSent_;
     }
 
 //    inline std::shared_ptr<EtherCatDatagram> addDatagram(EtherCatDatagram&& datagram) {
@@ -527,26 +563,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
     }
 
-    void printDcState() {
-        MELO_INFO_STREAM("DC state:");
-        MELO_INFO_STREAM("DC time: " << *ecatContext_.DCtime);
-        MELO_INFO_STREAM("DC tO: " << ecatContext_.DCtO);
-        MELO_INFO_STREAM("DC l: " << ecatContext_.DCl);
-        for (int i = 0; i <= *ecatContext_.slavecount; i++) {
-            MELO_INFO_STREAM("  Slave " << i << ": " << std::string(ecatContext_.slavelist[i].name));
-            MELO_INFO_STREAM("    Has DC: " << static_cast<bool>(ecatContext_.slavelist[i].hasdc));
-            MELO_INFO_STREAM("    DC active: " << static_cast<bool>(ecatContext_.slavelist[i].DCactive));
-            MELO_INFO_STREAM("    DC cycle: " << ecatContext_.slavelist[i].DCcycle);
-            MELO_INFO_STREAM("    DC previous: " << ecatContext_.slavelist[i].DCnext);
-            MELO_INFO_STREAM("    DC next: " << ecatContext_.slavelist[i].DCprevious);
-            MELO_INFO_STREAM("    DC rt A: " << ecatContext_.slavelist[i].DCrtA);
-            MELO_INFO_STREAM("    DC rt B: " << ecatContext_.slavelist[i].DCrtB);
-            MELO_INFO_STREAM("    DC rt C: " << ecatContext_.slavelist[i].DCrtC);
-            MELO_INFO_STREAM("    DC rt D: " << ecatContext_.slavelist[i].DCrtD);
-            MELO_INFO_STREAM("    DC shift: " << ecatContext_.slavelist[i].DCshift);
-        }
-    }
-
     void checkSlaveStates() {
         int slavestate = ecx_readstate(&ecatContext_);
         printf("Slave EtherCAT StateMachine state is 0x%x\n", slavestate);
@@ -569,72 +585,13 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
     }
 
-    template <typename Value>
-    void sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
-        const int size = sizeof(Value);
-        Value valueCopy = value; // copy value to make it modifiable
-        wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
-    }
-
-    template <typename Value>
-    void sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
-        int size = sizeof(Value);
-        wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
-        if (size != sizeof(Value)) {
-            MELO_WARN_STREAM("Expected (" << sizeof(Value) << ") and read (" << size << ") SDO value size mismatch.");
-        }
-    }
-
-    void sendSdoReadAndPrint(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess) {
-        int sdodata[4]={0,0,0,0};
-        sendSdoRead(slave, index, subindex, completeAccess, sdodata);
-        printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
-    }
-
-    void syncDistributedClocks(const uint16_t slave, const bool activate) {
-        MELO_INFO_STREAM((activate ? "Activating" : "Deactivating") << " distributed clock synchronization ...")
-        const double timeStep = 1e-3;
-        ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), static_cast<uint32>(timeStep*1e9), static_cast<int32>(timeStep*0.5*1e9));
-        MELO_INFO_STREAM("Finished " << (activate ? "activating" : "deactivating") << " distributed clock synchronization.")
-    }
-
-    void sendProcessData() {
-        ecx_send_processdata(&ecatContext_);
-    }
-
-    void receiveProcessData() {
-        wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-    }
-
-    bool checkWorkingCounter() {
+    bool workingCounterIsOk() {
         return wkc_ >= wkcExpected_;
     }
-
-    void setStateInit() { setState(EC_STATE_INIT); }
-    void setStatePreOp() { setState(EC_STATE_PRE_OP); }
-    void setStateBoot() { setState(EC_STATE_BOOT); }
-    void setStateSafeOp() { setState(EC_STATE_SAFE_OP); }
-    void setStateOperational() { setState(EC_STATE_OPERATIONAL); }
-
-    void waitForStateInit() { waitForState(EC_STATE_INIT); }
-    void waitForStatePreOp() { waitForState(EC_STATE_PRE_OP); }
-    void waitForStateBoot() { waitForState(EC_STATE_BOOT); }
-    void waitForStateSafeOp() { waitForState(EC_STATE_SAFE_OP); }
-    void waitForStateOperational() { waitForState(EC_STATE_OPERATIONAL); }
 
     void strangeFunction() {
         if (ecatContext_.slavelist[0].state == EC_STATE_OPERATIONAL ) {
             printf("Operational state reached for all slaves.\n");
-            inOP_ = true;
-
-      //            // Handle PDO streams
-      //            outdata_.controlword.all = 0;
-      //            ecatcomm_slave_set_rxpdo(&outdata_, CLEAR_CONTROLWORD, 0.0);
-      //            ecatcomm_slave_set_rxpdo(&outdata_, SHUTDOWN, 0.0);
-      //            ecx_send_processdata(&ecatContext_);
-      //            wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
-      //            ecatcomm_slave_get_txpdo(&indata_);
-      //            osal_usleep(1000);
         }
         else {
             printf("Not all slaves reached operational state.\n");
@@ -648,15 +605,14 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
     }
 
- protected:
     void setState(const uint16_t state) {
         ecatContext_.slavelist[0].state = state;
         ecx_writestate(&ecatContext_, 0);
         MELO_INFO_STREAM("State " << state << " has been set.");
-        ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 2);
     }
 
     void waitForState(const uint16_t state) {
+        ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 2);
         const unsigned int maxChecks = 40;
         unsigned int check = 0;
         do {
@@ -682,51 +638,70 @@ protected:
 
     std::shared_ptr<EtherCatDatagrams> datagramsSent_;
 
-    const int timeoutmon_ = 500;
-    char IOmap_[4096];
+    // EtherCAT input/output mapping of the slaves within the datagrams.
+    char ioMap_[4096];
+
+    // Working counters.
     std::atomic<int> wkcExpected_;
     std::atomic<int> wkc_;
-    std::atomic<bool> inOP_;
 
-    // EtherCAT Master Data TODO: make ecx_contextt contain its own data
-    /** Main slave data array.
-     *  Each slave found on the network gets its own record.
-     *  ec_slave[0] is reserved for the master. Structure gets filled
-     *  in by the configuration function ec_config().
-     */
-    ecx_portt        ecat_port;
-    ec_slavet        ecat_slave[EC_MAXSLAVE];
-    /** number of slaves found on the network */
-    int              ecat_slavecount;
-    /** slave group structure */
-    ec_groupt        ecat_group[EC_MAXGROUP];
+    // EtherCAT context data elements:
 
-    /** cache for EEPROM read functions */
-    uint8            ecat_esibuf[EC_MAXEEPBUF];
-    /** bitmap for filled cache buffer bytes */
-    uint32           ecat_esimap[EC_MAXEEPBITMAP];
-    /** current slave for EEPROM cache buffer */
-    ec_eringt        ecat_elist;
-    ec_idxstackT     ecat_idxstack;
-    /** Global variable TRUE if error available in error stack */
-    boolean          ecat_error = FALSE;
-    int64            ecat_DCtime;
+    // Port reference.
+    ecx_portt ecatPort_;
+    // List of slave data. Index 0 is reserved for the master, higher indices for the slaves.
+    ec_slavet ecatSlavelist_[EC_MAXSLAVE];
+    // Number of slaves found in the network.
+    int ecatSlavecount_ = 0;
+    // Slave group structure.
+    ec_groupt ecatGrouplist_[EC_MAXGROUP];
+    // Internal, reference to eeprom cache buffer.
+    uint8 ecatEsiBuf_[EC_MAXEEPBUF];
+    // Internal, reference to eeprom cache map.
+    uint32 ecatEsiMap_[EC_MAXEEPBITMAP];
+    // Internal, reference to error list.
+    ec_eringt ecatEList_;
+    // Internal, reference to processdata stack buffer info.
+    ec_idxstackT ecatIdxStack_;
+    // Boolean indicating if an error is available in error stack.
+    boolean ecatError_ = FALSE;
+    // Reference to last DC time from slaves.
+    int64 ecatDcTime_ = 0;
+    // Internal, SM buffer.
+    ec_SMcommtypet ecatSmCommtype_[EC_MAX_MAPT];
+    // Internal, PDO assign list.
+    ec_PDOassignt ecatPdoAssign_[EC_MAX_MAPT];
+    // Internal, PDO description list.
+    ec_PDOdesct ecatPdoDesc_[EC_MAX_MAPT];
+    // Internal, SM list from eeprom.
+    ec_eepromSMt ecatSm_;
+    // Internal, FMMU list from eeprom.
+    ec_eepromFMMUt ecatFmmu_;
 
-    /** SyncManager Communication Type struct to store data of one slave */
-    ec_SMcommtypet   ecat_SMcommtype[EC_MAX_MAPT];
-    /** PDO assign struct to store data of one slave */
-    ec_PDOassignt    ecat_PDOassign[EC_MAX_MAPT];
-    /** PDO description struct to store data of one slave */
-    ec_PDOdesct      ecat_PDOdesc[EC_MAX_MAPT];
-
-    /** buffer for EEPROM SM data */
-    ec_eepromSMt     ecat_SM;
-    /** buffer for EEPROM FMMU data */
-    ec_eepromFMMUt   ecat_FMMU;
-
-//    ecx_redportt     ecat_redport;
-
-    ecx_contextt ecatContext_;
+    // EtherCAT context data.
+    ecx_contextt ecatContext_ = {
+        &ecatPort_,
+        &ecatSlavelist_[0],
+        &ecatSlavecount_,
+        EC_MAXSLAVE,
+        &ecatGrouplist_[0],
+        EC_MAXGROUP,
+        &ecatEsiBuf_[0],
+        &ecatEsiMap_[0],
+        0,
+        &ecatEList_,
+        &ecatIdxStack_,
+        &ecatError_,
+        0,
+        0,
+        &ecatDcTime_,
+        &ecatSmCommtype_[0],
+        &ecatPdoAssign_[0],
+        &ecatPdoDesc_[0],
+        &ecatSm_,
+        &ecatFmmu_,
+        nullptr
+    };
 };
 
 } /* namespace tcan_ethercat */

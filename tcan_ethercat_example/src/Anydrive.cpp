@@ -22,8 +22,9 @@ bool Anydrive::initDevice() {
 
 bool Anydrive::initializeInterface() {
 
-    // Set state
+    // Go to state Pre Op.
     bus_->setStatePreOp();
+    bus_->waitForStatePreOp();
 
     // RxPDO assignments in SM2
     sendSdoWrite(0x1c12, 0, false, uint8_t(1)); // TODO read only?
@@ -42,21 +43,16 @@ bool Anydrive::initializeInterface() {
     // DC Sync0
     syncDistributedClocks(true);
 
-    // Set state
+    // Go to state Safe Op.
     bus_->setStateSafeOp();
+    bus_->waitForStateSafeOp();
 
     sendSdoWrite(0x6060, 0, false, uint8_t(4));
     sendSdoReadAndPrint(0x6060, 0, false);
     sendSdoReadAndPrint(0x6061, 0, false);
 
-    // Set state to Operational
+    // Go to state Operational.
     bus_->setStateOperational();
-
-    // send one valid process data to make outputs in slaves happy
-    bus_->sendProcessData();
-    bus_->receiveProcessData();
-
-    // wait for all slaves to reach OP state
     bus_->waitForStateOperational();
 
     printStatusInfo();
