@@ -130,7 +130,7 @@ int main() {
 
 	while(g_running) {
 #ifdef USE_SYNCHRONOUS_MODE
-		canManager_.readMessagesSynchrounous();
+		canManager_.readMessagesSynchronous();
 
 		canManager_.sanityCheckSynchronous();
 #endif

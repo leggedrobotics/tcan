@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
 
     while(g_running) {
         if (!asynchronous) {
-            busManager.readMessagesSynchrounous();
+            busManager.readMessagesSynchronous();
             busManager.sanityCheckSynchronous();
         }
 

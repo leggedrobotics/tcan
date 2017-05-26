@@ -147,11 +147,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             MELO_INFO_STREAM(i << ": " << std::string(ecatContext_.slavelist[i].name));
         }
 
-//        if (!allSlavesMatch()) {
-//            MELO_ERROR_STREAM("Expected and discovered slaves mismatch.");
-//            return false;
-//        }
-//        MELO_INFO_STREAM("Expected and discovered slaves match.");
+        if (!allSlavesMatch()) {
+            MELO_ERROR_STREAM("Expected and discovered slaves mismatch.");
+            return false;
+        }
+        MELO_INFO_STREAM("Expected and discovered slaves match.");
 
         /*!
          * We now have the network up and configured. Mailboxes are up for slaves that
@@ -223,17 +223,17 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         return true;
     }
 
-    void setStateInit() { setState(EC_STATE_INIT); }
-    void setStatePreOp() { setState(EC_STATE_PRE_OP); }
-    void setStateBoot() { setState(EC_STATE_BOOT); }
-    void setStateSafeOp() { setState(EC_STATE_SAFE_OP); }
-    void setStateOperational() { setState(EC_STATE_OPERATIONAL); }
+    void setStateInit(const uint16_t slave = 0) { setState(EC_STATE_INIT, slave); }
+    void setStatePreOp(const uint16_t slave = 0) { setState(EC_STATE_PRE_OP, slave); }
+    void setStateBoot(const uint16_t slave = 0) { setState(EC_STATE_BOOT, slave); }
+    void setStateSafeOp(const uint16_t slave = 0) { setState(EC_STATE_SAFE_OP, slave); }
+    void setStateOperational(const uint16_t slave = 0) { setState(EC_STATE_OPERATIONAL, slave); }
 
-    void waitForStateInit() { waitForState(EC_STATE_INIT); }
-    void waitForStatePreOp() { waitForState(EC_STATE_PRE_OP); }
-    void waitForStateBoot() { waitForState(EC_STATE_BOOT); }
-    void waitForStateSafeOp() { waitForState(EC_STATE_SAFE_OP); }
-    void waitForStateOperational() { waitForState(EC_STATE_OPERATIONAL); }
+    void waitForStateInit(const uint16_t slave = 0) { waitForState(EC_STATE_INIT, slave); }
+    void waitForStatePreOp(const uint16_t slave = 0) { waitForState(EC_STATE_PRE_OP, slave); }
+    void waitForStateBoot(const uint16_t slave = 0) { waitForState(EC_STATE_BOOT, slave); }
+    void waitForStateSafeOp(const uint16_t slave = 0) { waitForState(EC_STATE_SAFE_OP, slave); }
+    void waitForStateOperational(const uint16_t slave = 0) { waitForState(EC_STATE_OPERATIONAL, slave); }
 
     void syncDistributedClocks(const uint16_t slave, const bool activate) {
         MELO_INFO_STREAM((activate ? "Activating" : "Deactivating") << " distributed clock synchronization for slave " << slave << " ...")
@@ -279,13 +279,32 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     void sendSdoReadAndPrint(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess) {
-        int sdodata[4]={0,0,0,0};
-        sendSdoRead(slave, index, subindex, completeAccess, sdodata);
-        printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdodata[3], sdodata[2], sdodata[1], sdodata[0]);
+        int sdoData[4] = {0,0,0,0};
+        sendSdoRead(slave, index, subindex, completeAccess, sdoData);
+        printf(" OD entry {Index 0x%x, Subindex 0x%x} is  0x%x 0x%x 0x%x 0x%x\n", index, subindex, sdoData[3], sdoData[2], sdoData[1], sdoData[0]);
+    }
+
+    void sendMessage(const uint16_t slave, const std::pair<EtherCatDatagram, EtherCatDatagram>& rxAndTxPdoDatagram) {
+      // Create a new staged datagrams object if not existing yet.
+      if (!stagedDatagrams_) {
+          stagedDatagrams_.reset(new tcan_ethercat::EtherCatDatagrams());
+      }
+
+      // Stage the Rx and Tx datagram for one slave.
+      stagedDatagrams_->rxAndTxPdoDatagrams_.insert({slave, rxAndTxPdoDatagram});
+
+      // Only send the message once the Rx and Tx datagrams of all slaves have been staged.
+      if (stagedDatagrams_->rxAndTxPdoDatagrams_.size() < ecatSlavecount_) {
+          return;
+      }
+
+      // Send all datagrams at once and clear the staged datagrams.
+      tcan::Bus<EtherCatDatagrams>::sendMessage(*stagedDatagrams_);
+      stagedDatagrams_.reset();
     }
 
     std::shared_ptr<EtherCatDatagrams> getData() {
-        return datagramsSent_;
+        return sentDatagrams_;
     }
 
  protected:/// INTERNAL FUNCTIONS
@@ -306,7 +325,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         const char* ifname = options_->name_.c_str();
         if (ecx_init(&ecatContext_, ifname) <= 0) {
             MELO_ERROR_STREAM("No socket connection on '" << ifname << "'.");
-            MELO_ERROR_STREAM("Excecute as root.");
+            MELO_ERROR_STREAM("Execute as root.");
             return false;
         }
 
@@ -336,7 +355,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     /*! Is called after reception of a message. Routes the message to the callback.
-     * @param msg    reference to the ethercat message
+     * @param msg    reference to the ethercat datagram
      */
     void handleMessage(const EtherCatDatagrams& msg) {
 
@@ -365,7 +384,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() {
-        if (!datagramsSent_) {
+        if (!sentDatagrams_) {
             MELO_WARN_STREAM("Nothing to read, since no data has been sent yet.");
             return false;
         }
@@ -379,12 +398,23 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         for (int i = 1; i <= *ecatContext_.slavecount; i++) {
             memcpy(
-                datagramsSent_->rxAndTxPdoDatagrams_[i].second.data_,
+                sentDatagrams_->rxAndTxPdoDatagrams_[i].second.data_,
                 ecatContext_.slavelist[i].inputs,
-                datagramsSent_->rxAndTxPdoDatagrams_[i].second.getDataLength());
+                sentDatagrams_->rxAndTxPdoDatagrams_[i].second.getDataLength());
         }
 
-        handleMessage(*datagramsSent_);
+//        std::cout << "wkc: " << wkc_.load() << std::endl;
+//        std::cout << "wkcExpected: " << wkcExpected_.load() << std::endl;
+//        std::cout << "datagrams: " << std::endl;
+//        for (auto datagram : sentDatagrams_->rxAndTxPdoDatagrams_) {
+//          std::cout << "datagram " << datagram.first << std::endl;
+//          std::cout << "data rx l " << datagram.second.first.getDataLength() << std::endl;
+//          std::cout << "data rx " << (uint16_t*)datagram.second.first.data_ << std::endl;
+//          std::cout << "data tx l " << datagram.second.second.getDataLength() << std::endl;
+//          std::cout << "data tx " << (uint16_t*)datagram.second.second.data_ << std::endl;
+//        }
+
+        handleMessage(*sentDatagrams_);
 
         return false; // TODO true?
     }
@@ -405,7 +435,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                 rxAndTxDatagram.second.first.getDataLength());
         }
 
-        datagramsSent_.reset(new EtherCatDatagrams(msg));
+        sentDatagrams_.reset(new EtherCatDatagrams(msg));
 
         sendProcessData();
 
@@ -497,7 +527,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             return false;
         }
         else if (*ecatContext_.slavecount > static_cast<int>(slaves_.size())) {
-            MELO_ERROR_STREAM("Too many slaves found (" << *ecatContext_.slavecount << " < " << static_cast<int>(slaves_.size()) << ").")
+            MELO_ERROR_STREAM("Too many slaves found (" << *ecatContext_.slavecount << " > " << static_cast<int>(slaves_.size()) << ").")
             return false;
         }
 
@@ -605,13 +635,13 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
     }
 
-    void setState(const uint16_t state) {
+    void setState(const uint16_t state, const uint16_t slave = 0) {
         ecatContext_.slavelist[0].state = state;
         ecx_writestate(&ecatContext_, 0);
         MELO_INFO_STREAM("State " << state << " has been set.");
     }
 
-    void waitForState(const uint16_t state) {
+    void waitForState(const uint16_t state, const uint16_t slave = 0) {
         ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 2);
         const unsigned int maxChecks = 40;
         unsigned int check = 0;
@@ -636,7 +666,8 @@ protected:
     // map mapping COB id to parse functions
     TxPdoCallbackMap txPdoCallbackMap_;
 
-    std::shared_ptr<EtherCatDatagrams> datagramsSent_;
+    std::shared_ptr<EtherCatDatagrams> stagedDatagrams_;
+    std::shared_ptr<EtherCatDatagrams> sentDatagrams_;
 
     // EtherCAT input/output mapping of the slaves within the datagrams.
     char ioMap_[4096];
@@ -655,9 +686,9 @@ protected:
     int ecatSlavecount_ = 0;
     // Slave group structure.
     ec_groupt ecatGrouplist_[EC_MAXGROUP];
-    // Internal, reference to eeprom cache buffer.
+    // Internal, reference to EEPROM cache buffer.
     uint8 ecatEsiBuf_[EC_MAXEEPBUF];
-    // Internal, reference to eeprom cache map.
+    // Internal, reference to EEPROM cache map.
     uint32 ecatEsiMap_[EC_MAXEEPBITMAP];
     // Internal, reference to error list.
     ec_eringt ecatEList_;
@@ -673,9 +704,9 @@ protected:
     ec_PDOassignt ecatPdoAssign_[EC_MAX_MAPT];
     // Internal, PDO description list.
     ec_PDOdesct ecatPdoDesc_[EC_MAX_MAPT];
-    // Internal, SM list from eeprom.
+    // Internal, SM list from EEPROM.
     ec_eepromSMt ecatSm_;
-    // Internal, FMMU list from eeprom.
+    // Internal, FMMU list from EEPROM.
     ec_eepromFMMUt ecatFmmu_;
 
     // EtherCAT context data.

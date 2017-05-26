@@ -66,7 +66,7 @@ int main() {
 
 	while(g_running) {
 #ifdef USE_SYNCHRONOUS_MODE
-		myManager_.readMessagesSynchrounous();
+		myManager_.readMessagesSynchronous();
 
 		myManager_.sanityCheckSynchronous();
 #endif

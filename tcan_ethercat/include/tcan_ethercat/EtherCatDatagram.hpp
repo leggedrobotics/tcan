@@ -9,6 +9,7 @@
 
 
 // c++
+#include <cassert>
 #include <unordered_map>
 
 
@@ -17,17 +18,20 @@ namespace tcan_ethercat {
 
 class EtherCatDatagram {
  public:
+    EtherCatDatagram() {}
+    virtual ~EtherCatDatagram() {}
+
     inline void resize(const uint16_t length) {
         uint8_t* oldData = data_;
         data_ = new uint8_t[length];
         std::copy(&oldData[0], &oldData[getDataLength()], data_);
-        header_.lenRCM_.elements_.len_ = length;
+        setDataLength(length);
         delete[] oldData;
     }
 
     template <typename T>
     inline void write(const uint16_t memoryPosition, const T& data) {
-        // check if memoryPosition lies within data_?
+        assert(memoryPosition + sizeof(T) < getDataLength() && "Write memory out of range.");
         std::copy(&data_[memoryPosition], &data_[memoryPosition + sizeof(T)], &data);
     }
 
@@ -43,6 +47,8 @@ class EtherCatDatagram {
     }
 
  private:
+    inline void setDataLength(uint16_t length) { header_.lenRCM_.elements_.len_ = length; }
+
     struct EtherCatDatagramHeader {
         enum class Command : uint8_t {
             NOP=0, // No operation
@@ -81,7 +87,7 @@ class EtherCatDatagram {
         uint16_t irq_;
 
 //        DatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), len_(0), reserved_(0), circulating_(0), more_(0), irq_(0) { }
-        EtherCatDatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), lenRCM_{0}, irq_(0) { }
+        EtherCatDatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), lenRCM_{0}, irq_(0) {}
 
 //        uint16_t getLength() const {
 //            return (lenRCM_ & 0xFFE0) >> 5;

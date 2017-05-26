@@ -60,7 +60,7 @@ struct BusOptions {
     //! if true, the bus will automatically switch from passive to active state as soon as a message is received
     bool activateBusOnReception_;
 
-    //! Whether write calls are blocking in synchrounous mode. Doing so ensures that all messages in the
+    //! Whether write calls are blocking in synchronous mode. Doing so ensures that all messages in the
     //! output queue are sent when calling BusManager::writeMessagesSynchronous(), but may increase its execution time.
     bool synchronousBlockingWrite_;
 

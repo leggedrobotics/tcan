@@ -46,7 +46,7 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
     }
 
     //! counter limit at which an SDO is considered as timed out. Set 0 to disable.
-    // maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 10Hz by default (see BusOptions))
+    // maxSdoTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchronous mode this is 10Hz by default (see BusOptions))
     unsigned int maxSdoTimeoutCounter_;
 
     //! number of tries of an SDO transmission

@@ -111,12 +111,12 @@ inline AnydriveOutdata createOutdata(Dsp402Command command, double torque)
 }
 
 template <typename Value>
-void readValue(uint8_t* data, const uint16_t pos, Value& value) {
-    value = 0;
-    const uint16_t len = sizeof(Value);
-    for (uint16_t i = 0; i < len; i++) {
-        value |= static_cast<Value>(data[pos+i] << i*8);
-    }
+void readValue(const uint8_t* data, const uint16_t pos, Value& value) {
+  value = 0;
+  const uint16_t len = sizeof(Value);
+  for (uint16_t i = 0; i < len; i++) {
+    value |= (static_cast<Value>(data[pos+i]) << i*8);
+  }
 }
 
 inline AnydriveIndata createIndata(const tcan_ethercat::EtherCatDatagram& datagram)

@@ -38,7 +38,7 @@ class EtherCatSlaveOptions {
      * @param address   address of the device
      * @param name      name of the device
      * @param timeout   timeout in seconds. If no message was received within this time, the device is considered as missing
-     * @param looprate  loop rate [Hz] of the process calling checkSanity(..). In asynchrounous mode this is 10Hz by default (see BusOptions)
+     * @param looprate  loop rate [Hz] of the process calling checkSanity(..). In asynchronous mode this is 10Hz by default (see BusOptions)
      */
     EtherCatSlaveOptions(
         const uint32_t address,
@@ -52,7 +52,7 @@ class EtherCatSlaveOptions {
 
     /*!
      * set the maxDeviceTimeoutCounter_
-     * @param timeout   timout in seconds
+     * @param timeout   timeout in seconds
      * @param looprate  looprate at which the sanityCheck(..) function is called [Hz].
      */
     inline void setDeviceTimeoutCounter(const double timeout, const double looprate=10.0) {
@@ -67,7 +67,7 @@ class EtherCatSlaveOptions {
     std::string name_;
 
     //! counter limit at which the device is considered as timed out (see sanityCheck(..)).  Set 0 to disable.
-    // maxDeviceTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchrounous mode this is 10Hz by default (see BusOptions))
+    // maxDeviceTimeoutCounter = timeout [s] * looprate [Hz] (looprate = rate of checkSanity(..) calls. In asynchronous mode this is 10Hz by default (see BusOptions))
     unsigned int maxDeviceTimeoutCounter_;
 
     //! if true, a message will be printed to the console if configureDevice returned true
