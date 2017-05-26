@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <linux/can.h> // for can_filter
+#include <linux/can/error.h>
 
 #include "tcan/BusOptions.hpp"
 

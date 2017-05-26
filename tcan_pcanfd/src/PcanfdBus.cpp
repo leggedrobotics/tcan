@@ -40,7 +40,7 @@ bool PcanfdBus::initializeInterface()
     unsigned int flags = OFD_BITRATE;
     
     // make read/write non-blocking in synchronous mode
-    if(!options->asynchronous_) {
+    if(!isAsynchronous()) {
         flags |= OFD_NONBLOCKING;
     }
     fd_ = pcanfd_open(interface, flags, options->bitrate_);
@@ -48,7 +48,7 @@ bool PcanfdBus::initializeInterface()
         MELO_FATAL("Opening CAN %s failed!", interface);
         return false;
     }
-    
+
     // todo: filter
 
     MELO_INFO("Opened CAN %s.", interface);

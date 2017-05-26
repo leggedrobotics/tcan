@@ -28,8 +28,8 @@ class CanBusManager : public BusManager<CanMsg> {
 
 
     /*! Send a sync message on all buses
-     * @param waitForEmptyQueues     wheter the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
-     * 			ensures that the sync messages are immediatly sent at the same time and not just appended to a queue.
+     * @param waitForEmptyQueues     whether the busmanager should wait until the output message queues of all buses are empty before sending the global SYNC.
+     * 			ensures that the sync messages are sent at the same time and not just appended to a queue.
      * 			Only useful in asynchronous mode.
      */
     void sendSyncOnAllBuses(const bool waitForEmptyQueues=false);

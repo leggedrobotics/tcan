@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "tcan/BusOptions.hpp"
+#include "tcan/helper_functions.hpp"
 
 #include "message_logger/message_logger.hpp"
 
@@ -64,27 +65,21 @@ class Bus {
 
         running_ = true;
 
-        if(options_->asynchronous_) {
+        if(isAsynchronous()) {
             receiveThread_ = std::thread(&Bus::receiveWorker, this);
-            transmitThread_ = std::thread(&Bus::transmitWorker, this);
-
-            sched_param sched;
-            sched.sched_priority = options_->priorityReceiveThread_;
-            if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
+            if(!setThreadPriority(receiveThread_, options_->priorityReceiveThread_)) {
                 MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             }
 
-            sched.sched_priority = options_->priorityTransmitThread_;
-            if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
+            transmitThread_ = std::thread(&Bus::transmitWorker, this);
+            if (!setThreadPriority(transmitThread_, options_->priorityTransmitThread_)) {
                 MELO_WARN("Failed to set transmit thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
             }
 
             if(options_->sanityCheckInterval_ > 0) {
                 sanityCheckThread_ = std::thread(&Bus::sanityCheckWorker, this);
-
-                sched.sched_priority = options_->prioritySanityCheckThread_;
-                if (pthread_setschedparam(receiveThread_.native_handle(), SCHED_FIFO, &sched) != 0) {
-                    MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+                if (!setThreadPriority(sanityCheckThread_, options_->prioritySanityCheckThread_)) {
+                    MELO_WARN("Failed to set sanity check thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
                 }
             }
         }
@@ -146,13 +141,31 @@ class Bus {
     /*!
      * @return true if the bus is configured to be asynchronous
      */
-    inline bool isAsynchronous() const { return options_->asynchronous_; }
+    inline bool isAsynchronous() const { return (options_->mode_ == BusOptions::Mode::Asynchronous); }
+
+    /*!
+     * @return true if the bus is configured to be semi-synchronous
+     */
+    inline bool isSemiSynchronous() const { return (options_->mode_ == BusOptions::Mode::SemiSynchronous); }
+
+    /*!
+     * @return true if the bus is configured to be synchronous
+     */
+    inline bool isSynchronous() const { return (options_->mode_ == BusOptions::Mode::Synchronous); }
 
     /*!
      * @return  number of messages in the output queue
      */
     unsigned int getNumOutogingMessagesWithoutLock() const { return outgoingMsgs_.size(); }
 
+    /*!
+     * @return  returns the name of the bus
+     */
+    const std::string& getName() const { return options_->name_; }
+
+    /*!
+     * @return a const pointer to the options struct
+     */
     const BusOptions* getOptions() const { return options_.get(); }
 
     /*!
@@ -234,20 +247,28 @@ public: /// Internal functions
         condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
     }
 
+    /*! Get a file descriptor, used for polling multiple buses for incoming messages. Required for semi-synchronous buses.
+     * @return  valid file descriptor
+     */
+    virtual int getPollableFileDescriptor() {
+        MELO_FATAL("Bus %s does not support semi-synchronous mode!", getName().c_str());
+        return 0;
+    }
+
  protected:
     /*! Initialized the device driver
      * @return true if successful
      */
     virtual bool initializeInterface() = 0;
 
-    /*! read CAN message from the device driver. This function shall be blocking in asynchronous mode and non-blocking in synchronous!
+    /*! read CAN message from the device driver. This function shall be blocking in asynchronous mode and non-blocking in synchronous and semi-synchronous!
      * It shall set errorMsgFlag_ and errorMsgFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
      * and set errorMsgFlag_ to false on successful reads of non-error messages.
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() = 0;
 
-    /*! write CAN message to the device driver.  This function shall be blocking in asynchronous mode and non-blocking in synchronous!
+    /*! write CAN message to the device driver.  This function shall be blocking in asynchronous mode and non-blocking in synchronous and semi-synchronous!
      * @param lock      pointer to the lock protecting the output queue, which is in LOCKED state when the function is called.
      *                  Use nullptr if queue is unprotected.
      * @return          True if no error occurred
@@ -280,7 +301,7 @@ public: /// Internal functions
 
     inline bool checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
-            MELO_WARN_THROTTLE(options_->errorThrottleTime_, "Exceeding max queue size on bus %s! Dropping message!", options_->name_.c_str());
+            MELO_WARN_THROTTLE(options_->errorThrottleTime_, "Exceeding max queue size on bus %s! Dropping message!", getName().c_str());
             return false;
         }
         return true;

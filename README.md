@@ -1,4 +1,4 @@
-# Threaded CAN library #
+# Threaded Communication and Networking library #
 
 ## Overview
 

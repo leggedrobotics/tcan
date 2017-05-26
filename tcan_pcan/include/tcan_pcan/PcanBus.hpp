@@ -2,7 +2,10 @@
  * PcanBus.hpp
  *
  *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
+ *      Author: Christian Gehring
+ *
+ * fixme:
+ *  WARNING: THIS IMPLEMENTATION IS INCOMPLETE AND DOES NOT SUPPORT ALL BusOptions
  */
 
 #pragma once

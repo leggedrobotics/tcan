@@ -13,9 +13,9 @@ namespace tcan {
 CanBus::CanBus(std::unique_ptr<CanBusOptions>&& options):
     Bus<CanMsg>( std::move(options) ),
     devices_(),
-    cobIdToFunctionMap_()
+    cobIdToFunctionMap_(),
+    unmappedMessageCallbackFunction_(std::bind(&CanBus::defaultHandleUnmappedMessage, this, std::placeholders::_1))
 {
-
 }
 
 CanBus::~CanBus()
@@ -38,9 +38,7 @@ void CanBus::handleMessage(const CanMsg& msg) {
         }
         it->second.second(msg); // call function pointer
     } else {
-        auto value = msg.getData();
-        MELO_INFO("Received CAN message on bus %s that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
-                  options_->name_.c_str(), msg.getCobId(), value[1], value[0], value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]);
+        unmappedMessageCallbackFunction_(msg);
     }
 }
 
@@ -69,6 +67,14 @@ void CanBus::resetAllDevices() {
     for(auto device : devices_) {
         device->resetDevice();
     }
+}
+
+bool CanBus::defaultHandleUnmappedMessage(const CanMsg& msg) {
+    auto value = msg.getData();
+    MELO_INFO("Received CAN message on bus %s that is not handled: COB_ID: 0x%02X, code: 0x%02X%02X, message: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+              options_->name_.c_str(), msg.getCobId(), value[1], value[0], value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]);
+
+    return true;
 }
 
 } /* namespace tcan */

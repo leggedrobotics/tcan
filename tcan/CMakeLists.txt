@@ -35,6 +35,7 @@ add_library(${PROJECT_NAME}
   src/UniversalSerialBus.cpp
   src/IpBus.cpp
   src/DeviceCanOpen.cpp
+  src/helper_functions.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

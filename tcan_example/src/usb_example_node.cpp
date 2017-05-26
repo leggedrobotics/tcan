@@ -33,7 +33,7 @@ public:
 	void addUsb(const UsbId usbId, const std::string& interface) {
 		std::unique_ptr<tcan::UniversalSerialBusOptions> options(new tcan::UniversalSerialBusOptions());
 #ifdef USE_SYNCHRONOUS_MODE
-		options->asynchronous = false;
+		options->mode = UniversalSerialBusOptions::Mode::Synchronous;
 #endif
 		options->name_ = interface;
 
