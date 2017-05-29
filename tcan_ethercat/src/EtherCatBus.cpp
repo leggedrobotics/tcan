@@ -5,6 +5,7 @@
  *      Author: Remo Diethelm
  */
 
+#include "tcan_ethercat/conversions.hpp"
 #include "tcan_ethercat/EtherCatBus.hpp"
 
 namespace tcan_ethercat {

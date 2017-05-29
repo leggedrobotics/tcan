@@ -24,31 +24,6 @@
 
 namespace tcan_ethercat {
 
-static int32_t convertFloatToInt32(const float value) {
-  int32_t valueInt = 0;
-  memcpy(&valueInt, &value, sizeof(float));
-  return valueInt;
-}
-
-static int64_t convertDoubleToInt64(const double value) {
-  int64_t valueInt = 0;
-  memcpy(&valueInt, &value, sizeof(double));
-  return valueInt;
-}
-
-static float convertInt32ToFloat(const int32_t value) {
-  float valueFloat = 0.0;
-  memcpy(&valueFloat, &value, sizeof(float));
-  return valueFloat;
-}
-
-static double convertInt64ToDouble(const int64_t value) {
-  double valueDouble = 0.0;
-  memcpy(&valueDouble, &value, sizeof(double));
-  return valueDouble;
-}
-
-
 class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
  public:
     typedef std::function<bool(const EtherCatDatagram&)> TxPdoCallbackPtr;
