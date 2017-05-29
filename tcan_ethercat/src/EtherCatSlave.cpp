@@ -40,6 +40,8 @@ template void EtherCatSlave::sendSdoWrite<uint8_t>(const uint16_t index, const u
 template void EtherCatSlave::sendSdoWrite<uint16_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint16_t value);
 template void EtherCatSlave::sendSdoWrite<uint32_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint32_t value);
 template void EtherCatSlave::sendSdoWrite<uint64_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const uint64_t value);
+template void EtherCatSlave::sendSdoWrite<float>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const float value);
+template void EtherCatSlave::sendSdoWrite<double>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const double value);
 
 template void EtherCatSlave::sendSdoRead<int8_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, int8_t& value);
 template void EtherCatSlave::sendSdoRead<int16_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, int16_t& value);
@@ -49,6 +51,8 @@ template void EtherCatSlave::sendSdoRead<uint8_t>(const uint16_t index, const ui
 template void EtherCatSlave::sendSdoRead<uint16_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint16_t& value);
 template void EtherCatSlave::sendSdoRead<uint32_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint32_t& value);
 template void EtherCatSlave::sendSdoRead<uint64_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, uint64_t& value);
+template void EtherCatSlave::sendSdoRead<float>(const uint16_t index, const uint8_t subindex, const bool completeAccess, float& value);
+template void EtherCatSlave::sendSdoRead<double>(const uint16_t index, const uint8_t subindex, const bool completeAccess, double& value);
 
 
 } /* namespace tcan_ethercat */

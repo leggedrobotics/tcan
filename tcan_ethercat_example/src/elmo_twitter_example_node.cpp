@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    const bool asynchronous = false;
+    const tcan::BusOptions::Mode mode = tcan::BusOptions::Mode::Asynchronous;
 
     signal(SIGINT, signal_handler);
 
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
 
     std::unique_ptr<tcan_ethercat::EtherCatBusOptions> busOptions(new tcan_ethercat::EtherCatBusOptions());
     busOptions->name_ = argv[1];
-    busOptions->asynchronous_ = asynchronous;
+    busOptions->mode_ = mode;
     tcan_ethercat::EtherCatBus bus(std::move(busOptions));
     bus.addSlave(&slave);
 
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
     int print_counter_statusword = 0;
 
     while(g_running) {
-        if (!asynchronous) {
+        if (mode != tcan::BusOptions::Mode::Synchronous) {
             busManager.readMessagesSynchronous();
             busManager.sanityCheckSynchronous();
         }
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
             print_counter_statusword = 0;
         }
 
-        if (!asynchronous) {
+        if (mode != tcan::BusOptions::Mode::Asynchronous) {
             busManager.writeMessagesSynchronous();
         }
 
