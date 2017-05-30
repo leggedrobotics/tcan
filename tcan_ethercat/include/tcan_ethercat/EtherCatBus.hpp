@@ -312,8 +312,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * @return true if successful
      */
     bool initializeInterface() {
-        printf("Starting simple test\n");
-
         /*
          * Followed by start of the application we need to set up the NIC to be used as
          * EtherCAT Ethernet interface. In a simple setup we call ec_init(ifname) and if
@@ -334,34 +332,23 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     void cleanupInterface() {
-//        /* request INIT state for all slaves */
-//        printf("\nRequest init state for all slaves\n");
-//        ecatContext_.slavelist[0].state = EC_STATE_INIT;
-//        ecx_writestate(&ecatContext_, 0);
-//
-//        /* stop SOEM, close socket */
-//        printf("End simple test, close socket\n");
-//        if (ecatContext_.port) {
-//            ecx_close(&ecatContext_);
-//            printf("Closed socket\n");
-//        }
-//
-//        for (auto slave : slaves_) {
-//            std::cout << slave << std::endl;
-//            delete slave;
-//        }
-//        printf("Deleted slaves.\n");
+        MELO_INFO_STREAM("Closing socket ...");
+        if (ecatContext_.port) {
+            ecx_close(&ecatContext_);
+        }
+
+        MELO_INFO_STREAM("Deleting slaves ...");
+        for (auto slave : slaves_) {
+            delete slave;
+        }
     }
 
     /*! Is called after reception of a message. Routes the message to the callback.
      * @param msg    reference to the ethercat datagram
      */
     void handleMessage(const EtherCatDatagrams& msg) {
-
         // TODO:
         // check time the frame took to travel through the physical bus
-        // check working counters
-        // extract datagrams from ethernet frame and map datagrams to device callback
         for (EtherCatSlave* slave : slaves_) {
             slave->resetDeviceTimeoutCounter();
             auto callback = txPdoCallbackMap_.find(slave);
