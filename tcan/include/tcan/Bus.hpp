@@ -156,7 +156,7 @@ class Bus {
     /*!
      * @return  number of messages in the output queue
      */
-    unsigned int getNumOutogingMessagesWithoutLock() const { return outgoingMsgs_.size(); }
+    unsigned int getNumOutogingMessagesWithoutLock() const { return isPassive_ ? 0 : outgoingMsgs_.size(); }
 
     /*!
      * @return  returns the name of the bus
