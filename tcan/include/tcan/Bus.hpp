@@ -109,6 +109,7 @@ class Bus {
      */
     inline void activate() {
         isPassive_ = false;
+        condTransmitThread_.notify_all(); // kick off transmit thread in case it has been waiting because the bus was passive
     }
 
     /*!
@@ -154,9 +155,9 @@ class Bus {
     inline bool isSynchronous() const { return (options_->mode_ == BusOptions::Mode::Synchronous); }
 
     /*!
-     * @return  number of messages in the output queue
+     * @return  number of messages in the output queue. 0 if the bus is passive
      */
-    unsigned int getNumOutogingMessagesWithoutLock() const { return isPassive_ ? 0 : outgoingMsgs_.size(); }
+    unsigned int getNumOutogingMessagesWithoutLock() const { return isPassive() ? 0 : outgoingMsgs_.size(); }
 
     /*!
      * @return  returns the name of the bus
@@ -244,7 +245,7 @@ public: /// Internal functions
     void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
     {
         lock = std::unique_lock<std::mutex>(outgoingMsgsMutex_);
-        condOutputQueueEmpty_.wait(lock, [this]{ return outgoingMsgs_.size() == 0 || !running_; });
+        condOutputQueueEmpty_.wait(lock, [this]{ return getNumOutogingMessagesWithoutLock() == 0 || !running_; });
     }
 
     /*! Get a file descriptor, used for polling multiple buses for incoming messages. Required for semi-synchronous buses.
@@ -286,7 +287,7 @@ public: /// Internal functions
     bool processOutputQueue() {
         std::unique_lock<std::mutex> lock(outgoingMsgsMutex_);
 
-        while(outgoingMsgs_.size() == 0 && running_) {
+        while(getNumOutogingMessagesWithoutLock() == 0 && running_) {
             condOutputQueueEmpty_.notify_all();
             condTransmitThread_.wait(lock);
         }
