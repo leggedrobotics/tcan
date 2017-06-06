@@ -22,22 +22,21 @@ class IpBus : public Bus<IpMsg> {
 
     virtual ~IpBus();
 
-    /*! Callback called after reception of a message.
-     * @param msg	reference to the usb message
-     */
-    virtual void handleMessage(const IpMsg& msg) = 0;
-
     /*! Do a sanity check of all devices on this bus.
      */
     void sanityCheck();
 
- protected:
-    bool initializeInterface();
-    bool readData();
-    bool writeData(const IpMsg& msg);
+    virtual int getPollableFileDescriptor() { return socket_; }
+
+protected:
+    virtual bool initializeInterface();
+    virtual bool readData();
+    virtual bool writeData(std::unique_lock<std::mutex>* lock);
 
  private:
     int socket_;
+    int recvFlag_;
+    int sendFlag_;
 
     unsigned int deviceTimeoutCounter_;
 };

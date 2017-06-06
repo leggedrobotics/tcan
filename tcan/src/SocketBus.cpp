@@ -29,14 +29,16 @@ SocketBus::SocketBus(const std::string& interface):
 
 SocketBus::SocketBus(std::unique_ptr<SocketBusOptions>&& options):
     CanBus(std::move(options)),
-    socket_()
+    socket_(-1),
+    recvFlag_(0),
+    sendFlag_(0)
 {
 }
 
 SocketBus::~SocketBus()
 {
     stopThreads();
-    close(socket_.fd);
+    close(socket_);
 }
 
 bool SocketBus::initializeInterface()
@@ -45,9 +47,9 @@ bool SocketBus::initializeInterface()
     const char* interface = options->name_.c_str();
 
     /* open socket */
-    int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if(fd < 0) {
-        MELO_FATAL("Opening CAN channel %s failed: %d", interface, fd);
+    socket_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if(socket_ < 0) {
+        MELO_FATAL("Opening CAN channel %s failed: %d", interface, socket_);
         return false;
     }
 
@@ -55,34 +57,34 @@ bool SocketBus::initializeInterface()
     /* configure socket */
     struct ifreq ifr;
     strcpy(ifr.ifr_name, interface);
-    ioctl(fd, SIOCGIFINDEX, &ifr);
+    ioctl(socket_, SIOCGIFINDEX, &ifr);
 
     // loopback
     int loopback = options->loopback_;
-    if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback)) != 0) {
+    if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback)) != 0) {
         MELO_WARN("Failed to set loopback mode");
         perror("setsockopt");
     }
 
     // receive own messages
     int recv_own_msgs = 0; /* 0 = disabled (default), 1 = enabled */
-    if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &recv_own_msgs, sizeof(recv_own_msgs)) != 0) {
+    if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &recv_own_msgs, sizeof(recv_own_msgs)) != 0) {
     	MELO_WARN("Failed to set reception of own messages option:\n  %s", strerror(errno));
     }
 
     // CAN error handling
     can_err_mask_t err_mask = options->canErrorMask_;
-    if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_ERR_FILTER, &err_mask, sizeof(err_mask)) != 0) {
+    if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_ERR_FILTER, &err_mask, sizeof(err_mask)) != 0) {
     	MELO_WARN("Failed to set error mask:\n  %s", strerror(errno));
     }
 
     // get default bufer sizes
 //    int buf_size;
 //    socklen_t len;
-//    getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &len);
+//    getsockopt(socket_, SOL_SOCKET, SO_SNDBUF, &buf_size, &len);
 //    printf("sndbuf size: %d (%d)\n", buf_size, len);
 //
-//    getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &len);
+//    getsockopt(socket_, SOL_SOCKET, SO_RCVBUF, &buf_size, &len);
 //    printf("rcvbuf size: %d (%d)\n", buf_size, len);
 
     // On some CAN drivers, the txqueuelen of the netdevice cannot be changed (default=10).
@@ -93,21 +95,21 @@ bool SocketBus::initializeInterface()
     // https://www.mail-archive.com/socketcan-users@lists.berlios.de/msg00787.html
     // http://socket-can.996257.n3.nabble.com/Solving-ENOBUFS-returned-by-write-td2886.html
     if(options->sndBufLength_ != 0) {
-        if(setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_)) != 0) {
+        if(setsockopt(socket_, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_)) != 0) {
         	MELO_WARN("Failed to set sndBuf length:\n  %s", strerror(errno));
         }
     }
 
     // set read timeout
-    if (options->setReadTimeout_) {
-      if(setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&options->readTimeout_, sizeof(options->readTimeout_)) != 0) {
+    if (options_->readTimeout_.tv_sec != 0 || options_->readTimeout_.tv_usec != 0) {
+      if(setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&options_->readTimeout_, sizeof(options->readTimeout_)) != 0) {
           MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
       }
     }
 
     // set write timeout
-    if (options->setWriteTimeout_) {
-      if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&options->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
+    if (options_->writeTimeout_.tv_sec != 0 || options_->writeTimeout_.tv_usec != 0) {
+      if(setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&options_->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
           MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
       }
     }
@@ -116,17 +118,16 @@ bool SocketBus::initializeInterface()
 
     // set up filters
     if(options->canFilters_.size() != 0) {
-        if(setsockopt(fd, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters_[0]), sizeof(can_filter)*options->canFilters_.size()) != 0) {
+        if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters_[0]), sizeof(can_filter)*options->canFilters_.size()) != 0) {
             MELO_WARN("Failed to set CAN raw filters:\n  %s", strerror(errno));
         }
     }
 
-    //Set nonblocking for synchronous mode
-    if(!options_->asynchronous_) {
-        int flags;
-        if (-1 == (flags = fcntl(fd, F_GETFL, 0))) flags = 0;
-        if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
-            MELO_ERROR("Failed to set socket nonblocking:\n  %s", strerror(errno));
+    // set nonblocking flags for synchrounous mode
+    if(!isAsynchronous()) {
+        recvFlag_ = MSG_DONTWAIT;
+        if(!options_->synchronousBlockingWrite_) {
+            sendFlag_ = MSG_DONTWAIT;
         }
     }
 
@@ -135,12 +136,10 @@ bool SocketBus::initializeInterface()
     memset(&addr, 0, sizeof(struct sockaddr_can));
     addr.can_family  = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
-    if(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    if(bind(socket_, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         MELO_FATAL("Error in socket %s bind:\n  %s", interface, strerror(errno));
         return false;
     }
-
-    socket_ = {fd, POLLOUT, 0};
 
     MELO_INFO("Opened socket %s.", interface);
 
@@ -150,16 +149,17 @@ bool SocketBus::initializeInterface()
 
 bool SocketBus::readData() {
 
-    // no need to poll the socket.
     // In synchronous mode, the socket is non-blocking, so this function returns as soon as there is no data available to be read
     // If asynchronous, we set the socket to blocking and have a separate thread reading from it.
 
     can_frame frame;
-    const int bytes_read = read( socket_.fd, &frame, sizeof(struct can_frame));
+    const int bytes_read = recv( socket_, &frame, sizeof(struct can_frame), recvFlag_);
     //	printf("CanManager_ bytes read: %i\n", bytes_read);
 
-    if(bytes_read<=0) {
-        //		printf("read nothing\n");
+    if(bytes_read <= 0) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
+            MELO_ERROR("Failed to read data from bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+        }
         return false;
     } else {
 //		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
@@ -175,25 +175,11 @@ bool SocketBus::readData() {
 }
 
 
-bool SocketBus::writeData(const CanMsg& cmsg) {
-    // poll the socket only in synchronous mode, so this function DOES block until socket is writable (or timeout), even if the socket is non-blocking.
-    // If asynchronous, we set the socket to blocking and have a separate thread writing to it.
+bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
 
-    if(!options_->asynchronous_ && static_cast<const SocketBusOptions*>(options_.get())->usePoll_) {
-        socket_.revents = 0;
-
-        const int ret = poll( &socket_, 1, 1000 );
-
-        if ( ret == -1 ) {
-            MELO_ERROR("poll failed on bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
-            return false;
-        }else if ( ret == 0 || !(socket_.revents & POLLOUT) ) {
-            // poll timed out, without being able to write => raise error
-            MELO_WARN("polling for socket writeability timed out for bus %s. Socket overflow?", options_->name_.c_str());
-            return false;
-        }else{
-            // socket ready for write operations => proceed
-        }
+    CanMsg cmsg = outgoingMsgs_.front();
+    if(lock != nullptr) {
+        lock->unlock();
     }
 
     can_frame frame;
@@ -201,31 +187,33 @@ bool SocketBus::writeData(const CanMsg& cmsg) {
     frame.can_dlc = cmsg.getLength();
     std::copy(cmsg.getData(), &(cmsg.getData()[frame.can_dlc]), frame.data);
 
-    int ret;
-    if( ( ret = write(socket_.fd, &frame, sizeof(struct can_frame)) ) != sizeof(struct can_frame)) {
-        MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d):\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, strerror(errno));
-        return false;
+    const int ret = send(socket_, &frame, sizeof(struct can_frame), sendFlag_);
+    if( ret != sizeof(struct can_frame) ) {
+        if(errno != EAGAIN && errno != EWOULDBLOCK) {
+            MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d):\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, strerror(errno));
+        }
+    }else{
+        if(lock != nullptr) {
+            lock->lock();
+        }
+        outgoingMsgs_.pop_front();
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 void SocketBus::handleBusError(const can_frame& msg) {
 
-    if(static_cast<const CanBusOptions*>(options_.get())->ignoreErrorFrames_) {
-        return;
-    }
-
-    // todo: really ignore arbitration lost?
-    //if(msg.can_id & CAN_ERR_LOSTARB) {
-    //    return;
-    //}
-
-    busErrorFlag_ = true;
+    errorMsgFlagPersistent_ = true;
+    errorMsgFlag_ = true;
 
     if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
+        if(!isPassive_) {
+            MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+        }
         passivate();
-        MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+
     }
 
     std::stringstream errorMsg;
@@ -468,7 +456,7 @@ void SocketBus::handleBusError(const can_frame& msg) {
     // bit 5-7
     errorMsg << " / controller specific additional information: 0x" << std::hex << static_cast<int>(msg.data[5]) << " 0x" <<  std::hex << static_cast<int>(msg.data[6]) << " 0x" <<  std::hex << static_cast<int>(msg.data[7]);
 
-    MELO_ERROR_THROTTLE_STREAM(static_cast<const SocketBusOptions*>(options_.get())->canErrorThrottleTime_, errorMsg.str());
+    MELO_ERROR_THROTTLE_STREAM(options_->errorThrottleTime_, errorMsg.str());
 }
 
 } /* namespace tcan */

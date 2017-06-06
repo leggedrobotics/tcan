@@ -2,7 +2,10 @@
  * PcanBus.hpp
  *
  *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
+ *      Author: Christian Gehring
+ *
+ * fixme:
+ *  WARNING: THIS IMPLEMENTATION IS INCOMPLETE AND DOES NOT SUPPORT ALL BusOptions
  */
 
 #pragma once
@@ -26,7 +29,7 @@ class PcanBus : public CanBus {
  protected:
     bool initializeInterface();
     bool readData();
-    bool writeData(const CanMsg& cmsg);
+    bool writeData(std::unique_lock<std::mutex>* lock);
 
     /*!
      * Is called on reception of a bus error message. Sets the flag

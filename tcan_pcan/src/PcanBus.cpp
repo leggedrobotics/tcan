@@ -3,6 +3,9 @@
  *
  *  Created on: Mar 15, 2017
  *      Author: Christian Gehring
+ *
+ * fixme:
+ *  WARNING: THIS IMPLEMENTATION IS INCOMPLETE AND DOES NOT SUPPORT ALL BusOptions
  */
 
 
@@ -140,7 +143,12 @@ bool PcanBus::readData() {
 }
 
 
-bool PcanBus::writeData(const CanMsg& cmsg) {
+bool PcanBus::writeData(std::unique_lock<std::mutex>* lock) {
+    CanMsg cmsg = outgoingMsgs_.front();
+    if(lock != nullptr) {
+        lock->unlock();
+    }
+
     DWORD status;
     TPCANMsg msg;
     msg.ID = cmsg.getCobId();
@@ -150,24 +158,25 @@ bool PcanBus::writeData(const CanMsg& cmsg) {
 
     status = LINUX_CAN_Write_Timeout(handle_, &msg, 20);
 
-//    if(status != CAN_ERR_OK) {
-//      return false;
-//    }
+    if(lock != nullptr) {
+        lock->lock();
+    }
+    outgoingMsgs_.pop_front();
+
     return true;
 }
 
 void PcanBus::handleBusError(const can_frame& msg) {
 
-    // todo: really ignore arbitration lost?
-    //if(msg.can_id & CAN_ERR_LOSTARB) {
-    //    return;
-    //}
-
-    busErrorFlag_ = true;
+    errorMsgFlagPersistent_ = true;
+    errorMsgFlag_ = true;
 
     if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
+        if(!isPassive_) {
+            MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+        }
         passivate();
-        MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
+
     }
 
     std::stringstream errorMsg;

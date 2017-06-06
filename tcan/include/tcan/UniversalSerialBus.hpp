@@ -23,19 +23,14 @@ class UniversalSerialBus : public Bus<UsbMsg> {
 
     virtual ~UniversalSerialBus();
 
-    /*! Callback called after reception of a message.
-     * @param msg	reference to the usb message
-     */
-    virtual void handleMessage(const UsbMsg& msg) = 0;
-
-    /*! Do a sanity check of all devices on this bus.
-     */
     void sanityCheck();
 
- protected:
-    bool initializeInterface();
-    bool readData();
-    bool writeData(const UsbMsg& msg);
+    virtual int getPollableFileDescriptor() { return fileDescriptor_; }
+
+protected:
+    virtual bool initializeInterface();
+    virtual bool readData();
+    virtual bool writeData(std::unique_lock<std::mutex>* lock);
 
  private:
     void configureInterface();
