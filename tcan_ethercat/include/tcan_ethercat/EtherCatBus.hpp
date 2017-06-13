@@ -366,7 +366,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
     }
 
-    /*! read CAN message from the device driver
+    /*! read datagrams from the device driver
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() {
