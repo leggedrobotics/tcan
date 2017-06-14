@@ -314,6 +314,15 @@ public:
   {}
   virtual ~SDOTxPDO2Disable(){}
 };
+//////////////////////////////////////////////////////////////////////////////
+class SDOTxPDO2SetInhibitTime: public SdoMsg
+{
+public:
+    SDOTxPDO2SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
+            SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1801, 0x03, time_100us)
+    {}
+    virtual ~SDOTxPDO2SetInhibitTime(){}
+};
 
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO2SetTransmissionType: public SdoMsg
@@ -367,6 +376,15 @@ public:
   virtual ~SDOTxPDO3Disable(){}
 };
 //////////////////////////////////////////////////////////////////////////////
+class SDOTxPDO3SetInhibitTime: public SdoMsg
+{
+public:
+    SDOTxPDO3SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
+            SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1802, 0x03, time_100us)
+    {}
+    virtual ~SDOTxPDO3SetInhibitTime(){}
+};
+//////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO3SetTransmissionType: public SdoMsg
 {
 public:
@@ -416,6 +434,15 @@ public:
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0xFFFFFFFF)
   {}
   virtual ~SDOTxPDO4Disable(){}
+};
+//////////////////////////////////////////////////////////////////////////////
+class SDOTxPDO4SetInhibitTime: public SdoMsg
+{
+public:
+    SDOTxPDO4SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
+            SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1803, 0x03, time_100us)
+    {}
+    virtual ~SDOTxPDO4SetInhibitTime(){}
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO4SetTransmissionType: public SdoMsg
