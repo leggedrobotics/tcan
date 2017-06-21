@@ -29,7 +29,7 @@ class CanBus : public Bus<CanMsg> {
     using DeviceContainer = std::vector<CanDevice*>;
 
     CanBus() = delete;
-    CanBus(CanBusOptions* options);
+    CanBus(std::unique_ptr<CanBusOptions>&& options);
 
     virtual ~CanBus();
 
@@ -39,8 +39,8 @@ class CanBus : public Bus<CanMsg> {
      * @return true if successful
      */
     template <class C, typename TOptions>
-    inline std::pair<C*, bool> addDevice(TOptions* options) {
-        C* dev = new C(options);
+    inline std::pair<C*, bool> addDevice(std::unique_ptr<TOptions>&& options) {
+        C* dev = new C(std::move(options));
         bool success = addDevice(dev);
         return std::make_pair(dev, success);
     }
@@ -80,21 +80,6 @@ class CanBus : public Bus<CanMsg> {
     }
 
     /*!
-     * @return true if a bus error message has been received
-     */
-    inline bool hadBusError() const { return busErrorFlag_; }
-
-    /*!
-     * resets the bus error flag and returns its previous value.
-     * @return true if a bus error message has been received
-     */
-    inline bool resetBusError() {
-        bool tmp = busErrorFlag_;
-        busErrorFlag_ = false;
-        return tmp;
-    }
-
-    /*!
      * @return  Container with all devices handled by this bus
      */
     const DeviceContainer& getDeviceContainer() const { return devices_; }
@@ -104,6 +89,18 @@ class CanBus : public Bus<CanMsg> {
      */
     void resetAllDevices();
 
+    /*!
+     * Set the callback function to be called for incoming messages with an id not found in the callback function map
+     * @param callbackPtr std::function wrapper containing the callback function pointer
+     */
+    inline void setUnmappedMessageCallback(const CallbackPtr& callbackPtr) {
+        // todo: protect this with a mutex? (also inside handleMessage)
+        unmappedMessageCallbackFunction_ = callbackPtr;
+    }
+
+    bool defaultHandleUnmappedMessage(const CanMsg& msg);
+
+
  public:/// INTERNAL FUNCTIONS
     /*! Send a sync message on the bus without locking the queue.
      * This function is intended to be used by BusManager::sendSyncOnAllBuses, which locks the queue.
@@ -112,7 +109,7 @@ class CanBus : public Bus<CanMsg> {
         sendMessageWithoutLock(CanMsg(0x80, 0, nullptr));
     }
 
-    /*! Is called after reception of a message. Routes the message to the callback.
+    /*! Is called after reception of a message. Routes the message to the callback and clears the errorMsgFlag_
      * @param cmsg	reference to the can message
      */
     void handleMessage(const CanMsg& cmsg);
@@ -128,8 +125,8 @@ class CanBus : public Bus<CanMsg> {
     // map mapping COB id to parse functions
     CobIdToFunctionMap cobIdToFunctionMap_;
 
-    // flag to indicate the reception of a bus error message
-    std::atomic<bool> busErrorFlag_;
+    // function pointer to be called for unmapped COB ids
+    CallbackPtr unmappedMessageCallbackFunction_;
 };
 
 } /* namespace tcan */

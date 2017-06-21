@@ -10,9 +10,11 @@
 
 #pragma once
 
+#include "tcan/DeviceCanOpen.hpp"
+
 #include <stdint.h>
-#include <tcan/DeviceCanOpen.hpp>
 #include <atomic>
+#include <memory>
 
 
 namespace tcan {
@@ -43,7 +45,7 @@ public:
 	 */
 	CanDeviceExample() = delete;
 	CanDeviceExample(const uint32_t nodeId, const std::string& name);
-	CanDeviceExample(CanDeviceExampleOptions* options);
+	CanDeviceExample(std::unique_ptr<CanDeviceExampleOptions>&& options);
 
 	//! Destructor
 	virtual ~CanDeviceExample();

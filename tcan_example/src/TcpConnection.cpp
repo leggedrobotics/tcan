@@ -11,8 +11,8 @@
 
 namespace tcan_example {
 
-TcpConnection::TcpConnection(tcan::IpBusOptions* options):
-    tcan::IpBus(options)
+TcpConnection::TcpConnection(std::unique_ptr<tcan::IpBusOptions>&& options):
+    tcan::IpBus(std::move(options))
 {
 
 }
@@ -23,6 +23,10 @@ TcpConnection::~TcpConnection()
 
 void TcpConnection::handleMessage(const tcan::IpMsg& msg) {
     std::cout << " got data: " << msg.getData() << std::endl;
+
+    // clear the error message flag, indicating that the received message is valid.
+    // This is used for the passive bus option
+    errorMsgFlag_ = false;
 }
 
 } /* namespace tcan */

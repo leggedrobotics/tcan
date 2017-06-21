@@ -18,15 +18,25 @@ namespace tcan {
 
 namespace example_can {
 
+// put this definition in a separate header file
+class mySdo : public SdoMsg {
+public:
+	mySdo(uint32_t nodeid, int value):
+			SdoMsg(nodeid, SdoMsg::Command::WRITE_4_BYTE, 0x1010, 0x00, value) {
+
+	}
+};
+
+
 CanDeviceExample::CanDeviceExample(const uint32_t nodeId, const std::string& name):
-	CanDeviceExample(new CanDeviceExampleOptions(nodeId, name))
+	CanDeviceExample(std::unique_ptr<CanDeviceExampleOptions>(new CanDeviceExampleOptions(nodeId, name)))
 
 {
 
 }
 
-CanDeviceExample::CanDeviceExample(CanDeviceExampleOptions* options):
-	DeviceCanOpen(options),
+CanDeviceExample::CanDeviceExample(std::unique_ptr<CanDeviceExampleOptions>&& options):
+	DeviceCanOpen(std::move(options)),
 	myMeasurement_(0.f)
 {
 
@@ -36,14 +46,6 @@ CanDeviceExample::~CanDeviceExample()
 {
 
 }
-
-class mySdo : public SdoMsg {
-public:
-	mySdo(uint32_t nodeid, int value):
-		SdoMsg(nodeid, SdoMsg::Command::WRITE_4_BYTE, 0x1010, 0x00, value) {
-
-	}
-};
 
 bool CanDeviceExample::initDevice() {
 
@@ -63,7 +65,7 @@ bool CanDeviceExample::configureDevice(const CanMsg& msg) {
     // explicitly set it to preoperational, just to make sure..
 	printf("configureDevice called\n");
 	setNmtEnterPreOperational();
-	sendSdo(mySdo(getNodeId(), static_cast<const CanDeviceExampleOptions*>(options_)->someParameter));
+	sendSdo(mySdo(getNodeId(), static_cast<const CanDeviceExampleOptions*>(options_.get())->someParameter));
 	setNmtStartRemoteDevice();
 
 	// when returning true, the device is considered as beeing 'active'. return false to leave it in 'missing'
@@ -72,6 +74,12 @@ bool CanDeviceExample::configureDevice(const CanMsg& msg) {
 }
 
 void CanDeviceExample::setCommand(const float value) {
+	// you should normally only send PDOs if the device is operational. However, for demonstration purposes, we want the software
+	// to send the PDOs even if the device is missing
+//	if(!isOperational()) {
+//		return;
+//	}
+
 	CanMsg cmsg(DeviceCanOpen::RxPDO1Id + getNodeId());
 	cmsg.write(static_cast<uint32_t>(value), 0);
 

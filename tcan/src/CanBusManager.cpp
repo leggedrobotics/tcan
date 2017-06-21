@@ -24,7 +24,10 @@ void CanBusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
 
     if(waitForEmptyQueues) {
         for(unsigned int i=0; i<bussize; i++) {
-            static_cast<CanBus*>(buses_[i])->waitForEmptyQueue(locks[i]);
+            auto bus = getCanBus(i);
+            if(bus->isAsynchronous()) {
+                bus->waitForEmptyQueue(locks[i]);
+            }
         }
 
         // we now own a lock on all output message queues
@@ -41,19 +44,19 @@ void CanBusManager::sendSync(const unsigned int busIndex) {
     }
 }
 
-bool CanBusManager::hadBusError() const {
+bool CanBusManager::getErrorMsgFlag() const {
     for(auto bus : buses_) {
-        if(static_cast<CanBus*>(bus)->hadBusError()) {
+        if(static_cast<CanBus*>(bus)->getErrorMsgFlag()) {
             return true;
         }
     }
     return false;
 }
 
-bool CanBusManager::resetBusError() {
+bool CanBusManager::resetErrorMsgFlag() {
     bool hadBusError = false;
     for(auto bus : buses_) {
-        if(static_cast<CanBus*>(bus)->resetBusError()) {
+        if(static_cast<CanBus*>(bus)->resetErrorMsgFlag()) {
             hadBusError = true;
         }
     }
