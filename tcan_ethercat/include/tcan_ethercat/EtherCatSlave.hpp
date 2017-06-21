@@ -24,21 +24,22 @@ class EtherCatBus;
 class EtherCatSlave {
  public:
     enum State {
-        Initializing=0,
-        Active=1,
-        Error=-2,
-        Missing=-1
+        Initializing = 0,
+        Active = 1,
+        Error = -2,
+        Missing = -1
     };
 
-    /*! Constructor
+    /*! Constructor by address and name.
      *  @param address address of the device
      *  @param name    human-readable name of the device
      */
-    EtherCatSlave() = delete;
-
     EtherCatSlave(const uint32_t address, const std::string& name)
     :   EtherCatSlave(std::unique_ptr<EtherCatSlaveOptions>(new EtherCatSlaveOptions(address, name))) {}
 
+    /*! Constructor by options.
+     *  @param options EtherCAT options.
+     */
     EtherCatSlave(std::unique_ptr<EtherCatSlaveOptions>&& options)
     :   options_(std::move(options)),
         deviceTimeoutCounter_(0),
@@ -60,16 +61,6 @@ class EtherCatSlave {
      *  @return true if successfully initialized
      */
     virtual bool initializeInterface() = 0;
-
-    /*! Configure the device
-     *  This function is automatically called after reception of a
-     *  bootup message. (or more general: After reception of any message if the device was in state Missing or Initializing)
-     *  @param msg   received message which caused the call of this function
-     *  @return      true if device is active
-     */
-//    virtual bool configureDevice(const CanMsg& msg) {
-//        return true;
-//    }
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      *  and shall check heartbeats, SDO timeouts, ...
@@ -95,11 +86,6 @@ class EtherCatSlave {
 
     virtual int getStatus() const { return static_cast<int>(state_.load()); }
 
-    /*!
-     * Resets the device to Initializing state
-     */
-    virtual void resetDevice() { state_ = Initializing; }
-
  public: /// Internal functions
     /*! Initialize the device. This function is automatically called by EtherCatBus::addDevice(..).
      *  Calls the initDevice() function.
@@ -108,17 +94,6 @@ class EtherCatSlave {
         bus_ = bus;
         return initDevice();
     }
-
-//    inline void configureDeviceInternal(const CanMsg& msg) {
-//        if(state_ != Active && state_ != Error) {
-//            if(configureDevice(msg)) {
-//                state_ = Active;
-//                if(options_->printConfigInfo_) {
-//                    MELO_INFO("Device %s configured successfully.", options_->name_.c_str());
-//                }
-//            }
-//        }
-//    }
 
     inline void resetDeviceTimeoutCounter() {
         deviceTimeoutCounter_ = 0;
@@ -136,11 +111,12 @@ class EtherCatSlave {
 
  protected:
     /*!
+     * Check if the device is timed out.
      * @return True if the device timed out
      */
     inline bool isTimedOut() {
-        return (options_->maxDeviceTimeoutCounter_ != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter_) );
-        // deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
+      // deviceTimeoutCounter_ is only increased if options_->maxDeviceTimeoutCounter != 0
+        return (options_->maxDeviceTimeoutCounter_ != 0 && (deviceTimeoutCounter_++ > options_->maxDeviceTimeoutCounter_));
     }
 
  protected:
