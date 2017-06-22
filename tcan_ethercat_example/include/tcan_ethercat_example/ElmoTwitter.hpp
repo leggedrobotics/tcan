@@ -138,8 +138,6 @@ class ElmoTwitter : public tcan_ethercat::EtherCatSlave {
  public:
     ElmoTwitter(const uint32_t address, const std::string& name);
 
-    void printStatusInfo();
-
     bool initDevice();
     bool initializeInterface();
 };

@@ -27,11 +27,6 @@ void EtherCatSlave::sendSdoRead(const uint16_t index, const uint8_t subindex, co
     bus_->sendSdoRead(options_->address_, index, subindex, completeAccess, value);
 }
 
-void EtherCatSlave::sendSdoReadAndPrint(const uint16_t index, const uint8_t subindex, const bool completeAccess) {
-    bus_->sendSdoReadAndPrint(options_->address_, index, subindex, completeAccess);
-}
-
-
 template void EtherCatSlave::sendSdoWrite<int8_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value);
 template void EtherCatSlave::sendSdoWrite<int16_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int16_t value);
 template void EtherCatSlave::sendSdoWrite<int32_t>(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int32_t value);

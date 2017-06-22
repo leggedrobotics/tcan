@@ -149,8 +149,6 @@ class Anydrive : public tcan_ethercat::EtherCatSlave {
  public:
     Anydrive(const uint32_t address, const std::string& name);
 
-    void printStatusInfo();
-
     bool initDevice();
     bool initializeInterface();
 };
