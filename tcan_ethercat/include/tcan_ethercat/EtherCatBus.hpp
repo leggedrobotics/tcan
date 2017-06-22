@@ -205,9 +205,12 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
       }
 
       // Send all datagrams at once and clear the staged datagrams.
-      tcan::Bus<EtherCatDatagrams>::sendMessage(*stagedDatagrams_);
+      tcan::Bus<EtherCatDatagrams>::sendMessage(*stagedDatagrams_); // TODO: Use return bool.
       stagedDatagrams_.reset();
     }
+
+    // TODO: Implement emplace method.
+//    void emplaceMessage(const uint16_t slave, const std::pair<EtherCatDatagram, EtherCatDatagram>& rxAndTxPdoDatagram) {}
 
     std::shared_ptr<EtherCatDatagrams> getData() {
         return sentDatagrams_;
