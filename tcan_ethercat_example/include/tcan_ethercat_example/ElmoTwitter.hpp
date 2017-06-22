@@ -3,6 +3,7 @@
 
 // tcan ethercat
 #include <tcan_ethercat/EtherCatSlave.hpp>
+#include "tcan_ethercat/EtherCatBus.hpp"
 
 // tcan ethercat example
 #include "tcan_ethercat_example/Dsp402.hpp"
