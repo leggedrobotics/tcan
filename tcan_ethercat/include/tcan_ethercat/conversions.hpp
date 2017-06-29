@@ -61,6 +61,5 @@ static double convertUInt64ToDouble(const uint64_t value) {
   return valueDouble;
 }
 
-
 } /* namespace tcan_ethercat */
 

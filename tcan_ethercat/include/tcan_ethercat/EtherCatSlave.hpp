@@ -109,6 +109,36 @@ class EtherCatSlave {
 
     void sendSdoReadAndPrint(const uint16_t index, const uint8_t subindex, const bool completeAccess);
 
+    template <typename T>
+    bool changeSdoParameter(const uint16_t index,
+                          const uint8_t subindex,
+                          const bool completeAccess,
+                          const T value,
+                          const std::string & name,
+                          const bool verbose = true)
+    {
+      T temp;
+      sendSdoWrite(index, subindex, completeAccess, value );
+      sendSdoRead(index, subindex, completeAccess, temp);
+      if(temp == value) {
+          MELO_INFO_STREAM("Set " << name << " to " << value << "!");
+      } else{
+          MELO_WARN_STREAM("Could not set " << name << " to " << value << ", " << name << " is " << temp << "!");
+      }
+      return (temp == value);
+    }
+
+    template <typename T>
+    void printSdoParameter(const uint16_t index,
+                           const uint8_t subindex,
+                           const bool completeAccess,
+                           const std::string & name)
+    {
+      T temp;
+      sendSdoRead(index, subindex, completeAccess, temp);
+      MELO_INFO_STREAM(name << " is " << temp << "!");
+    }
+
  protected:
     /*!
      * Check if the device is timed out.
