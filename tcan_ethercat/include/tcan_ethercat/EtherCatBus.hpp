@@ -86,6 +86,18 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
         MELO_INFO_STREAM("Expected and discovered slaves match.");
 
+
+        // Disable symmetrical transfers.
+        ecatContext_.grouplist[0].blockLRW = 1;
+
+        // Initialize the communication interfaces of all slaves.
+        for (EtherCatSlave* slave : slaves_) {
+            if (!slave->initializeInterface()) {
+                MELO_ERROR_STREAM("Slave '" << slave->getName() << "' was not initialized successfully.");
+                return false;
+            }
+        }
+
         // Set up the communication IO mapping.
         ecx_config_map_group(&ecatContext_, &ioMap_, 0);
 
@@ -97,30 +109,18 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             MELO_INFO_STREAM("No distributed clocks located and measured.");
         }
 
-        // The states should reach the safe op state here.
-        if (!waitForStateSafeOp()) {
-            MELO_ERROR_STREAM("Not all slaves reached the safe op state.");
-            printSlaveStates();
-            printSlaveErrors();
-            return false;
-        }
-
-        // Disable symmetrical transfers.
-        ecatContext_.grouplist[0].blockLRW = 1;
-
         // Calculate the expected working counter.
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
         MELO_INFO_STREAM("Calculated expected working counter: " << wkcExpected_.load());
 
-        // Initialize the communication interfaces of all slaves.
-        for (EtherCatSlave* slave : slaves_) {
-            if (!slave->initializeInterface()) {
-                MELO_ERROR_STREAM("Slave '" << slave->getName() << "' was not initialized successfully.");
-                return false;
-            }
+        // Go to state Safe Op.
+        setStateSafeOp();
+        if (!waitForStateSafeOp()) {
+            MELO_ERROR_STREAM("Not all slaves reached the safe-op state.");
         }
 
-        // The states should reach the operational state here.
+        // Go to state Operational.
+        setStateOperational();
         if (!waitForStateOperational()) {
             MELO_ERROR_STREAM("Not all slaves reached the operational state.");
             printSlaveStates();
