@@ -430,7 +430,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     void printSlaveInfo() {
-        // TODO: Use MELO.
         int ret = 0;
         int Osize = 0, Isize = 0;
 
@@ -441,42 +440,43 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         // Check PDO mapping size
         ret = ecx_readPDOmap(&ecatContext_, 1, &Osize, &Isize);
-        printf("\n\nec_readPDOmap returned %d\n", ret);
-        printf("Osize in bits = %d\n", Osize);
-        printf("Isize in bits = %d\n", Isize);
+        MELO_INFO_STREAM("ec_readPDOmap returned " << ret);
+        MELO_INFO_STREAM("Osize in bits = " << Osize);
+        MELO_INFO_STREAM("Isize in bits = " << Isize);
 
         // Get complete OD dump
         ec_ODlistt odinfo;
         ec_OElistt odentryinfo;
         ret = ecx_readODlist(&ecatContext_, 1, &odinfo);
-        printf("\nc_readODlist returned %d\n", ret);
-        printf("Slave = %d, Entries = %d\n", odinfo.Slave, odinfo.Entries);
+        MELO_INFO_STREAM("c_readODlist returned " << ret);
+        MELO_INFO_STREAM("Slave = " << odinfo.Slave << ", Entries = " << odinfo.Entries);
         for (int k = 0; k < odinfo.Entries; k++) {
             ecx_readODdescription(&ecatContext_, k, &odinfo);
             ecx_readOE(&ecatContext_, k, &odinfo, &odentryinfo);
-            printf("\nIndex = 0x%x\n", odinfo.Index[k]);
-            printf("    MaxSub     = %d\n", odinfo.MaxSub[k]+1);
-            printf("    ObjectCode = %d\n", odinfo.ObjectCode[k]);
-            printf("    DataType   = %d\n", odinfo.DataType[k]);
-            printf("    Description: %s\n", &odinfo.Name[k][0]);
-            printf("    OE Entries = %d\n", odentryinfo.Entries);
+            MELO_INFO_STREAM("Index = 0x" << std::hex << odinfo.Index[k]);
+            MELO_INFO_STREAM("    MaxSub     = " << odinfo.MaxSub[k]+1);
+            MELO_INFO_STREAM("    ObjectCode = " << odinfo.ObjectCode[k]);
+            MELO_INFO_STREAM("    DataType   = " << odinfo.DataType[k]);
+            MELO_INFO_STREAM("    Description: " << &odinfo.Name[k][0]);
+            MELO_INFO_STREAM("    OE Entries = " << odentryinfo.Entries);
             for (int j = 0; j < odentryinfo.Entries; j++) {
                 for (int n = 0; n < Nsdo; n++) {
                     sdodata[n] = 0;
                 }
                 sdodatasize = Nsdo*sizeof(int);
                 ecx_SDOread(&ecatContext_, odinfo.Slave, odinfo.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
-                printf("    OE = %d\n", j);
-                printf("        ValueInfo  = %d\n", odentryinfo.ValueInfo[j]);
-                printf("        DataType   = %d\n", odentryinfo.DataType[j]);
-                printf("        BitLength  = %d\n", odentryinfo.BitLength[j]);
-                printf("        ObjAccess  = %d\n", odentryinfo.ObjAccess[j]);
-                printf("        Name       = %s\n", &odentryinfo.Name[j][0]);
-                printf("        Value      =");
+                MELO_INFO_STREAM("    OE = " << j);
+                MELO_INFO_STREAM("        ValueInfo  = " << odentryinfo.ValueInfo[j]);
+                MELO_INFO_STREAM("        DataType   = " << odentryinfo.DataType[j]);
+                MELO_INFO_STREAM("        BitLength  = " << odentryinfo.BitLength[j]);
+                MELO_INFO_STREAM("        ObjAccess  = " << odentryinfo.ObjAccess[j]);
+                MELO_INFO_STREAM("        Name       = " << &odentryinfo.Name[j][0]);
+                std::stringstream stream;
+                stream << "        Value      =" << std::hex;
                 for (int n=0; n<sdodatasize; n++) {
-                    printf(" 0x%x", (0xFF & databuf[n]));
+                    stream << " 0x" << (0xFF & databuf[n]);
                 }
-                printf("\n");
+                MELO_INFO_STREAM(stream.str());
             }
         }
     }
