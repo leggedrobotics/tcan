@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(tcan_example)
+project(tcan_ethercat_example)
 
 find_package(catkin REQUIRED COMPONENTS
-  tcan
+  tcan_ethercat
 )
 
 ###################################
@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS tcan
+  CATKIN_DEPENDS tcan_ethercat
 )
 
 ###########
@@ -27,27 +27,19 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(can_example_node
-  src/CanDeviceExample.cpp
-  src/can_example_node.cpp
+add_executable(elmo_twitter_example_node
+  src/ElmoTwitter.cpp
+  src/elmo_twitter_example_node.cpp
 )
-target_link_libraries(can_example_node
+target_link_libraries(elmo_twitter_example_node
   ${catkin_LIBRARIES}
 )
 
-add_executable(usb_example_node
-  src/XbeeUsb.cpp
-  src/usb_example_node.cpp
+add_executable(anydrive_example_node
+  src/Anydrive.cpp
+  src/anydrive_example_node.cpp
 )
-target_link_libraries(usb_example_node
-  ${catkin_LIBRARIES}
-)
-
-add_executable(tcp_example_node
-  src/TcpConnection.cpp
-  src/tcp_example_node.cpp
-)
-target_link_libraries(tcp_example_node
+target_link_libraries(anydrive_example_node
   ${catkin_LIBRARIES}
 )
 
@@ -56,7 +48,7 @@ target_link_libraries(tcp_example_node
 #############
 
 
-install(TARGETS can_example_node usb_example_node tcp_example_node
+install(TARGETS elmo_twitter_example_node anydrive_example_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

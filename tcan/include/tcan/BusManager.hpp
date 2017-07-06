@@ -59,7 +59,7 @@ class BusManager {
     /*!
      * Send the messages in the output queue on all buses. Call this function in the control loop if synchronous mode is used.
      * Note that this function may not send all the messages in the output queue if BlockingWrite is disabled (see BusOptions)
-     * @return  False if at least one write error occured
+     * @return  False if at least one write error occurred
      */
     bool writeMessagesSynchronous() {
         bool sendingData = true;

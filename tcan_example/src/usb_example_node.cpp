@@ -26,7 +26,7 @@ public:
 
 	virtual ~UsbManager()
 	{
-		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destructed object (parseIncomingSync(..) in this case)
+		// close Buses (especially their threads!) here, so that the receiveThread does not try to call a callback of a already destroyed object (parseIncomingSync(..) in this case)
 		closeBuses();
 	}
 
@@ -68,7 +68,7 @@ int main() {
 
 	while(g_running) {
 #ifdef USE_SYNCHRONOUS_MODE
-	    usbManager_.readMessagesSynchrounous();
+	    usbManager_.readMessagesSynchronous();
 
 	    usbManager_.sanityCheckSynchronous();
 #endif
