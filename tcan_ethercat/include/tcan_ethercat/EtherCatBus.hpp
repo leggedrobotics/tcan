@@ -114,9 +114,12 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         MELO_INFO_STREAM("Calculated expected working counter: " << wkcExpected_.load());
 
         // Go to state Safe Op.
-        setStateSafeOp();
-        if (!waitForStateSafeOp()) {
-            MELO_ERROR_STREAM("Not all slaves reached the safe-op state.");
+        for (EtherCatSlave* slave : slaves_) {
+          setStateSafeOp(slave->getAddress());
+          if (!waitForStateSafeOp(slave->getAddress())) {
+            MELO_ERROR_STREAM("Slave " << slave->getAddress() << " did not reach the safe-op state.");
+            return false;
+          }
         }
 
         // Go to state Operational.
@@ -128,17 +131,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
           }
         }
 
-
-/*
-        // Go to state Operational.
-        setStateOperational();
-        if (!waitForStateOperational()) {
-            MELO_ERROR_STREAM("Not all slaves reached the operational state.");
-            printSlaveStates();
-            printSlaveErrors();
-            return false;
-        }
-*/
 
         // Print slave states and errors.
         printSlaveStates();
