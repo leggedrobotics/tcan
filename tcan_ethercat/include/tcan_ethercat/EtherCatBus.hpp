@@ -534,8 +534,8 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      *  @param slave    slave id, 0 means all slaves.
      */
     void setState(const uint16_t state, const uint16_t slave = 0) {
-        ecatContext_.slavelist[0].state = state;
-        ecx_writestate(&ecatContext_, 0);
+        ecatContext_.slavelist[slave].state = state;
+        ecx_writestate(&ecatContext_, slave);
         MELO_INFO_STREAM("State " << state << " has been set.");
     }
 
@@ -545,17 +545,17 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      *  @return         true if it the state has been reached within the timeout.
      */
     bool waitForState(const uint16_t state, const uint16_t slave = 0) {
-        ecx_statecheck(&ecatContext_, 0, state,  EC_TIMEOUTSTATE * 2);
+        ecx_statecheck(&ecatContext_, slave, state,  EC_TIMEOUTSTATE * 2);
         const unsigned int maxChecks = 40;
         unsigned int check = 0;
         do {
             sendProcessData();
             receiveProcessData();
-            ecx_statecheck(&ecatContext_, 0, state,  50000);
+            ecx_statecheck(&ecatContext_, slave, state,  50000);
             check++;
-        } while (check <= maxChecks && (ecatContext_.slavelist[0].state != state));
+        } while (check <= maxChecks && (ecatContext_.slavelist[slave].state != state));
 
-        if (ecatContext_.slavelist[0].state == state) {
+        if (ecatContext_.slavelist[slave].state == state) {
             MELO_INFO_STREAM("State " << state << " has been reached.");
             return true;
         } else {
