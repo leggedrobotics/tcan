@@ -120,6 +120,17 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
 
         // Go to state Operational.
+        for (EtherCatSlave* slave : slaves_) {
+          setStateOperational(slave->getAddress());
+          if (!waitForStateOperational(slave->getAddress())) {
+            MELO_ERROR_STREAM("Slave " << slave->getAddress() << " did not reach the operational state.");
+            return false;
+          }
+        }
+
+
+/*
+        // Go to state Operational.
         setStateOperational();
         if (!waitForStateOperational()) {
             MELO_ERROR_STREAM("Not all slaves reached the operational state.");
@@ -127,6 +138,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             printSlaveErrors();
             return false;
         }
+*/
 
         // Print slave states and errors.
         printSlaveStates();
