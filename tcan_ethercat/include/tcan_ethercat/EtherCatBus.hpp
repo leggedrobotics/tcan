@@ -74,18 +74,17 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
 
         // Print the slaves which have been detected.
-        MELO_INFO_STREAM("The following " << *ecatContext_.slavecount << " slaves have been found and configured:");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': The following " << *ecatContext_.slavecount << " slaves have been found and configured:");
         for (int i = 1; i <= *ecatContext_.slavecount; i++) {
             MELO_INFO_STREAM(i << ": " << std::string(ecatContext_.slavelist[i].name));
         }
 
         // In order to set up the mapping correctly, only continue if all slaves have been found.
         if (!allSlavesMatch()) {
-            MELO_ERROR_STREAM("Expected and discovered slaves mismatch.");
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Expected and discovered slaves mismatch.");
             return false;
         }
-        MELO_INFO_STREAM("Expected and discovered slaves match.");
-
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Expected and discovered slaves match.");
 
         // Disable symmetrical transfers.
         ecatContext_.grouplist[0].blockLRW = 1;
@@ -93,7 +92,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         // Initialize the communication interfaces of all slaves.
         for (EtherCatSlave* slave : slaves_) {
             if (!slave->initializeInterface()) {
-                MELO_ERROR_STREAM("Slave '" << slave->getName() << "' was not initialized successfully.");
+                MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Slave '" << slave->getName() << "' was not initialized successfully.");
                 return false;
             }
         }
@@ -102,11 +101,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         ecx_config_map_group(&ecatContext_, &ioMap_, 0);
 
         // Configure distributed clocks.
-        MELO_INFO_STREAM("Locating and measuring distributed clocks ...");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Locating and measuring distributed clocks ...");
         if (ecx_configdc(&ecatContext_)) {
-            MELO_INFO_STREAM("Distributed clocks located and measured.");
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': Distributed clocks located and measured.");
         } else {
-            MELO_INFO_STREAM("No distributed clocks located and measured.");
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': No distributed clocks located and measured.");
         }
 
         // Calculate the expected working counter.
@@ -115,22 +114,21 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         // Go to state Safe Op.
         for (EtherCatSlave* slave : slaves_) {
-          setStateSafeOp(slave->getAddress());
-          if (!waitForStateSafeOp(slave->getAddress())) {
-            MELO_ERROR_STREAM("Slave " << slave->getAddress() << " did not reach the safe-op state.");
-            return false;
-          }
+            setStateSafeOp(slave->getAddress());
+            if (!waitForStateSafeOp(slave->getAddress())) {
+                MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Slave " << slave->getAddress() << " did not reach the safe-op state.");
+                return false;
+            }
         }
 
         // Go to state Operational.
         for (EtherCatSlave* slave : slaves_) {
-          setStateOperational(slave->getAddress());
-          if (!waitForStateOperational(slave->getAddress())) {
-            MELO_ERROR_STREAM("Slave " << slave->getAddress() << " did not reach the operational state.");
-            return false;
-          }
+            setStateOperational(slave->getAddress());
+            if (!waitForStateOperational(slave->getAddress())) {
+                MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Slave " << slave->getAddress() << " did not reach the operational state.");
+                return false;
+            }
         }
-
 
         // Print slave states and errors.
         printSlaveStates();
@@ -152,14 +150,14 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     bool waitForStateOperational(const uint16_t slave = 0) { return waitForState(EC_STATE_OPERATIONAL, slave); }
 
     void syncDistributedClocks(const uint16_t slave, const bool activate) {
-        MELO_INFO_STREAM((activate ? "Activating" : "Deactivating") << " distributed clock synchronization for slave " << slave << " ...")
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": " << (activate ? "Activating" : "Deactivating") << " distributed clock synchronization ...")
         const double timeStep = 1e-3;
         ecx_dcsync0(&ecatContext_, slave, static_cast<boolean>(activate), static_cast<uint32>(timeStep*1e9), static_cast<int32>(timeStep*0.5*1e9));
-        MELO_INFO_STREAM("Finished " << (activate ? "activating" : "deactivating") << " distributed clock synchronization.")
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Finished " << (activate ? "activating" : "deactivating") << " distributed clock synchronization.")
     }
 
     void printDistributedClockState() {
-        MELO_INFO_STREAM("DC state:");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': DC state:");
         MELO_INFO_STREAM("DC time: " << *ecatContext_.DCtime);
         MELO_INFO_STREAM("DC tO: " << ecatContext_.DCtO);
         MELO_INFO_STREAM("DC l: " << ecatContext_.DCl);
@@ -190,7 +188,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         int size = sizeof(Value);
         wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
         if (size != sizeof(Value)) {
-            MELO_WARN_STREAM("Expected (" << sizeof(Value) << ") and read (" << size << ") SDO value size mismatch.");
+            MELO_WARN_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Expected (" << sizeof(Value) << ") and read (" << size << ") SDO value size mismatch.");
         }
     }
 
@@ -235,12 +233,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
          */
         const char* ifname = options_->name_.c_str();
         if (ecx_init(&ecatContext_, ifname) <= 0) {
-            MELO_ERROR_STREAM("No socket connection on '" << ifname << "'.");
-            MELO_ERROR_STREAM("Execute as root.");
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': No socket connection. Execute as root.");
             return false;
         }
 
-        MELO_INFO_STREAM("EtherCAT initialization on '" << ifname << "' succeeded.");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': EtherCAT initialization on succeeded.");
 
         return true;
     }
@@ -248,12 +245,12 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     /*! Cleanup the interface.
      */
     void cleanupInterface() {
-        MELO_INFO_STREAM("Closing socket ...");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Closing socket ...");
         if (ecatContext_.port) {
             ecx_close(&ecatContext_);
         }
 
-        MELO_INFO_STREAM("Deleting slaves ...");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Deleting slaves ...");
         for (auto slave : slaves_) {
             delete slave;
         }
@@ -291,14 +288,14 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     virtual bool readData() {
         if (!sentDatagrams_) {
-            MELO_WARN_STREAM("Nothing to read, since no data has been sent yet.");
+            MELO_WARN_STREAM("Bus '" << options_->name_ << "': Nothing to read, since no data has been sent yet.");
             return false;
         }
 
         receiveProcessData();
 
         if (!workingCounterIsOk()) {
-            MELO_WARN_STREAM("Working counter is too low (" << wkc_ << " < " << wkcExpected_ << ").");
+            MELO_WARN_STREAM("Bus '" << options_->name_ << "': Working counter is too low (" << wkc_ << " < " << wkcExpected_ << ").");
             return false;
         }
 
@@ -412,11 +409,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     bool allSlavesMatch() {
         // Verify the expected number of slaves
         if (*ecatContext_.slavecount < static_cast<int>(slaves_.size())) {
-            MELO_ERROR_STREAM("Too few slaves found (" << *ecatContext_.slavecount << " < " << static_cast<int>(slaves_.size()) << ").")
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Too few slaves found (" << *ecatContext_.slavecount << " < " << static_cast<int>(slaves_.size()) << ").")
             return false;
         }
         else if (*ecatContext_.slavecount > static_cast<int>(slaves_.size())) {
-            MELO_ERROR_STREAM("Too many slaves found (" << *ecatContext_.slavecount << " > " << static_cast<int>(slaves_.size()) << ").")
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Too many slaves found (" << *ecatContext_.slavecount << " > " << static_cast<int>(slaves_.size()) << ").")
             return false;
         }
 
@@ -489,12 +486,12 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         for (uint16_t i = 0; i <= *ecatContext_.slavecount; i++) {
             uint32_t state = 0;
             sendSdoRead(i, 0x6041, 0, false, state);
-            MELO_INFO_STREAM("Slave " << i << " state is 0x" << std::hex << state);
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': Slave " << i << " state is 0x" << std::hex << state);
         }
     }
 
     void printSlaveErrors() {
-        MELO_INFO_STREAM("Error report:");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Error report:");
         if (ecx_iserror(&ecatContext_)) {
             int i = 0;
             do {
@@ -528,7 +525,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     void setState(const uint16_t state, const uint16_t slave = 0) {
         ecatContext_.slavelist[slave].state = state;
         ecx_writestate(&ecatContext_, slave);
-        MELO_INFO_STREAM("State " << state << " has been set.");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": State " << state << " has been set.");
     }
 
     /*! Wait for an EtherCAT state machine state to be reached.
@@ -548,10 +545,10 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         } while (check <= maxChecks && (ecatContext_.slavelist[slave].state != state));
 
         if (ecatContext_.slavelist[slave].state == state) {
-            MELO_INFO_STREAM("State " << state << " has been reached.");
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": State " << state << " has been reached.");
             return true;
         } else {
-            MELO_WARN_STREAM("State " << state << " has not been reached.");
+            MELO_WARN_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": State " << state << " has not been reached.");
             return false;
         }
     }
