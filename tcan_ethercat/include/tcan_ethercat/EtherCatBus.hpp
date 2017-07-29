@@ -33,7 +33,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     EtherCatBus(std::unique_ptr<EtherCatBusOptions>&& options)
     : tcan::Bus<EtherCatDatagrams>(std::move(options)),
       wkcExpected_(0),
-      wkc_(0) {}
+      wkc_(0) {
+      // Initialize the redport pointer explicit with NULL (this solves the
+      // segmentation fault, that sometimes occurred during the shutdown).
+      ecatContext_.port->redport = NULL;
+    }
 
     virtual ~EtherCatBus() {
         cleanupInterface();
