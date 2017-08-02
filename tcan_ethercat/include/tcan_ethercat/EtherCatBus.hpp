@@ -34,9 +34,17 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     : tcan::Bus<EtherCatDatagrams>(std::move(options)),
       wkcExpected_(0),
       wkc_(0) {
-      // Initialize the redport pointer explicit with NULL (this solves the
-      // segmentation fault, that sometimes occurred during the shutdown).
-      ecatContext_.port->redport = NULL;
+      // Initialize all SOEM context data pointers that are not used with null.
+      ecatContext_.port->stack.sock = nullptr;
+      ecatContext_.port->stack.txbuf = nullptr;
+      ecatContext_.port->stack.txbuflength = nullptr;
+      ecatContext_.port->stack.tempbuf = nullptr;
+      ecatContext_.port->stack.rxbuf = nullptr;
+      ecatContext_.port->stack.rxbufstat = nullptr;
+      ecatContext_.port->stack.rxsa = nullptr;
+      ecatContext_.port->redport = nullptr;
+//      ecatContext_.idxstack->data = nullptr; // This does not compile since they use a fixed size array of void pointers ...
+      ecatContext_.FOEhook = nullptr;
     }
 
     virtual ~EtherCatBus() {
@@ -608,6 +616,8 @@ protected:
     ec_eepromFMMUt ecatFmmu_;
 
     // EtherCAT context data.
+    // Note: SOEM does not use dynamic memory (new/delete). Therefore
+    // all context pointers must be null or point to an existing member.
     ecx_contextt ecatContext_ = {
         &ecatPort_,
         &ecatSlavelist_[0],
