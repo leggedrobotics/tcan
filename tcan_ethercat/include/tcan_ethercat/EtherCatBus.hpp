@@ -260,6 +260,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': Closing socket ...");
         if (ecatContext_.port) {
             ecx_close(&ecatContext_);
+            sleep(0.5); // Sleep to make sure the socket is closed, because ecx_close is non-blocking.
         }
 
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': Deleting slaves ...");
