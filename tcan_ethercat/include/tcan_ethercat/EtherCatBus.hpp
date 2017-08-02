@@ -205,22 +205,22 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     void sendMessage(const uint16_t slave, const std::pair<EtherCatDatagram, EtherCatDatagram>& rxAndTxPdoDatagram) {
-      // Create a new staged datagrams object if not existing yet.
-      if (!stagedDatagrams_) {
-          stagedDatagrams_.reset(new tcan_ethercat::EtherCatDatagrams());
-      }
+        // Create a new staged datagrams object if not existing yet.
+        if (!stagedDatagrams_) {
+            stagedDatagrams_.reset(new tcan_ethercat::EtherCatDatagrams());
+        }
 
-      // Stage the Rx and Tx datagram for one slave.
-      stagedDatagrams_->rxAndTxPdoDatagrams_.insert({slave, rxAndTxPdoDatagram});
+        // Stage the Rx and Tx datagram for one slave.
+        stagedDatagrams_->rxAndTxPdoDatagrams_.insert({slave, rxAndTxPdoDatagram});
 
-      // Only send the message once the Rx and Tx datagrams of all slaves have been staged.
-      if (stagedDatagrams_->rxAndTxPdoDatagrams_.size() < ecatSlavecount_) {
-          return;
-      }
+        // Only send the message once the Rx and Tx datagrams of all slaves have been staged.
+        if (stagedDatagrams_->rxAndTxPdoDatagrams_.size() < ecatSlavecount_) {
+            return;
+        }
 
-      // Send all datagrams at once and clear the staged datagrams.
-      tcan::Bus<EtherCatDatagrams>::sendMessage(*stagedDatagrams_); // TODO: Use return bool.
-      stagedDatagrams_.reset();
+        // Send all datagrams at once and clear the staged datagrams.
+        tcan::Bus<EtherCatDatagrams>::sendMessage(*stagedDatagrams_); // TODO: Use return bool.
+        stagedDatagrams_.reset();
     }
 
     // TODO: Implement emplace method.
