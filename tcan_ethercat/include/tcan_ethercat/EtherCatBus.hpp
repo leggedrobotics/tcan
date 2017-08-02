@@ -87,7 +87,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': Expected and discovered slaves match.");
 
         // Disable symmetrical transfers.
-        ecatContext_.grouplist[0].blockLRW = 1;
+        ecatContext_.grouplist[0].blockLRW = static_cast<const EtherCatBusOptions*>(getOptions())->blockLrw_ ? 1 : 0;
 
         // Initialize the communication interfaces of all slaves.
         for (EtherCatSlave* slave : slaves_) {

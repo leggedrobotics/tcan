@@ -15,13 +15,18 @@ namespace tcan_ethercat {
 
 struct EtherCatBusOptions : public tcan::BusOptions {
 
-    EtherCatBusOptions(const std::string& name = "", unsigned int maxDeviceTimeoutCounter = 20):
+    EtherCatBusOptions(
+        const std::string& name = "",
+        unsigned int maxDeviceTimeoutCounter = 20,
+        bool blockLrw = false):
         BusOptions(name),
-        maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter) {}
+        maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter),
+        blockLrw_(blockLrw) {}
 
     virtual ~EtherCatBusOptions() {}
 
     unsigned int maxDeviceTimeoutCounter_;
+    bool blockLrw_;
 };
 
 } /* namespace tcan_ethercat */
