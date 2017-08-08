@@ -27,7 +27,7 @@ add_definitions(-std=c++11)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${pcan_driver_INCLUDE_DIRS} # fix for third-party library not prepending package name in their includes
+  ${pcan_driver_INCLUDE_DIRS}/pcan_driver # fix for third-party library not prepending package name in their includes
 )
 
 add_library(${PROJECT_NAME}
