@@ -67,9 +67,8 @@ class EtherCatDatagram {
             ARMW=13, // Auto Increment Read Multiple Write
             FRMW=14 // Configured Read Multiple Write
         };
-        // Note: Bit field ordering depends on the Endianness which is implementation dependent.
         struct LenRCMBits {
-          uint16_t len_           :11; // does this sub-byte work?
+          uint16_t len_           :11;
           uint16_t reserved_      :3;
           uint16_t circulating_   :1;
           uint16_t more_          :1;
@@ -86,44 +85,8 @@ class EtherCatDatagram {
         LenRCM lenRCM_;
         uint16_t irq_;
 
-//        DatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), len_(0), reserved_(0), circulating_(0), more_(0), irq_(0) { }
         EtherCatDatagramHeader(): cmd_(Command::NOP), idx_(0), address_(0), lenRCM_{0}, irq_(0) {}
 
-//        uint16_t getLength() const {
-//            return (lenRCM_ & 0xFFE0) >> 5;
-//        }
-//
-//        void setLength(uint16_t length) {
-//            lenRCM_ &= ~0xFFE0; // clear bits first.
-//            lenRCM_ = (length << 5) & 0xFFE0;
-//        }
-//
-//        uint16_t getReserved() const {
-//            return (lenRCM_ & 0x001C) >> 2;
-//        }
-//
-//        void setReserved(uint16_t reserved) {
-//            lenRCM_ &= ~0x001C; // clear bits first.
-//            lenRCM_ = (reserved << 2) & 0x001C;
-//        }
-//
-//        uint16_t getCirculating() const {
-//            return (lenRCM_ & 0x0002) >> 1;
-//        }
-//
-//        void setCirculating(uint16_t circulating) {
-//            lenRCM_ &= ~0x0002; // clear bits first.
-//            lenRCM_ = (circulating << 1) & 0x0002;
-//        }
-//
-//        uint16_t getMore() const {
-//            return (lenRCM_ & 0x0001) >> 0;
-//        }
-//
-//        void setMore(uint16_t more) {
-//            lenRCM_ &= ~0x0001; // clear bits first.
-//            lenRCM_ = (more << 1) & 0x0001;
-//        }
     } __attribute__((packed)); // prevent structure padding
 
 

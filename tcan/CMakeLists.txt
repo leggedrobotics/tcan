@@ -55,7 +55,11 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY
-  scripts
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(
+  PROGRAMS
+    scripts/vcan.sh
+    scripts/canusb.sh
+    scripts/filter_calculator.py
+    scripts/parse_candump.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

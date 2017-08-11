@@ -27,6 +27,7 @@ add_definitions(-std=c++11)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${pcan_driver_INCLUDE_DIRS}/pcan_driver # fix for third-party library not prepending package name in their includes
 )
 
 add_library(${PROJECT_NAME}
@@ -48,9 +49,4 @@ install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY
-  scripts
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

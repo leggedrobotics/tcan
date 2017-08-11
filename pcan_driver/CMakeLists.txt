@@ -17,10 +17,10 @@ execute_process(
 )
 
 ## copy files to devel space
-configure_file(${EXTRACTED_DIR}/lib/libpcan.h   ${DEVEL_INCLUDE_DIR}/pcan_driver/libpcan.h      COPYONLY)
-configure_file(${EXTRACTED_DIR}/lib/libpcanfd.h ${DEVEL_INCLUDE_DIR}/pcan_driver/libpcanfd.h    COPYONLY)
-configure_file(${EXTRACTED_DIR}/driver/pcan.h   ${DEVEL_INCLUDE_DIR}/pcan_driver/pcan.h         COPYONLY)
-configure_file(${EXTRACTED_DIR}/driver/pcanfd.h ${DEVEL_INCLUDE_DIR}/pcan_driver/pcanfd.h       COPYONLY)
+configure_file(${EXTRACTED_DIR}/lib/libpcan.h   ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME}/libpcan.h      COPYONLY)
+configure_file(${EXTRACTED_DIR}/lib/libpcanfd.h ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME}/libpcanfd.h    COPYONLY)
+configure_file(${EXTRACTED_DIR}/driver/pcan.h   ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME}/pcan.h         COPYONLY)
+configure_file(${EXTRACTED_DIR}/driver/pcanfd.h ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME}/pcanfd.h       COPYONLY)
 
 ###################################
 ## catkin specific configuration ##
@@ -28,7 +28,7 @@ configure_file(${EXTRACTED_DIR}/driver/pcanfd.h ${DEVEL_INCLUDE_DIR}/pcan_driver
 catkin_package(
   INCLUDE_DIRS
     ${DEVEL_INCLUDE_DIR}
-    ${DEVEL_INCLUDE_DIR}/pcan_driver # add include directory directly, because include directives in API source are not catkin style packaged based
+    ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME} # add include directory directly, because include directives in API source are not catkin style packaged based
   LIBRARIES ${PROJECT_NAME}
 )
 
@@ -39,7 +39,7 @@ catkin_package(
 add_definitions(-DPCANFD_OLD_STYLE_API -DNO_RT -fPIC -shared -Wall)
 
 include_directories(
-  ${DEVEL_INCLUDE_DIR}/pcan_driver # add package name, because source is not catkin style packaged based
+  ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME} # add package name, because source is not catkin style packaged based
   ${EXTRACTED_DIR}/lib # for libprivate.h
 )
 
@@ -58,9 +58,8 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME}
+install(DIRECTORY ${DEVEL_INCLUDE_DIR}/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
 

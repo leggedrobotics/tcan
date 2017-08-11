@@ -10,9 +10,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS
+    include
   LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS tcan pcan_driver
+  CATKIN_DEPENDS
+    tcan
+    pcan_driver
 )
 
 ###########
@@ -25,6 +28,7 @@ add_definitions(-std=c++11)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${pcan_driver_INCLUDE_DIRS}/pcan_driver # fix for third-party library not prepending package name in their includes
 )
 
 add_library(${PROJECT_NAME}

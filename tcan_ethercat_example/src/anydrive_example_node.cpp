@@ -232,8 +232,8 @@ int main(int argc, char *argv[]) {
             if(++print_counter >= 5) {
                 printf("Processdata cycle %4d", i++);
                 // printf(" T:%"PRId64"",ecatContext_.DCtime[0]);
-                printf(", Command Data: 0x%4x, %4d", outdata.controlword.all, outdata.desired_joint_position);
-                printf(", Feedback Data: 0x%4x, %4d, %8d, %16d, %16d, %16d", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
+                printf(", Command Data: 0x%4x, %16ld", outdata.controlword.all, outdata.desired_joint_position);
+                printf(", Feedback Data: 0x%4x, %4d, %8d, %16ld, %16ld, %16ld", indata.statusword.all, indata.measured_motor_voltage, indata.measured_motor_current, indata.measured_motor_position, indata.measured_gear_position, indata.measured_joint_position);
                 printf("\r");
                 print_counter = 0;
             }

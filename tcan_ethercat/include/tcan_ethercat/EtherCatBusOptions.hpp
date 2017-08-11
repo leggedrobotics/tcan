@@ -15,33 +15,18 @@ namespace tcan_ethercat {
 
 struct EtherCatBusOptions : public tcan::BusOptions {
 
-    enum class ConnectionType : unsigned int {
-        TCP
-        //UDP
-    };
-
-    EtherCatBusOptions():
-        EtherCatBusOptions(std::string(), 9999)
-    {
-
-    }
-
-    EtherCatBusOptions(const std::string& name, const uint16_t port):
+    EtherCatBusOptions(
+        const std::string& name = "",
+        unsigned int maxDeviceTimeoutCounter = 20,
+        bool blockLrw = false):
         BusOptions(name),
-        connectionType_(ConnectionType::TCP),
-        port_(port),
-        maxDeviceTimeoutCounter_(20)
-    {
+        maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter),
+        blockLrw_(blockLrw) {}
 
-    }
-
-    virtual ~EtherCatBusOptions() { }
-
-    ConnectionType connectionType_;
-
-    uint16_t port_;
+    virtual ~EtherCatBusOptions() {}
 
     unsigned int maxDeviceTimeoutCounter_;
+    bool blockLrw_;
 };
 
 } /* namespace tcan_ethercat */
