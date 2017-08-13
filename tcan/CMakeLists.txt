@@ -1,18 +1,26 @@
 cmake_minimum_required(VERSION 2.6)
 project(tcan)
 
-find_package(catkin REQUIRED COMPONENTS
-  message_logger
-)
+find_package(catkin QUIET)
+
+if(catkin_FOUND)
+  find_package(catkin REQUIRED COMPONENTS
+    message_logger
+  )
+else()
+  find_package(message_logger REQUIRED)
+endif()
 
 ###################################
 ## catkin specific configuration ##
 ###################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS message_logger
-)
+if(catkin_FOUND)
+  catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES ${PROJECT_NAME} pthread
+    CATKIN_DEPENDS message_logger
+  )
+endif()
 
 ###########
 ## Build ##
@@ -23,10 +31,18 @@ add_definitions(-std=c++11)
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
+if(catkin_FOUND)
+  include_directories(
+    ${catkin_INCLUDE_DIRS}
+  )
+else()
+  include_directories(
+    ${message_logger_INCLUDE_DIRS}
+  )
+endif()
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   src/CanBusManager.cpp
   src/UniversalSerialBusManager.cpp
   src/IpBusManager.cpp
@@ -38,28 +54,61 @@ add_library(${PROJECT_NAME}
   src/helper_functions.cpp
 )
 target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
   pthread
 )
+if(catkin_FOUND)
+  target_link_libraries(${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+  )
+else()
+  target_link_libraries(${PROJECT_NAME}
+    ${message_logger_LIBRARIES}
+  )
+endif()
 
 #############
 ## Install ##
 #############
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+if(catkin_FOUND)
+  install(DIRECTORY include/${PROJECT_NAME}/
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+    PATTERN ".svn" EXCLUDE
+  )
 
-install(
-  PROGRAMS
-    scripts/vcan.sh
-    scripts/canusb.sh
-    scripts/filter_calculator.py
-    scripts/parse_candump.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+  install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+
+  install(
+    PROGRAMS
+      scripts/vcan.sh
+      scripts/canusb.sh
+      scripts/filter_calculator.py
+      scripts/parse_candump.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+endif()
+
+### Local Build ###
+
+if(NOT catkin_FOUND)
+  set(external_libs
+    ${message_logger_LIBRARIES}
+  )
+
+  # Register the local build in case on doesn't use "make install"
+  export(PACKAGE tcan)
+
+  # Create variable with the library location
+  set(LIB_NAME tcan)
+  set(tcan_library $<TARGET_FILE:${LIB_NAME}>)
+
+  # Create variable for the local build tree
+  get_property(tcan_include_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+  # Configure config file for local build tree
+  configure_file(tcanConfig.cmake.in
+    "${PROJECT_BINARY_DIR}/tcanConfig.cmake" @ONLY
+  )
+endif()

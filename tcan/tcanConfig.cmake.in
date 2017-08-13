@@ -1,0 +1,9 @@
+# - Config file for the tcan package
+# It defines the following variables
+#  tcan_INCLUDE_DIRS - include directories for tcan
+#  tcan_LIBRARIES    - libraries to link against
+
+# Compute paths
+get_filename_component(tcan_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(tcan_INCLUDE_DIRS "@tcan_include_dirs@")
+set(tcan_LIBRARIES "@tcan_library@;@external_libs@")
