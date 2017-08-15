@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>tcan_msgs</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>The tcan_msgs package</description>
   <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
   <license>Proprietary</license>
