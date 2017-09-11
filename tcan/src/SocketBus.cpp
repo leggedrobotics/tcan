@@ -69,13 +69,13 @@ bool SocketBus::initializeInterface()
     // receive own messages
     int recv_own_msgs = 0; /* 0 = disabled (default), 1 = enabled */
     if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &recv_own_msgs, sizeof(recv_own_msgs)) != 0) {
-    	MELO_WARN("Failed to set reception of own messages option:\n  %s", strerror(errno));
+    	MELO_WARN("Failed to set reception of own messages option: (%d)\n  %s", errno, strerror(errno));
     }
 
     // CAN error handling
     can_err_mask_t err_mask = options->canErrorMask_;
     if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_ERR_FILTER, &err_mask, sizeof(err_mask)) != 0) {
-    	MELO_WARN("Failed to set error mask:\n  %s", strerror(errno));
+    	MELO_WARN("Failed to set error mask: (%d)\n  %s", errno, strerror(errno));
     }
 
     // get default bufer sizes
@@ -96,21 +96,21 @@ bool SocketBus::initializeInterface()
     // http://socket-can.996257.n3.nabble.com/Solving-ENOBUFS-returned-by-write-td2886.html
     if(options->sndBufLength_ != 0) {
         if(setsockopt(socket_, SOL_SOCKET, SO_SNDBUF, &(options->sndBufLength_), sizeof(options->sndBufLength_)) != 0) {
-        	MELO_WARN("Failed to set sndBuf length:\n  %s", strerror(errno));
+        	MELO_WARN("Failed to set sndBuf length: (%d)\n  %s", errno, strerror(errno));
         }
     }
 
     // set read timeout
     if (options_->readTimeout_.tv_sec != 0 || options_->readTimeout_.tv_usec != 0) {
       if(setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&options_->readTimeout_, sizeof(options->readTimeout_)) != 0) {
-          MELO_WARN("Failed to set read timeout:\n  %s", strerror(errno));
+          MELO_WARN("Failed to set read timeout: (%d)\n  %s", errno, strerror(errno));
       }
     }
 
     // set write timeout
     if (options_->writeTimeout_.tv_sec != 0 || options_->writeTimeout_.tv_usec != 0) {
       if(setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&options_->writeTimeout_, sizeof(options->writeTimeout_)) != 0) {
-          MELO_WARN("Failed to set write timeout:\n  %s", strerror(errno));
+          MELO_WARN("Failed to set write timeout: (%d)\n  %s", errno, strerror(errno));
       }
     }
 
@@ -119,7 +119,7 @@ bool SocketBus::initializeInterface()
     // set up filters
     if(options->canFilters_.size() != 0) {
         if(setsockopt(socket_, SOL_CAN_RAW, CAN_RAW_FILTER, &(options->canFilters_[0]), sizeof(can_filter)*options->canFilters_.size()) != 0) {
-            MELO_WARN("Failed to set CAN raw filters:\n  %s", strerror(errno));
+            MELO_WARN("Failed to set CAN raw filters: (%d)\n  %s", errno, strerror(errno));
         }
     }
 
@@ -137,7 +137,7 @@ bool SocketBus::initializeInterface()
     addr.can_family  = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     if(bind(socket_, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        MELO_FATAL("Error in socket %s bind:\n  %s", interface, strerror(errno));
+        MELO_FATAL("Error in socket %s bind: (%d)\n  %s", interface, errno, strerror(errno));
         return false;
     }
 
@@ -158,7 +158,7 @@ bool SocketBus::readData() {
 
     if(bytes_read <= 0) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
-            MELO_ERROR("Failed to read data from bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            MELO_ERROR("Failed to read data from bus %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
         }
         return false;
     } else {
@@ -190,7 +190,7 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
     const int ret = send(socket_, &frame, sizeof(struct can_frame), sendFlag_);
     if( ret != sizeof(struct can_frame) ) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
-            MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d):\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, strerror(errno));
+            MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d): (%d)\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, errno, strerror(errno));
         }
     }else{
         if(lock != nullptr) {
