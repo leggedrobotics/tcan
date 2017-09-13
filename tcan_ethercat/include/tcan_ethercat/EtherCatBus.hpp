@@ -200,7 +200,8 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         int size = sizeof(Value);
         wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
         if (size != sizeof(Value)) {
-            MELO_WARN_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Expected (" << sizeof(Value) << ") and read (" << size << ") SDO value size mismatch.");
+            MELO_WARN_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Expected (" << sizeof(Value) << ") and read ("
+            << size << ") SDO value size mismatch for object 0x" << std::hex << index <<  ".0x" << std::hex << subindex);
         }
     }
 
@@ -249,7 +250,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             return false;
         }
 
-        MELO_INFO_STREAM("Bus '" << options_->name_ << "': EtherCAT initialization on succeeded.");
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': EtherCAT initialization succeeded.");
 
         return true;
     }
@@ -497,7 +498,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
     void printSlaveStates() {
         for (uint16_t i = 0; i <= *ecatContext_.slavecount; i++) {
-            uint32_t state = 0;
+            uint16_t state = 0;
             sendSdoRead(i, 0x6041, 0, false, state);
             MELO_INFO_STREAM("Bus '" << options_->name_ << "': Slave " << i << " state is 0x" << std::hex << state);
         }
@@ -645,4 +646,3 @@ protected:
 };
 
 } /* namespace tcan_ethercat */
-
