@@ -23,7 +23,7 @@ class BusManager {
         buses_(),
         receiveThread_(),
         sanityCheckThread_(),
-        running_(false),
+        running_{false},
         sanityCheckInterval_(100)
     {
     }

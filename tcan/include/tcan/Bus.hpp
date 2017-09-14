@@ -40,7 +40,7 @@ class Bus {
         receiveThread_(),
         transmitThread_(),
         sanityCheckThread_(),
-        running_(false),
+        running_{false},
         condTransmitThread_(),
         condOutputQueueEmpty_(),
         errorMsgFlagPersistent_(false),
@@ -337,7 +337,6 @@ public: /// Internal functions
                 if(!isPassive_) {
                     writeData(&lock);
                 }
-                lock.unlock();
             }
 
         }
