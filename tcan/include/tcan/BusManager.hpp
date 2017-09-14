@@ -117,6 +117,9 @@ class BusManager {
         return true;
     }
 
+    /*!
+     * Close all buses and stop threads associated to them.
+     */
     void closeBuses() {
         // tell all threads to stop
         stopThreads(false);
@@ -133,7 +136,15 @@ class BusManager {
         buses_.clear();
     }
 
+    /*
+     * Start threads for buses which are asynchronous or semi-synchronous.
+     */
     void startThreads() {
+
+        for(auto bus : buses_) {
+            bus->startThreads();
+        }
+
         if(running_) {
             return;
         }
@@ -185,6 +196,10 @@ class BusManager {
         }
     }
 
+    /*!
+     * Stop all threads associated with buses
+     * @param wait  Whether to wait for the threads to stop or return immediately
+     */
     void stopThreads(const bool wait=true) {
         running_ = false;
 
