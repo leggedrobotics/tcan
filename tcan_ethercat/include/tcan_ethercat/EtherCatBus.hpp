@@ -78,11 +78,19 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         return txPdoCallbackMap_.emplace(device, std::bind(fp, device, std::placeholders::_1)).second;
     }
 
-    bool setupCommunication() {
+    bool setupCommunication(int retries = 0) {
         // Initialize SOEM.
-        if (ecx_config_init(&ecatContext_, FALSE) == 0) {
-            MELO_ERROR_STREAM("No slaves have been found.");
-            return false;
+        while (true) {
+            if (ecx_config_init(&ecatContext_, FALSE) > 0) {
+                break;
+            }
+            if (retries <= 0) {
+              MELO_ERROR_STREAM("No slaves have been found.");
+              return false;
+            }
+            retries--;
+            sleep(1);
+            MELO_INFO_STREAM("No slaves have been found, retrying ...");
         }
 
         // Print the slaves which have been detected.
