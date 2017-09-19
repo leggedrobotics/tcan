@@ -151,7 +151,7 @@ void DeviceCanOpen::resetDevice() {
 
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
     if(cmsg.getLength() != 1) {
-        MELO_WARN("Invalid Heartbeat message length from nodeId %x: %d", getNodeId(), cmsg.getLength());
+        MELO_WARN("Invalid Heartbeat message length from %s (nodeId %x): %d", getName(), getNodeId(), cmsg.getLength());
         return false;
     }
 
