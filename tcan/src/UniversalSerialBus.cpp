@@ -75,7 +75,7 @@ bool UniversalSerialBus::readData() {
         ret = poll( &fds, 1, calculatePollTimeoutMs(options_->readTimeout_) );
 
         if ( ret == -1 ) {
-            MELO_ERROR("polling for fileDescriptor readability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            MELO_ERROR("polling for fileDescriptor readability failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
             return false;
         }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
             // poll timed out, without being able to read => return silently
@@ -92,7 +92,7 @@ bool UniversalSerialBus::readData() {
 
     if(bytes_read <= 0) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
-            MELO_ERROR("read failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            MELO_ERROR("read failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
         }
         return false;
     } else {
@@ -117,7 +117,7 @@ bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
         ret = poll( &fds, 1, calculatePollTimeoutMs(options_->writeTimeout_) );
 
         if ( ret == -1 ) {
-            MELO_ERROR("polling for fileDescriptor writeability failed on interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            MELO_ERROR("polling for fileDescriptor writeability failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
             return false;
         }else if ( ret == 0 || !(fds.revents & POLLOUT) ) {
             // poll timed out, without being able to read => raise error
@@ -130,7 +130,7 @@ bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
 
     if( ( ret = write(fileDescriptor_, msg.getData(), msg.getLength()) ) != static_cast<int>(msg.getLength())) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
-            MELO_ERROR("Error at sending USB message on interface %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
+            MELO_ERROR("Error at sending USB message on interface %s (return value=%d, length=%d): (%d)\n  %s", options_->name_.c_str(), ret, msg.getLength(), errno, strerror(errno));
         }
     }else{
         if(lock != nullptr) {
