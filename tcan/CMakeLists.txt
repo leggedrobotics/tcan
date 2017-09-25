@@ -42,7 +42,7 @@ else()
   )
 endif()
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME}
   src/CanBusManager.cpp
   src/UniversalSerialBusManager.cpp
   src/IpBusManager.cpp
