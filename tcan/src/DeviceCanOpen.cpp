@@ -150,11 +150,10 @@ void DeviceCanOpen::resetDevice() {
 }
 
 bool DeviceCanOpen::parseHeartBeat(const CanMsg& cmsg) {
-    // fixme: commented out as a workaround for moog_can heartbeat length 8
-//    if(cmsg.getLength() != 1) {
-//        MELO_WARN("Invalid Heartbeat message length from nodeId %x: %d", getNodeId(), cmsg.getLength());
-        //return false;
-//    }
+    if(cmsg.getLength() != 1) {
+        MELO_WARN("Invalid Heartbeat message length from %s (nodeId %x): %d", getName().c_str(), getNodeId(), cmsg.getLength());
+        return false;
+    }
 
     switch(cmsg.readuint8(0)) {
         case 0x0: // boot up
