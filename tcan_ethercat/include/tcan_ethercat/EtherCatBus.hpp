@@ -150,8 +150,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             }
         }
 
-        // Print slave states and errors.
-        printSlaveStates();
+        // Print slave errors.
         printSlaveErrors();
 
         return true;
@@ -501,14 +500,6 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                 }
                 MELO_INFO_STREAM(stream.str());
             }
-        }
-    }
-
-    void printSlaveStates() {
-        for (uint16_t i = 0; i <= *ecatContext_.slavecount; i++) {
-            uint16_t state = 0;
-            sendSdoRead(i, 0x6041, 0, false, state);
-            MELO_INFO_STREAM("Bus '" << options_->name_ << "': Slave " << i << " state is 0x" << std::hex << state);
         }
     }
 
