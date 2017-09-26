@@ -196,20 +196,33 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     template <typename Value>
-    void sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
+    bool sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
         const int size = sizeof(Value);
         Value valueCopy = value; // copy value to make it modifiable
-        wkc_ = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
+        const int wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
+        if (wkc <= 0) {
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Working counter too low ("
+                << wkc << ") for writing SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
+            return false;
+        }
+        return true;
     }
 
     template <typename Value>
-    void sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
+    bool sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
         int size = sizeof(Value);
-        wkc_ = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
-        if (size != sizeof(Value)) {
-            MELO_WARN_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Expected (" << sizeof(Value) << ") and read ("
-            << size << ") SDO value size mismatch for object 0x" << std::hex << index <<  ".0x" << std::hex << subindex);
+        const int wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
+        if (wkc <= 0) {
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Working counter too low ("
+                << wkc << ") for reading SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
+            return false;
         }
+        if (size != sizeof(Value)) {
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Size mismatch (expected " << sizeof(Value) << " bytes, read "
+                << size << " bytes) for reading SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
+            return false;
+        }
+        return true;
     }
 
     void sendMessage(const uint16_t slave, const std::pair<EtherCatDatagram, EtherCatDatagram>& rxAndTxPdoDatagram) {
