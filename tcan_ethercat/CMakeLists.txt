@@ -103,4 +103,34 @@ if(NOT catkin_FOUND)
   configure_file(tcan_ethercatConfig.cmake.in
     "${PROJECT_BINARY_DIR}/tcan_ethercatConfig.cmake" @ONLY
   )
+
+### Install Build ###
+
+  # Change the include location for the case of an install location
+  set(tcan_ethercat_include_dirs
+    ${CMAKE_INSTALL_PREFIX}/include
+    ${tcan_INCLUDE_DIRS}
+    ${soem_INCLUDE_DIRS}
+    ${soem_INCLUDE_DIRS}/soem
+  )
+
+  # We put the generated file for installation in a different repository (i.e., ./CMakeFiles/)
+  configure_file(tcan_ethercatConfig.cmake.in
+    "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/tcan_ethercatConfig.cmake" @ONLY
+  )
+
+  install(FILES
+    "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/tcan_ethercatConfig.cmake"
+    DESTINATION share/tcan_ethercat/cmake COMPONENT dev
+  )
+
+  install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+  )
+
+  install(DIRECTORY include/tcan_ethercat/
+    DESTINATION include/tcan_ethercat
+  )
 endif()
