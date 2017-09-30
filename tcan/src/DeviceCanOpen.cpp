@@ -186,8 +186,8 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
     const uint16_t index = cmsg.readuint16(1);
     const uint8_t subindex = cmsg.readuint8(3);
 
+    std::unique_lock<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
     if(sdoMsgs_.size() != 0) {
-        std::unique_lock<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent checkSdoTimeout() from making changes on sdoMsgs_
         const SdoMsg& sdo = sdoMsgs_.front();
 
         if(sdo.getIndex() == index && sdo.getSubIndex() == subindex) {
@@ -220,22 +220,24 @@ bool DeviceCanOpen::parseSDOAnswer(const CanMsg& cmsg) {
 bool DeviceCanOpen::checkSdoTimeout() {
     const DeviceCanOpenOptions* options = static_cast<const DeviceCanOpenOptions*>(options_.get());
 
-    if(options->maxSdoTimeoutCounter_ != 0 && sdoMsgs_.size() != 0 && (sdoTimeoutCounter_++ > options->maxSdoTimeoutCounter_) ) {
-        // sdoTimeoutCounter_ is only increased if options_->maxSdoTimeoutCounter != 0 and sdoMsgs_.size() != 0
-
+    if(options->maxSdoTimeoutCounter_ != 0) {
         std::unique_lock<std::mutex> guard(sdoMsgsMutex_); // lock sdoMsgsMutex_ to prevent parseSDOAnswer from making changes on sdoMsgs_
-        const SdoMsg& msg = sdoMsgs_.front();
-        if(sdoSentCounter_ > options->maxSdoSentCounter_) {
-            guard.unlock(); // unlock guard here, otherwise the user will not be able to put any sdo in the sdo ouput queue
-            handleTimedoutSdo(msg);
-            guard.lock();
-            sendNextSdo();
+        if( sdoMsgs_.size() != 0 && (sdoTimeoutCounter_++ > options->maxSdoTimeoutCounter_) ) {
+            // sdoTimeoutCounter_ is only increased if options_->maxSdoTimeoutCounter != 0 and sdoMsgs_.size() != 0
 
-            return false;
-        }else{
-            sdoSentCounter_++;
+            const SdoMsg &msg = sdoMsgs_.front();
+            if (sdoSentCounter_ > options->maxSdoSentCounter_) {
+                guard.unlock(); // unlock guard here, otherwise the user will not be able to put any sdo in the sdo ouput queue
+                handleTimedoutSdo(msg);
+                guard.lock();
+                sendNextSdo();
 
-            bus_->sendMessage( msg );
+                return false;
+            } else {
+                sdoSentCounter_++;
+
+                bus_->sendMessage(msg);
+            }
         }
     }
 
