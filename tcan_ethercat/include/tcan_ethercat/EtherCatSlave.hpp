@@ -102,12 +102,10 @@ class EtherCatSlave {
     void syncDistributedClocks(const bool activate);
 
     template <typename Value>
-    void sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value);
+    bool sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value);
 
     template <typename Value>
-    void sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value);
-
-    void sendSdoReadAndPrint(const uint16_t index, const uint8_t subindex, const bool completeAccess);
+    bool sendSdoRead(const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value);
 
  protected:
     /*!
