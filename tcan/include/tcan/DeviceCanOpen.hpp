@@ -25,6 +25,7 @@ namespace tcan {
 
 class DeviceCanOpen : public CanDevice {
  public:
+    static constexpr int TxNMTCmdId = 0x0;
     static constexpr int TxEmcyId = 0x80;
     static constexpr int TxPDO1Id = 0x180;
     static constexpr int TxPDO2Id = 0x280;
