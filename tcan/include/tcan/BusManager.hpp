@@ -68,9 +68,16 @@ class BusManager {
             sendingData = false;
 
             for(auto bus : buses_) {
-                if(!bus->isAsynchronous() && bus->getNumOutogingMessagesWithoutLock() > 0) {
-                    noError &= bus->writeMessagesWithoutLock();
+                if(bus->isSynchronous() && bus->getNumOutgoingMessagesWithoutLock() > 0) {
+                    noError &= bus->writeMessages( nullptr );
                     sendingData = true;
+                }else if(bus->isSemiSynchronous()) {
+                    // we need to acquire lock here because the callbacks of incoming messages may put new messages in the output queue
+                    std::unique_lock<std::mutex> lock( bus->getOutgoingMsgsMutex() );
+                    if(bus->getNumOutgoingMessagesWithoutLock() > 0) {
+                        noError &= bus->writeMessages( &lock );
+                        sendingData = true;
+                    }
                 }
             }
         }

@@ -187,7 +187,7 @@ class Bus {
     /*!
      * @return  number of messages in the output queue. 0 if the bus is passive
      */
-    unsigned int getNumOutogingMessagesWithoutLock() const { return isPassive() ? 0 : outgoingMsgs_.size(); }
+    unsigned int getNumOutgoingMessagesWithoutLock() const { return isPassive() ? 0 : outgoingMsgs_.size(); }
 
     /*!
      * @return  returns the name of the bus
@@ -216,15 +216,14 @@ class Bus {
 
 
 public: /// Internal functions
-
-    /*! write the message(s) at the front of the queue to the CAN bus
-     * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked,
-     * and if there is something in the queue is NOT checked.
-     * @return true if a message was successfully written to the bus
+    /*!
+     * write the message(s) at the front of the queue to the CAN bus
+     * @param lock
+     * @return true if a message was successfully written to the bus or if the bus is passive
      */
-    inline bool writeMessagesWithoutLock()
+    inline bool writeMessages(std::unique_lock<std::mutex>* lock)
     {
-        return isPassive_ ? true : writeData( nullptr );
+        return isPassive_ ? true : writeData( lock );
     }
 
     /*! read and parse a message from the bus
@@ -249,7 +248,7 @@ public: /// Internal functions
     void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
     {
         lock = std::unique_lock<std::mutex>(outgoingMsgsMutex_);
-        condOutputQueueEmpty_.wait(lock, [this]{ return getNumOutogingMessagesWithoutLock() == 0 || !running_; });
+        condOutputQueueEmpty_.wait(lock, [this]{ return getNumOutgoingMessagesWithoutLock() == 0 || !running_; });
     }
 
     /*! Get a file descriptor, used for polling multiple buses for incoming messages. Required for semi-synchronous buses.
@@ -259,6 +258,8 @@ public: /// Internal functions
         MELO_FATAL("Bus %s does not support semi-synchronous mode!", getName().c_str());
         return 0;
     }
+
+    inline std::mutex& getOutgoingMsgsMutex() { return outgoingMsgsMutex_; }
 
  protected:
     /*! Initialized the device driver
@@ -326,7 +327,7 @@ public: /// Internal functions
         std::unique_lock<std::mutex> lock(outgoingMsgsMutex_);
 
         while(running_) {
-            while(getNumOutogingMessagesWithoutLock() == 0 && running_) {
+            while(getNumOutgoingMessagesWithoutLock() == 0 && running_) {
                 condOutputQueueEmpty_.notify_all();
                 condTransmitThread_.wait(lock);
             }

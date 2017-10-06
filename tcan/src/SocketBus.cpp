@@ -188,14 +188,16 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
     std::copy(cmsg.getData(), &(cmsg.getData()[frame.can_dlc]), frame.data);
 
     const int ret = send(socket_, &frame, sizeof(struct can_frame), sendFlag_);
+
+    if(lock != nullptr) {
+        lock->lock();
+    }
+
     if( ret != sizeof(struct can_frame) ) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d): (%d)\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, errno, strerror(errno));
         }
     }else{
-        if(lock != nullptr) {
-            lock->lock();
-        }
         outgoingMsgs_.pop_front();
         return true;
     }
