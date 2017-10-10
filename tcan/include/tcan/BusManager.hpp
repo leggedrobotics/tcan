@@ -23,7 +23,7 @@ class BusManager {
         buses_(),
         receiveThread_(),
         sanityCheckThread_(),
-        running_(false),
+        running_{false},
         sanityCheckInterval_(100)
     {
     }
@@ -68,9 +68,16 @@ class BusManager {
             sendingData = false;
 
             for(auto bus : buses_) {
-                if(!bus->isAsynchronous() && bus->getNumOutogingMessagesWithoutLock() > 0) {
-                    noError &= bus->writeMessagesWithoutLock();
+                if(bus->isSynchronous() && bus->getNumOutgoingMessagesWithoutLock() > 0) {
+                    noError &= bus->writeMessages( nullptr );
                     sendingData = true;
+                }else if(bus->isSemiSynchronous()) {
+                    // we need to acquire lock here because the callbacks of incoming messages may put new messages in the output queue
+                    std::unique_lock<std::mutex> lock( bus->getOutgoingMsgsMutex() );
+                    if(bus->getNumOutgoingMessagesWithoutLock() > 0) {
+                        noError &= bus->writeMessages( &lock );
+                        sendingData = true;
+                    }
                 }
             }
         }
@@ -117,6 +124,9 @@ class BusManager {
         return true;
     }
 
+    /*!
+     * Close all buses and stop threads associated to them.
+     */
     void closeBuses() {
         // tell all threads to stop
         stopThreads(false);
@@ -133,7 +143,15 @@ class BusManager {
         buses_.clear();
     }
 
+    /*
+     * Start threads for buses which are asynchronous or semi-synchronous.
+     */
     void startThreads() {
+
+        for(auto bus : buses_) {
+            bus->startThreads();
+        }
+
         if(running_) {
             return;
         }
@@ -185,6 +203,10 @@ class BusManager {
         }
     }
 
+    /*!
+     * Stop all threads associated with buses
+     * @param wait  Whether to wait for the threads to stop or return immediately
+     */
     void stopThreads(const bool wait=true) {
         running_ = false;
 
