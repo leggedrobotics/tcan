@@ -47,11 +47,12 @@ struct BusOptions {
 
     //! Mode to operate the bus in.
     //! Synchronous: It is up to the user to call BusManager's readMessagesSynchronous(), writeMessagesSynchronous() and sanityCheckSynchronous() functions.
-    //!              No threads are created.
+    //!              No threads are created. Note that these 3 functions are not thread safe, so the user has to call them in the same thread or ensure thread safety himself!
     //! Semi-synchronous: The BusManager creates threads for receiving messages and sanity check. It us up to the user to call writeMessagesSynchronous()
-    //!                   and to call startThreads() after all the buses have been added to the manager (addBus(..)).
+    //!                   and to call startThreads() after all the buses have been added to the manager (addBus(..)) and add devices to the bus.
     //!                   Note that this mode may not be supported by all Bus implementations.
-    //! Asynchronous: The bus will create threads for receiving, sending and sanity check, no further actions required by the user.
+    //! Asynchronous:   The bus will create threads for receiving, sending and sanity check. The user has to call startThreads() after
+    //!                 all the buses have been added to the manager (addBus(..)) and add devices to the bus.
     Mode mode_;
 
     //! if > 0 and in asynchronous mode, a thread will be created which does a sanity check of the devices. Default is 100 [ms].

@@ -40,7 +40,7 @@ class Bus {
         receiveThread_(),
         transmitThread_(),
         sanityCheckThread_(),
-        running_(false),
+        running_{false},
         condTransmitThread_(),
         condOutputQueueEmpty_(),
         errorMsgFlagPersistent_(false),
@@ -54,18 +54,26 @@ class Bus {
     }
 
 
-    /*! Initializes the Bus. Sets up threads and calls initializeCanBus(..).
+    /*!
+     * Initializes the Bus. Calls initializeInterface(..).
      * @return true if init was successful
      */
-    bool initBus() {
+    inline bool initBus() {
+        return initializeInterface();
+    }
 
-        if(!initializeInterface()) {
-            return false;
-        }
+    /*!
+     * Do a sanity check of the bus.
+     */
+    virtual void sanityCheck() = 0;
 
-        running_ = true;
+    /*!
+     * Starts threads for this bus (send, recieve, sanity check) if it is configured to be asynchronous
+     */
+    void startThreads() {
+        if(isAsynchronous() && !running_) {
+            running_ = true;
 
-        if(isAsynchronous()) {
             receiveThread_ = std::thread(&Bus::receiveWorker, this);
             if(!setThreadPriority(receiveThread_, options_->priorityReceiveThread_)) {
                 MELO_WARN("Failed to set receive thread priority for bus %s:\n  %s", options_->name_.c_str(), strerror(errno));
@@ -83,8 +91,30 @@ class Bus {
                 }
             }
         }
+    }
 
-        return true;
+    /*!
+     * Stops all threads handled by this bus (send, receive, sanity check)
+     * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
+     */
+    void stopThreads(const bool wait=true) {
+        running_ = false;
+        condTransmitThread_.notify_all();
+        condOutputQueueEmpty_.notify_all();
+
+        if(wait) {
+            if(receiveThread_.joinable()) {
+                receiveThread_.join();
+            }
+
+            if(transmitThread_.joinable()) {
+                transmitThread_.join();
+            }
+
+            if(sanityCheckThread_.joinable()) {
+                sanityCheckThread_.join();
+            }
+        }
     }
 
     /*! Copy a message to be sent to the output queue
@@ -157,7 +187,7 @@ class Bus {
     /*!
      * @return  number of messages in the output queue. 0 if the bus is passive
      */
-    unsigned int getNumOutogingMessagesWithoutLock() const { return isPassive() ? 0 : outgoingMsgs_.size(); }
+    unsigned int getNumOutgoingMessagesWithoutLock() const { return isPassive() ? 0 : outgoingMsgs_.size(); }
 
     /*!
      * @return  returns the name of the bus
@@ -186,15 +216,14 @@ class Bus {
 
 
 public: /// Internal functions
-
-    /*! write the message(s) at the front of the queue to the CAN bus
-     * This is a helper function for BusManager::writeMessagesSynchronous(). The output message queue mutex is NOT locked,
-     * and if there is something in the queue is NOT checked.
-     * @return true if a message was successfully written to the bus
+    /*!
+     * write the message(s) at the front of the queue to the CAN bus
+     * @param lock
+     * @return true if a message was successfully written to the bus or if the bus is passive
      */
-    inline bool writeMessagesWithoutLock()
+    inline bool writeMessages(std::unique_lock<std::mutex>* lock)
     {
-        return isPassive_ ? true : writeData( nullptr );
+        return isPassive_ ? true : writeData( lock );
     }
 
     /*! read and parse a message from the bus
@@ -212,40 +241,14 @@ public: /// Internal functions
         return false;
     }
 
-    /*! Do a sanity check of the bus.
-     */
-    virtual void sanityCheck() = 0;
-
     /*!
-     * Stops all threads handled by this bus (send, receive, sanity check)
-     * @param wait  whether the function shall wait for the the threads to terminate or return immediately.
-     */
-    void stopThreads(const bool wait=true) {
-        running_ = false;
-        condTransmitThread_.notify_all();
-        condOutputQueueEmpty_.notify_all();
-
-        if(wait) {
-            if(receiveThread_.joinable()) {
-                receiveThread_.join();
-            }
-
-            if(transmitThread_.joinable()) {
-                transmitThread_.join();
-            }
-
-            if(sanityCheckThread_.joinable()) {
-                sanityCheckThread_.join();
-            }
-        }
-    }
-
-    /*! Waits until the output queue is empty, locks the queue and returns the lock
+     * Waits until the output queue is empty, locks the queue and returns the lock.
+     * This function shall only be called for asynchronous buses.
      */
     void waitForEmptyQueue(std::unique_lock<std::mutex>& lock)
     {
         lock = std::unique_lock<std::mutex>(outgoingMsgsMutex_);
-        condOutputQueueEmpty_.wait(lock, [this]{ return getNumOutogingMessagesWithoutLock() == 0 || !running_; });
+        condOutputQueueEmpty_.wait(lock, [this]{ return getNumOutgoingMessagesWithoutLock() == 0 || !running_; });
     }
 
     /*! Get a file descriptor, used for polling multiple buses for incoming messages. Required for semi-synchronous buses.
@@ -255,6 +258,8 @@ public: /// Internal functions
         MELO_FATAL("Bus %s does not support semi-synchronous mode!", getName().c_str());
         return 0;
     }
+
+    inline std::mutex& getOutgoingMsgsMutex() { return outgoingMsgsMutex_; }
 
  protected:
     /*! Initialized the device driver
@@ -280,25 +285,6 @@ public: /// Internal functions
      * @param cmsg  reference to the can message
      */
     virtual void handleMessage(const Msg& msg) = 0;
-
-    /*! Helper function for transmission thread.
-     * @return  True if message(s) were successfully sent.
-     */
-    bool processOutputQueue() {
-        std::unique_lock<std::mutex> lock(outgoingMsgsMutex_);
-
-        while(getNumOutogingMessagesWithoutLock() == 0 && running_) {
-            condOutputQueueEmpty_.notify_all();
-            condTransmitThread_.wait(lock);
-        }
-        // after the wait function we own the lock.
-
-        if(!running_) {
-            return true;
-        }
-
-        return isPassive_ ? true : writeData( &lock );
-    }
 
     inline bool checkOutgoingMsgsSize() const {
         if(outgoingMsgs_.size() >= options_->maxQueueSize_) {
@@ -338,8 +324,22 @@ public: /// Internal functions
     }
 
     void transmitWorker() {
+        std::unique_lock<std::mutex> lock(outgoingMsgsMutex_);
+
         while(running_) {
-            processOutputQueue();
+            while(getNumOutgoingMessagesWithoutLock() == 0 && running_) {
+                condOutputQueueEmpty_.notify_all();
+                condTransmitThread_.wait(lock);
+            }
+
+            // after the wait function we own the lock.
+
+            if(running_) { // check if running_ is still true, otherwise leave loop immediately
+                if(!isPassive_) {
+                    writeData(&lock);
+                }
+            }
+
         }
 
         MELO_INFO("transmit thread for bus %s terminated", options_->name_.c_str());
