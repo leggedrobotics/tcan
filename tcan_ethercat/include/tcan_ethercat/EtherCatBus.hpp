@@ -143,8 +143,8 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
 
         // Print slave states and errors.
-        printSlaveStates();
-        printSlaveErrors();
+        //printSlaveStates();
+        //printSlaveErrors();
 
         return true;
     }
@@ -495,6 +495,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
     }
 
+    // This is not a state of ethercat, but of the device itself
     void printSlaveStates() {
         for (uint16_t i = 0; i <= *ecatContext_.slavecount; i++) {
             uint32_t state = 0;
