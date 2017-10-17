@@ -25,7 +25,6 @@ add_definitions(--std=c++11)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${soem_INCLUDE_DIRS}/soem
 )
 
 add_executable(elmo_twitter_example_node

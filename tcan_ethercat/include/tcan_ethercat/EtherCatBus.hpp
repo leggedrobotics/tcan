@@ -16,7 +16,7 @@
 #include <inttypes.h>
 #include <iomanip>
 
-#include <ethercat.h>
+#include <soem/soem/ethercat.h>
 
 #include "tcan/Bus.hpp"
 #include "tcan/CanMsg.hpp"
