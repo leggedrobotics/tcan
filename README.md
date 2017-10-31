@@ -2,7 +2,7 @@
 
 ## Overview
 
-[![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=bitbucket_leggedrobotics/tcan/master)](http://rsl-ci.ethz.ch/job/bitbucket_leggedrobotics/job/tcan/job/master/)
+[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=bitbucket_leggedrobotics/tcan/master)](https://ci.leggedrobotics.com/job/bitbucket_leggedrobotics/job/tcan/job/master/)
 
 The source code is released under a [proprietary license](LICENSE).
 

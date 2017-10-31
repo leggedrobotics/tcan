@@ -16,7 +16,7 @@
 #include <inttypes.h>
 #include <iomanip>
 
-#include <ethercat.h>
+#include <soem/soem/ethercat.h>
 
 #include "tcan/Bus.hpp"
 #include "tcan/CanMsg.hpp"
@@ -278,15 +278,18 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     /*! Cleanup the interface.
      */
     void cleanupInterface() {
-        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Closing socket ...");
         if (ecatContext_.port) {
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': Closing socket ...");
             ecx_close(&ecatContext_);
             sleep(0.5); // Sleep to make sure the socket is closed, because ecx_close is non-blocking.
         }
 
-        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Deleting slaves ...");
-        for (auto slave : slaves_) {
-            delete slave;
+        if (slaves_.size() > 0)
+        {
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': Deleting slaves ...");
+            for (auto slave : slaves_) {
+                delete slave;
+            }
         }
     }
 
@@ -322,7 +325,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     virtual bool readData() {
         if (!sentDatagrams_) {
-            MELO_WARN_STREAM("Bus '" << options_->name_ << "': Nothing to read, since no data has been sent yet.");
+            MELO_DEBUG_STREAM("Bus '" << options_->name_ << "': Nothing to read, since no data has been sent yet.");
             return false;
         }
 

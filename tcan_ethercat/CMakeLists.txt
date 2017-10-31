@@ -32,7 +32,6 @@ add_definitions(-std=c++11)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${soem_INCLUDE_DIRS}/soem
 )
 if(catkin_FOUND)
   include_directories(
