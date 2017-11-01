@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <string>
 
-#include "tcan/CanMsg.hpp"
+#include "tcan_can/CanMsg.hpp"
 
 
 namespace tcan {

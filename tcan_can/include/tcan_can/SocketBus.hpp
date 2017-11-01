@@ -9,8 +9,8 @@
 
 #include <memory>
 
-#include "tcan/CanBus.hpp"
-#include "tcan/SocketBusOptions.hpp"
+#include "tcan_can/CanBus.hpp"
+#include "tcan_can/SocketBusOptions.hpp"
 
 namespace tcan {
 

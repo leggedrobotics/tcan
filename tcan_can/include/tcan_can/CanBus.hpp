@@ -15,9 +15,9 @@
 #include <atomic>
 
 #include "tcan/Bus.hpp"
-#include "tcan/CanBusOptions.hpp"
-#include "tcan/CanMsg.hpp"
-#include "tcan/CanDevice.hpp"
+#include "tcan_can/CanBusOptions.hpp"
+#include "tcan_can/CanMsg.hpp"
+#include "tcan_can/CanDevice.hpp"
 
 namespace tcan {
 

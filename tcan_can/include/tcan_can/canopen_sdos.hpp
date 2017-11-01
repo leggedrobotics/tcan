@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tcan/SdoMsg.hpp"
+#include "tcan_can/SdoMsg.hpp"
 
 namespace tcan {
 namespace canopen {

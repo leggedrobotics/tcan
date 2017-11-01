@@ -5,7 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#include "tcan/DeviceCanOpen.hpp"
+#include "tcan_can/DeviceCanOpen.hpp"
 #include "tcan/Bus.hpp"
 
 #include "message_logger/message_logger.hpp"

@@ -5,7 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#include "tcan/CanBus.hpp"
+#include "tcan_can/CanBus.hpp"
 #include "message_logger/message_logger.hpp"
 
 namespace tcan {

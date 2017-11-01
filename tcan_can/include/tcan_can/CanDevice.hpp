@@ -12,8 +12,8 @@
 #include <atomic>
 #include <memory>
 
-#include "tcan/CanMsg.hpp"
-#include "tcan/CanDeviceOptions.hpp"
+#include "tcan_can/CanMsg.hpp"
+#include "tcan_can/CanDeviceOptions.hpp"
 
 #include "message_logger/message_logger.hpp"
 

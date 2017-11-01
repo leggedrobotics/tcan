@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "tcan/SocketBus.hpp"
+#include "tcan_can/SocketBus.hpp"
 
 #include "message_logger/message_logger.hpp"
 #include <sstream>

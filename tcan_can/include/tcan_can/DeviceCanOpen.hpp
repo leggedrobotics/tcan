@@ -14,10 +14,10 @@
 #include <unordered_map>
 #include <memory>
 
-#include "tcan/DeviceCanOpenOptions.hpp"
-#include "tcan/CanDevice.hpp"
-#include "tcan/CanBus.hpp"
-#include "tcan/SdoMsg.hpp"
+#include "tcan_can/DeviceCanOpenOptions.hpp"
+#include "tcan_can/CanDevice.hpp"
+#include "tcan_can/CanBus.hpp"
+#include "tcan_can/SdoMsg.hpp"
 
 
 namespace tcan {

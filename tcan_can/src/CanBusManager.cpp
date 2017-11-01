@@ -5,7 +5,7 @@
  *      Author: Philipp Leemann
  */
 
-#include "tcan/CanBusManager.hpp"
+#include "tcan_can/CanBusManager.hpp"
 
 namespace tcan {
 

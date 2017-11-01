@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-#include "tcan/CanDeviceOptions.hpp"
+#include "tcan_can/CanDeviceOptions.hpp"
 
 namespace tcan {
 

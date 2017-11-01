@@ -8,8 +8,8 @@
 #pragma once
 
 #include "tcan/BusManager.hpp"
-#include "tcan/CanBus.hpp"
-#include "tcan/CanMsg.hpp"
+#include "tcan_can/CanBus.hpp"
+#include "tcan_can/CanMsg.hpp"
 
 namespace tcan {
 
