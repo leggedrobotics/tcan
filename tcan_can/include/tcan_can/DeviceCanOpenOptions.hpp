@@ -11,7 +11,7 @@
 
 #include "tcan_can/CanDeviceOptions.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 class DeviceCanOpenOptions : public CanDeviceOptions {
  public:
@@ -57,4 +57,4 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
 
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

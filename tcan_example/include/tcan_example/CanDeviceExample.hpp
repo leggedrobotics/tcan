@@ -10,17 +10,19 @@
 
 #pragma once
 
-#include "tcan/DeviceCanOpen.hpp"
-
 #include <stdint.h>
 #include <atomic>
 #include <memory>
 
+#include "tcan_can/DeviceCanOpen.hpp"
 
-namespace tcan {
+
+namespace tcan_example {
 
 namespace example_can {
 //! An example device that is connected via CAN.
+
+using namespace tcan_can;
 
 class CanDeviceExampleOptions : public DeviceCanOpenOptions {
 public:
@@ -70,4 +72,4 @@ protected:
 
 } /* namespace example_can */
 
-} /* namespace tcan */
+} /* namespace tcan_example */

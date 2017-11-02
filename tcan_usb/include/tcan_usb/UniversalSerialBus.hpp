@@ -11,12 +11,12 @@
 #include <memory>
 
 #include "tcan/Bus.hpp"
-#include "tcan/UniversalSerialBusOptions.hpp"
-#include "tcan/UsbMsg.hpp"
+#include "tcan_usb/UniversalSerialBusOptions.hpp"
+#include "tcan_usb/UsbMsg.hpp"
 
-namespace tcan {
+namespace tcan_usb {
 
-class UniversalSerialBus : public Bus<UsbMsg> {
+class UniversalSerialBus : public tcan::Bus<UsbMsg> {
  public:
     UniversalSerialBus() = delete;
     UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions>&& options);
@@ -43,5 +43,4 @@ protected:
     unsigned int deviceTimeoutCounter_;
 };
 
-} /* namespace tcan */
-
+} /* namespace tcan_usb */

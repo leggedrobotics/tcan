@@ -10,12 +10,12 @@
 #include <memory>
 
 #include "tcan/Bus.hpp"
-#include "tcan/IpBusOptions.hpp"
-#include "tcan/IpMsg.hpp"
+#include "tcan_ip/IpBusOptions.hpp"
+#include "tcan_ip/IpMsg.hpp"
 
-namespace tcan {
+namespace tcan_ip {
 
-class IpBus : public Bus<IpMsg> {
+class IpBus : public tcan::Bus<IpMsg> {
  public:
 	IpBus() = delete;
 	IpBus(std::unique_ptr<IpBusOptions>&& options);
@@ -41,5 +41,4 @@ protected:
     unsigned int deviceTimeoutCounter_;
 };
 
-} /* namespace tcan */
-
+} /* namespace tcan_ip */

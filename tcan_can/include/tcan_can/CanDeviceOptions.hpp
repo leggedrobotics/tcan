@@ -10,7 +10,7 @@
 #include <string>
 #include <stdint.h>
 
-namespace tcan {
+namespace tcan_can {
 
 class CanDeviceOptions {
  public:
@@ -79,4 +79,4 @@ class CanDeviceOptions {
     bool printConfigInfo_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

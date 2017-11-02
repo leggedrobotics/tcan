@@ -8,10 +8,10 @@
 #include "tcan_can/CanBus.hpp"
 #include "message_logger/message_logger.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 CanBus::CanBus(std::unique_ptr<CanBusOptions>&& options):
-    Bus<CanMsg>( std::move(options) ),
+    tcan::Bus<CanMsg>( std::move(options) ),
     devices_(),
     cobIdToFunctionMap_(),
     unmappedMessageCallbackFunction_(std::bind(&CanBus::defaultHandleUnmappedMessage, this, std::placeholders::_1))
@@ -77,5 +77,4 @@ bool CanBus::defaultHandleUnmappedMessage(const CanMsg& msg) {
     return true;
 }
 
-} /* namespace tcan */
-
+} /* namespace tcan_can */

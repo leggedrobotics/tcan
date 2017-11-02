@@ -13,16 +13,16 @@
 #include <fcntl.h>
 #include <poll.h>
 
-#include "tcan/IpBus.hpp"
+#include "tcan_ip/IpBus.hpp"
 #include "message_logger/message_logger.hpp"
 
 
-namespace tcan {
+namespace tcan_ip {
 
 constexpr uint16_t maxMessageSize = 512;
 
 IpBus::IpBus(std::unique_ptr<IpBusOptions>&& options):
-    Bus<IpMsg>(std::move(options)),
+    tcan::Bus<IpMsg>(std::move(options)),
 	socket_(-1),
 	recvFlag_(0),
 	sendFlag_(0),
@@ -135,5 +135,4 @@ bool IpBus::writeData(std::unique_lock<std::mutex>* lock) {
     return false;
 }
 
-} /* namespace tcan */
-
+} /* namespace tcan_ip */

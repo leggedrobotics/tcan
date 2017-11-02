@@ -8,13 +8,13 @@
 #pragma once
 
 #include "tcan/BusManager.hpp"
-#include "tcan/IpBus.hpp"
-#include "tcan/IpMsg.hpp"
+#include "tcan_ip/IpBus.hpp"
+#include "tcan_ip/IpMsg.hpp"
 
-namespace tcan {
+namespace tcan_ip {
 
 //! Container of all IP buses
-class IpBusManager : public BusManager<IpMsg> {
+class IpBusManager : public tcan::BusManager<IpMsg> {
  public:
 	IpBusManager();
 
@@ -23,4 +23,4 @@ class IpBusManager : public BusManager<IpMsg> {
     IpBus* getIpBus(const unsigned int index) { return static_cast<IpBus*>(buses_[index]); }
 };
 
-} /* namespace tcan */
+} /* namespace tcan_ip */

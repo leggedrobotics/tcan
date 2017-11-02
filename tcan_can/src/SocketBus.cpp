@@ -20,7 +20,7 @@
 #include "message_logger/message_logger.hpp"
 #include <sstream>
 
-namespace tcan {
+namespace tcan_can {
 
 SocketBus::SocketBus(const std::string& interface):
     SocketBus(std::unique_ptr<SocketBusOptions>(new SocketBusOptions(interface)))
@@ -461,4 +461,4 @@ void SocketBus::handleBusError(const can_frame& msg) {
     MELO_ERROR_THROTTLE_STREAM(options_->errorThrottleTime_, errorMsg.str());
 }
 
-} /* namespace tcan */
+} /* namespace tcan_can */

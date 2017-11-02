@@ -5,12 +5,12 @@
  *      Author: Philipp Leemann
  */
 
-#include "tcan/IpBusManager.hpp"
+#include "tcan_ip/IpBusManager.hpp"
 
-namespace tcan {
+namespace tcan_ip {
 
 IpBusManager::IpBusManager():
-    BusManager<IpMsg>()
+    tcan::BusManager<IpMsg>()
 {
 }
 
@@ -18,4 +18,4 @@ IpBusManager::~IpBusManager()
 {
 }
 
-} /* namespace tcan */
+} /* namespace tcan_ip */

@@ -9,8 +9,8 @@
 
 #include "tcan/GenericMsg.hpp"
 
-namespace tcan {
+namespace tcan_ip {
 
-using IpMsg = GenericMsg;
+using IpMsg = tcan::GenericMsg;
 
-} /* namespace tcan */
+} /* namespace tcan_ip */

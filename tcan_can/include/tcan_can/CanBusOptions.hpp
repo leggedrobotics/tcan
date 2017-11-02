@@ -9,9 +9,9 @@
 
 #include "tcan/BusOptions.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
-struct CanBusOptions : public BusOptions {
+struct CanBusOptions : public tcan::BusOptions {
     CanBusOptions():
         CanBusOptions(std::string())
     {
@@ -35,4 +35,4 @@ struct CanBusOptions : public BusOptions {
     bool passivateIfNoDevices_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

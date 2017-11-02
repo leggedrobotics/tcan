@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <initializer_list>
 
-namespace tcan {
+namespace tcan_can {
 
 //! General CANOpen message container
 
@@ -245,4 +245,4 @@ class CanMsg {
     uint8_t data_[8];
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

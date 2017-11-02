@@ -20,7 +20,7 @@
 #include "tcan_can/SdoMsg.hpp"
 
 
-namespace tcan {
+namespace tcan_can {
 //! A CANOpen device that is connected via CAN.
 
 class DeviceCanOpen : public CanDevice {
@@ -183,4 +183,4 @@ class DeviceCanOpen : public CanDevice {
     std::unordered_map<uint32_t, SdoMsg> sdoAnswerMap_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

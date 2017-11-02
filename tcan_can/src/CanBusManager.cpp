@@ -7,10 +7,10 @@
 
 #include "tcan_can/CanBusManager.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 CanBusManager::CanBusManager():
-    BusManager<CanMsg>()
+    tcan::BusManager<CanMsg>()
 {
 }
 
@@ -69,4 +69,4 @@ void CanBusManager::resetAllDevices() {
     }
 }
 
-} /* namespace tcan */
+} /* namespace tcan_can */

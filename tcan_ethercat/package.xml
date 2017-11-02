@@ -8,6 +8,7 @@
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
   <author email="diethelm@mavt.ethz.ch">Remo Diethelm</author>
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>tcan</depend>
   <depend>soem</depend>
+  <depend>tcan</depend>
+  <depend>tcan_can</depend>
 </package>

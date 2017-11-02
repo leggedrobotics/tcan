@@ -9,9 +9,9 @@
 
 #include "tcan/BusOptions.hpp"
 
-namespace tcan {
+namespace tcan_usb {
 
-struct UniversalSerialBusOptions : public BusOptions {
+struct UniversalSerialBusOptions : public tcan::BusOptions {
     enum class Parity : unsigned int {
         None,
         Odd,
@@ -62,4 +62,4 @@ struct UniversalSerialBusOptions : public BusOptions {
     bool skipConfiguration;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_usb */

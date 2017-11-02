@@ -9,8 +9,8 @@
 
 #include "tcan/GenericMsg.hpp"
 
-namespace tcan {
+namespace tcan_usb {
 
-using UsbMsg = GenericMsg;
+using UsbMsg = tcan::GenericMsg;
 
-} /* namespace tcan */
+} /* namespace tcan_usb */

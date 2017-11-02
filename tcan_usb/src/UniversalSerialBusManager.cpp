@@ -5,12 +5,12 @@
  *      Author: Philipp Leemann
  */
 
-#include "tcan/UniversalSerialBusManager.hpp"
+#include "tcan_usb/UniversalSerialBusManager.hpp"
 
-namespace tcan {
+namespace tcan_usb {
 
 UniversalSerialBusManager::UniversalSerialBusManager():
-    BusManager<UsbMsg>()
+    tcan::BusManager<UsbMsg>()
 {
 }
 
@@ -18,4 +18,4 @@ UniversalSerialBusManager::~UniversalSerialBusManager()
 {
 }
 
-} /* namespace tcan */
+} /* namespace tcan_usb */

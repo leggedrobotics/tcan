@@ -8,13 +8,13 @@
 #pragma once
 
 #include "tcan/BusManager.hpp"
-#include "tcan/UniversalSerialBus.hpp"
-#include "tcan/UsbMsg.hpp"
+#include "tcan_usb/UniversalSerialBus.hpp"
+#include "tcan_usb/UsbMsg.hpp"
 
-namespace tcan {
+namespace tcan_usb {
 
 //! Container of all USB buses
-class UniversalSerialBusManager : public BusManager<UsbMsg> {
+class UniversalSerialBusManager : public tcan::BusManager<UsbMsg> {
  public:
     UniversalSerialBusManager();
 
@@ -23,4 +23,4 @@ class UniversalSerialBusManager : public BusManager<UsbMsg> {
     UniversalSerialBus* getUniversalSerialBus(const unsigned int index) { return static_cast<UniversalSerialBus*>(buses_[index]); }
 };
 
-} /* namespace tcan */
+} /* namespace tcan_usb */

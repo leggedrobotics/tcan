@@ -10,7 +10,7 @@
 
 #include "message_logger/message_logger.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
     DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>(new DeviceCanOpenOptions(nodeId, name)))
@@ -272,4 +272,4 @@ uint32_t DeviceCanOpen::getSdoAnswerId(const uint16_t index, const uint8_t subIn
     return (static_cast<uint32_t>(index) << 8) + static_cast<uint32_t>(subIndex);
 }
 
-} /* namespace tcan */
+} /* namespace tcan_can */

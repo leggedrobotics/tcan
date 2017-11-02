@@ -12,7 +12,7 @@
 #include "tcan_can/CanBus.hpp"
 #include "tcan_can/SocketBusOptions.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 class SocketBus : public CanBus {
  public:
@@ -41,4 +41,4 @@ protected:
     int sendFlag_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

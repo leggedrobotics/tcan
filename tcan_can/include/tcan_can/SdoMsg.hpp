@@ -13,7 +13,7 @@
 #include "tcan_can/CanMsg.hpp"
 
 
-namespace tcan {
+namespace tcan_can {
 
 //! Service Data Object Message Container
 class SdoMsg : public CanMsg {
@@ -171,4 +171,4 @@ class SdoMsg : public CanMsg {
     bool requiresAnswer_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

@@ -19,9 +19,9 @@
 #include "tcan_can/CanMsg.hpp"
 #include "tcan_can/CanDevice.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
-class CanBus : public Bus<CanMsg> {
+class CanBus : public tcan::Bus<CanMsg> {
  public:
 
     using CallbackPtr =  std::function<bool(const CanMsg&)>;
@@ -129,5 +129,4 @@ class CanBus : public Bus<CanMsg> {
     CallbackPtr unmappedMessageCallbackFunction_;
 };
 
-} /* namespace tcan */
-
+} /* namespace tcan_can */

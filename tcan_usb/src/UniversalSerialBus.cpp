@@ -10,15 +10,15 @@
 #include <sys/ioctl.h>
 #include <poll.h>
 
-#include "tcan/UniversalSerialBus.hpp"
 #include "tcan/helper_functions.hpp"
+#include "tcan_usb/UniversalSerialBus.hpp"
 
 #include "message_logger/message_logger.hpp"
 
-namespace tcan {
+namespace tcan_usb {
 
 UniversalSerialBus::UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions>&& options):
-    Bus<UsbMsg>(std::move(options)),
+    tcan::Bus<UsbMsg>(std::move(options)),
     fileDescriptor_(0),
     deviceTimeoutCounter_(0)
 {
@@ -72,7 +72,7 @@ bool UniversalSerialBus::readData() {
     if(isAsynchronous()) {
         pollfd fds = {fileDescriptor_, POLLIN, 0};
 
-        ret = poll( &fds, 1, calculatePollTimeoutMs(options_->readTimeout_) );
+        ret = poll( &fds, 1, tcan::calculatePollTimeoutMs(options_->readTimeout_) );
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor readability failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
@@ -114,7 +114,7 @@ bool UniversalSerialBus::writeData(std::unique_lock<std::mutex>* lock) {
     if(isAsynchronous() || options_->synchronousBlockingWrite_) {
         pollfd fds = {fileDescriptor_, POLLOUT, 0};
 
-        ret = poll( &fds, 1, calculatePollTimeoutMs(options_->writeTimeout_) );
+        ret = poll( &fds, 1, tcan::calculatePollTimeoutMs(options_->writeTimeout_) );
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor writeability failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
@@ -361,5 +361,4 @@ void UniversalSerialBus::configureInterface()
     }
 }
 
-} /* namespace tcan */
-
+} /* namespace tcan_usb */

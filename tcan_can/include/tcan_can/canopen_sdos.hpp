@@ -2,7 +2,7 @@
 
 #include "tcan_can/SdoMsg.hpp"
 
-namespace tcan {
+namespace tcan_can {
 namespace canopen {
 
 /** *********************************************************************
@@ -723,4 +723,4 @@ public:
 
 
 } // namespace canopen
-} /* namespace tcan */
+} /* namespace tcan_can */

@@ -17,7 +17,7 @@
 
 #include "message_logger/message_logger.hpp"
 
-namespace tcan {
+namespace tcan_can {
 class CanBus;
 
 //! A device that is connected via CAN.
@@ -145,4 +145,4 @@ class CanDevice {
     CanBus* bus_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

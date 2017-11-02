@@ -11,10 +11,10 @@
 #include "tcan_can/CanBus.hpp"
 #include "tcan_can/CanMsg.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 //! Container of all CAN buses
-class CanBusManager : public BusManager<CanMsg> {
+class CanBusManager : public tcan::BusManager<CanMsg> {
  public:
     CanBusManager();
 
@@ -56,4 +56,4 @@ class CanBusManager : public BusManager<CanMsg> {
 
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

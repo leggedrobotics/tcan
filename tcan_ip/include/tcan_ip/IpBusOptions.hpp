@@ -10,9 +10,9 @@
 #include "tcan/BusOptions.hpp"
 #include <stdint.h>
 
-namespace tcan {
+namespace tcan_ip {
 
-struct IpBusOptions : public BusOptions {
+struct IpBusOptions : public tcan::BusOptions {
 
 	enum class ConnectionType : unsigned int {
 		TCP
@@ -43,4 +43,4 @@ struct IpBusOptions : public BusOptions {
     unsigned int maxDeviceTimeoutCounter_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_ip */

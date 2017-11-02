@@ -13,7 +13,7 @@
 
 #include "tcan/BusOptions.hpp"
 
-namespace tcan {
+namespace tcan_can {
 
 struct SocketBusOptions : public CanBusOptions {
     SocketBusOptions():
@@ -51,4 +51,4 @@ struct SocketBusOptions : public CanBusOptions {
     std::vector<can_filter> canFilters_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_can */

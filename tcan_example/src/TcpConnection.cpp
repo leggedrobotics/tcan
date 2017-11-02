@@ -6,13 +6,13 @@
  */
 
 
-#include "tcan_example/TcpConnection.hpp"
 #include "message_logger/message_logger.hpp"
+#include "tcan_example/TcpConnection.hpp"
 
 namespace tcan_example {
 
-TcpConnection::TcpConnection(std::unique_ptr<tcan::IpBusOptions>&& options):
-    tcan::IpBus(std::move(options))
+TcpConnection::TcpConnection(std::unique_ptr<tcan_ip::IpBusOptions>&& options):
+    tcan_ip::IpBus(std::move(options))
 {
 
 }
@@ -21,7 +21,7 @@ TcpConnection::~TcpConnection()
 {
 }
 
-void TcpConnection::handleMessage(const tcan::IpMsg& msg) {
+void TcpConnection::handleMessage(const tcan_ip::IpMsg& msg) {
     std::cout << " got data: " << msg.getData() << std::endl;
 
     // clear the error message flag, indicating that the received message is valid.
@@ -29,5 +29,4 @@ void TcpConnection::handleMessage(const tcan::IpMsg& msg) {
     errorMsgFlag_ = false;
 }
 
-} /* namespace tcan */
-
+} /* namespace tcan_example */
