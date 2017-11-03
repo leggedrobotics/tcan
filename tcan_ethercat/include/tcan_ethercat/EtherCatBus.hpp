@@ -338,6 +338,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         const int size = sizeof(Value);
         Value valueCopy = value; // copy value to make it modifiable
         const int wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
+        MELO_INFO("sendSdoWrite done");
         if (wkc <= 0) {
             MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Working counter too low ("
                 << wkc << ") for writing SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
@@ -360,6 +361,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         MELO_INFO("sendSdoRead");
         int size = sizeof(Value);
         const int wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
+        MELO_INFO("sendSdoRead done");
         if (wkc <= 0) {
             MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Working counter too low ("
                 << wkc << ") for reading SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
@@ -486,7 +488,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Send EtherCAT process data.
      */
     void sendProcessData() {
-        MELO_INFO("sendProcessData");
+//        MELO_INFO("sendProcessData");
         ecx_send_processdata(&ecatContext_);
     }
 
@@ -494,7 +496,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Receive EtherCAT process data and update the working counter.
      */
     void receiveProcessData() {
-        MELO_INFO("receiveProcessData");
+//        MELO_INFO("receiveProcessData");
         wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
     }
 
