@@ -1,15 +1,15 @@
 #include <signal.h>
 #include <unordered_map>
 
-#include "tcan/IpBusManager.hpp"
-#include "tcan/IpBusOptions.hpp"
+#include "tcan_ip/IpBusManager.hpp"
+#include "tcan_ip/IpBusOptions.hpp"
 
 #include "tcan_example/TcpConnection.hpp"
 
 //#define USE_SYNCHRONOUS_MODE
 
 namespace tcan_example {
-class TcpManager : public tcan::IpBusManager {
+class TcpManager : public tcan_ip::IpBusManager {
 public:
 	enum class IpId : unsigned int {
 		DEVICE1=0
@@ -18,7 +18,7 @@ public:
 	typedef std::unordered_map<unsigned int, TcpConnection*> ConnectionContainer;
 
 	TcpManager():
-	    tcan::IpBusManager(),
+	    tcan_ip::IpBusManager(),
 	    connectionContainer_()
 	{
 		addConnection(IpId::DEVICE1, "192.168.0.100", 9999);
@@ -30,7 +30,7 @@ public:
 	}
 
 	void addConnection(const IpId ipId, const std::string& host, const unsigned int port) {
-	    std::unique_ptr<tcan::IpBusOptions> options(new tcan::IpBusOptions(host, port));
+	    std::unique_ptr<tcan_ip::IpBusOptions> options(new tcan_ip::IpBusOptions(host, port));
 #ifdef USE_SYNCHRONOUS_MODE
 		options->asynchronous = false;
 #endif
@@ -71,7 +71,7 @@ int main() {
 		myManager_.sanityCheckSynchronous();
 #endif
 		for(auto device : myManager_.getConnectionContainer()) {
-			device.second->emplaceMessage(tcan::IpMsg("hi"));
+			device.second->emplaceMessage(tcan_ip::IpMsg("hi"));
 			// as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
 		}
 #ifdef USE_SYNCHRONOUS_MODE

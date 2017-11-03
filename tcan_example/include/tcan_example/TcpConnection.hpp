@@ -7,25 +7,24 @@
 
 #pragma once
 
-#include "tcan/IpBus.hpp"
+#include "tcan_ip/IpBus.hpp"
 
 namespace tcan_example {
 
-class TcpConnection : public tcan::IpBus {
+class TcpConnection : public tcan_ip::IpBus {
  public:
     TcpConnection() = delete;
-    TcpConnection(std::unique_ptr<tcan::IpBusOptions>&& options);
+    TcpConnection(std::unique_ptr<tcan_ip::IpBusOptions>&& options);
 
     virtual ~TcpConnection();
 
     /*! Callback called after reception of a message.
      * @param msg	reference to the usb message
      */
-    virtual void handleMessage(const tcan::IpMsg& msg);
+    virtual void handleMessage(const tcan_ip::IpMsg& msg);
 
  private:
 
 };
 
-} /* namespace tcan */
-
+} /* namespace tcan_example */

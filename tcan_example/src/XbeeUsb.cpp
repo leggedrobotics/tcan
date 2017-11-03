@@ -11,8 +11,8 @@
 
 namespace tcan_example {
 
-XbeeUsb::XbeeUsb(std::unique_ptr<tcan::UniversalSerialBusOptions>&& options):
-    tcan::UniversalSerialBus(std::move(options))
+XbeeUsb::XbeeUsb(std::unique_ptr<tcan_usb::UniversalSerialBusOptions>&& options):
+    tcan_usb::UniversalSerialBus(std::move(options))
 {
 
 }
@@ -21,7 +21,7 @@ XbeeUsb::~XbeeUsb()
 {
 }
 
-void XbeeUsb::handleMessage(const tcan::UsbMsg& msg) {
+void XbeeUsb::handleMessage(const tcan_usb::UsbMsg& msg) {
     std::cout << " got data: " << msg.getData() << std::endl;
 
 
@@ -30,5 +30,4 @@ void XbeeUsb::handleMessage(const tcan::UsbMsg& msg) {
     errorMsgFlag_ = false;
 }
 
-} /* namespace tcan */
-
+} /* namespace tcan_usb */

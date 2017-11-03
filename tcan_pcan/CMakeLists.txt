@@ -3,6 +3,7 @@ project(tcan_pcan)
 
 find_package(catkin REQUIRED COMPONENTS
   tcan
+  tcan_can
   pcan_driver
 )
 
@@ -12,9 +13,12 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS
     include
-  LIBRARIES ${PROJECT_NAME} pthread
+  LIBRARIES
+    ${PROJECT_NAME}
+    pthread
   CATKIN_DEPENDS
     tcan
+    tcan_can
     pcan_driver
 )
 
