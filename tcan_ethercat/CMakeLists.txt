@@ -7,7 +7,6 @@ if(catkin_FOUND)
   find_package(catkin REQUIRED COMPONENTS
     soem
     tcan
-    tcan_can
   )
 else()
   find_package(tcan REQUIRED)
@@ -26,7 +25,6 @@ if(catkin_FOUND)
     CATKIN_DEPENDS
       soem
       tcan
-      tcan_can
   )
 endif()
 

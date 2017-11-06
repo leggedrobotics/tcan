@@ -10,5 +10,4 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>soem</depend>
   <depend>tcan</depend>
-  <depend>tcan_can</depend>
 </package>
