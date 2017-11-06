@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include "tcan/CanBus.hpp"
+#include "tcan_can/CanBus.hpp"
 #include "tcan_pcanfd/PcanfdBusOptions.hpp"
 
 #include <string>
 #include <memory>
 
 
-namespace tcan {
+namespace tcan_pcanfd {
 
-class PcanfdBus : public CanBus {
+class PcanfdBus : public tcan_can::CanBus {
  public:
 
     PcanfdBus(const std::string& interface);
@@ -39,4 +39,4 @@ class PcanfdBus : public CanBus {
     int fd_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_pcanfd */

@@ -10,11 +10,11 @@
 
 #include <stdio.h>
 
-#include "tcan_example/CanDeviceExample.hpp"
 #include "tcan/Bus.hpp"
-#include "tcan/canopen_sdos.hpp"
+#include "tcan_can/canopen_sdos.hpp"
+#include "tcan_example/CanDeviceExample.hpp"
 
-namespace tcan {
+namespace tcan_example {
 
 namespace example_can {
 
@@ -106,4 +106,4 @@ void CanDeviceExample::handleReadSdoAnswer(const SdoMsg& sdoMsg) {
 
 } /* namespace example_can */
 
-} /* namespace tcan */
+} /* namespace tcan_example */

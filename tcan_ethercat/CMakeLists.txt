@@ -5,8 +5,9 @@ find_package(catkin QUIET)
 
 if(catkin_FOUND)
   find_package(catkin REQUIRED COMPONENTS
-    tcan
     soem
+    tcan
+    tcan_can
   )
 else()
   find_package(tcan REQUIRED)
@@ -18,9 +19,14 @@ endif()
 ###################################
 if(catkin_FOUND)
   catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS tcan soem
+    INCLUDE_DIRS
+      include
+    LIBRARIES
+      ${PROJECT_NAME}
+    CATKIN_DEPENDS
+      soem
+      tcan
+      tcan_can
   )
 endif()
 

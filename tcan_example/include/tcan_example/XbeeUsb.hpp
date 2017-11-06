@@ -7,25 +7,24 @@
 
 #pragma once
 
-#include "tcan/UniversalSerialBus.hpp"
+#include "tcan_usb/UniversalSerialBus.hpp"
 
 namespace tcan_example {
 
-class XbeeUsb : public tcan::UniversalSerialBus {
+class XbeeUsb : public tcan_usb::UniversalSerialBus {
  public:
     XbeeUsb() = delete;
-    XbeeUsb(std::unique_ptr<tcan::UniversalSerialBusOptions>&&);
+    XbeeUsb(std::unique_ptr<tcan_usb::UniversalSerialBusOptions>&&);
 
     virtual ~XbeeUsb();
 
     /*! Callback called after reception of a message.
      * @param msg	reference to the usb message
      */
-    virtual void handleMessage(const tcan::UsbMsg& msg);
+    virtual void handleMessage(const tcan_usb::UsbMsg& msg);
 
  private:
 
 };
 
-} /* namespace tcan */
-
+} /* namespace tcan_example */
