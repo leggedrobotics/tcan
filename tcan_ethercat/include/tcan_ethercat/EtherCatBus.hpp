@@ -19,7 +19,6 @@
 #include <soem/soem/ethercat.h>
 
 #include "tcan/Bus.hpp"
-#include "tcan/CanMsg.hpp"
 #include "tcan_ethercat/EtherCatBusOptions.hpp"
 #include "tcan_ethercat/EtherCatSlave.hpp"
 

@@ -10,18 +10,18 @@
 
 #pragma once
 
-#include "tcan/CanBus.hpp"
+#include "tcan_can/CanBus.hpp"
 #include "tcan_pcan/PcanBusOptions.hpp"
 
 #include "pcan_driver/libpcan.h"
 
-namespace tcan {
+namespace tcan_pcan {
 
-class PcanBus : public CanBus {
+class PcanBus : public tcan_can::CanBus {
  public:
 
     PcanBus(const std::string& interface);
-    PcanBus(std::unique_ptr<BusOptions>&& options) = delete;
+    PcanBus(std::unique_ptr<tcan::BusOptions>&& options) = delete;
     PcanBus(std::unique_ptr<PcanBusOptions>&& options);
 
     virtual ~PcanBus();
@@ -42,4 +42,4 @@ class PcanBus : public CanBus {
 //    pcan_handle pcanHandle_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_pcan */

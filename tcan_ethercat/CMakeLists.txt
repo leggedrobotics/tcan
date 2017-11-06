@@ -2,17 +2,21 @@ cmake_minimum_required(VERSION 2.6)
 project(tcan_ethercat)
 
 find_package(catkin REQUIRED COMPONENTS
-  tcan
   soem
+  tcan
 )
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS tcan soem
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${PROJECT_NAME}
+  CATKIN_DEPENDS
+    soem
+    tcan
 )
 
 ###########

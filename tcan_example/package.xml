@@ -12,6 +12,9 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>tcan</depend>
+  <depend>tcan_can</depend>
+  <depend>tcan_ip</depend>
+  <depend>tcan_usb</depend>
 
   <export>
   </export>

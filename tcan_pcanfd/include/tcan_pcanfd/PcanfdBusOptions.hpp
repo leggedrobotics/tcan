@@ -9,16 +9,16 @@
 
 #include "tcan/BusOptions.hpp"
 
-namespace tcan {
+namespace tcan_pcanfd {
 
-struct PcanfdBusOptions : public CanBusOptions {
+struct PcanfdBusOptions : public tcan_can::CanBusOptions {
     PcanfdBusOptions():
         PcanfdBusOptions(std::string())
     {
     }
 
     PcanfdBusOptions(const std::string& interface_name):
-        CanBusOptions(interface_name),
+        tcan_can::CanBusOptions(interface_name),
         loopback_(false),
         maxMessagesPassed_(10),
         bitrate_(1000000)
@@ -32,11 +32,11 @@ struct PcanfdBusOptions : public CanBusOptions {
 
     //! max number of messages we are passing to the driver at once
     unsigned int maxMessagesPassed_;
-    
+
     //! bitrate of the CAN bus (max 1000000)
     unsigned int bitrate_;
-    
+
     // todo: filter
 };
 
-} /* namespace tcan */
+} /* namespace tcan_pcanfd */
