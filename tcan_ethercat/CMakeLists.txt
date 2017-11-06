@@ -4,7 +4,6 @@ project(tcan_ethercat)
 find_package(catkin REQUIRED COMPONENTS
   soem
   tcan
-  tcan_can
 )
 
 ###################################
@@ -18,7 +17,6 @@ catkin_package(
   CATKIN_DEPENDS
     soem
     tcan
-    tcan_can
 )
 
 ###########
