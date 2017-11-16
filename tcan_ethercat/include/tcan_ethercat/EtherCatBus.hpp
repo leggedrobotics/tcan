@@ -126,7 +126,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         }
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': Expected and discovered slaves match.");
 
-        // Disable symmetrical transfers.
+        // Enable/disable symmetrical transfers.
         ecatContext_.grouplist[0].blockLRW = static_cast<const EtherCatBusOptions*>(getOptions())->blockLrw_ ? 1 : 0;
 
         // Initialize the communication interfaces of all slaves.
@@ -152,6 +152,9 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
         MELO_INFO_STREAM("Calculated expected working counter: " << wkcExpected_.load());
 
+        readyForCommunication_ = true;
+
+/*
         // Go to state Safe Op.
         for (EtherCatSlave* slave : slaves_) {
             setStateSafeOp(slave->getAddress());
@@ -169,6 +172,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                 return false;
             }
         }
+*/
 
         // Print slave errors.
         printErrorReport();
@@ -333,11 +337,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     template <typename Value>
     bool sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
-        MELO_INFO("sendSdoWrite");
+        //MELO_INFO("sendSdoWrite");
         const int size = sizeof(Value);
         Value valueCopy = value; // copy value to make it modifiable
         const int wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
-        MELO_INFO("sendSdoWrite done");
+        //MELO_INFO("sendSdoWrite done");
         if (wkc <= 0) {
             MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Working counter too low ("
                 << wkc << ") for writing SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
@@ -357,10 +361,10 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     template <typename Value>
     bool sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
-        MELO_INFO("sendSdoRead");
+        //MELO_INFO("sendSdoRead");
         int size = sizeof(Value);
         const int wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
-        MELO_INFO("sendSdoRead done");
+        //MELO_INFO("sendSdoRead done");
         if (wkc <= 0) {
             MELO_ERROR_STREAM("Bus '" << options_->name_ << "', slave " << slave << ": Working counter too low ("
                 << wkc << ") for reading SDO 0x" << std::hex << index <<  ".0x" << std::hex << static_cast<uint16_t>(subindex));
@@ -487,7 +491,21 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Send EtherCAT process data.
      */
     void sendProcessData() {
-//        MELO_INFO("sendProcessData");
+        if (!readyForCommunication_) {
+            return;
+        }
+std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+const std::chrono::duration<double> elapsedSeconds = now - last;
+const double sec = elapsedSeconds.count();
+last = now;
+
+if (sec > 0.1) {
+        MELO_ERROR_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
+} else if (sec > 0.05) {
+        MELO_WARN_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
+} else {
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
+}
         ecx_send_processdata(&ecatContext_);
     }
 
@@ -496,6 +514,9 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     void receiveProcessData() {
 //        MELO_INFO("receiveProcessData");
+        if (!readyForCommunication_) {
+            return;
+        }
         wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
     }
 
@@ -571,6 +592,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Do a sanity check of all slaves on this bus.
      */
     void sanityCheck() {
+return;
         // TODO: Restructure and use data from SOEM.
         uint8_t currentgroup = 0;
         if (!workingCounterIsOk() || ecatContext_.grouplist[currentgroup].docheckstate) {
@@ -791,10 +813,11 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
 protected:
+std::chrono::time_point<std::chrono::high_resolution_clock> last;
     // Default value for the maximal retries to wait for a state.
     static constexpr unsigned int maxRetriesDef_ = 40;
-    // Default value for the duration to sleep between the retires.
-    static constexpr double retrySleepDef_ = 0.05;
+    // Default value for the duration to sleep between the retries.
+    static constexpr double retrySleepDef_ = 0.001;
 
     // Vector containing all slaves.
     std::vector<EtherCatSlave*> slaves_;
@@ -815,6 +838,8 @@ protected:
     // Working counters.
     std::atomic<int> wkcExpected_;
     std::atomic<int> wkc_;
+
+    bool readyForCommunication_ = false;
 
     // EtherCAT context data elements:
 
