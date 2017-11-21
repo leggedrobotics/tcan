@@ -494,7 +494,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         if (!readyForCommunication_) {
             return;
         }
-std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+/*std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
 const std::chrono::duration<double> elapsedSeconds = now - last;
 const double sec = elapsedSeconds.count();
 last = now;
@@ -505,7 +505,7 @@ if (sec > 0.1) {
         MELO_WARN_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
 } else {
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
-}
+}*/
         ecx_send_processdata(&ecatContext_);
     }
 
