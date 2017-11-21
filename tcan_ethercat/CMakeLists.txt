@@ -30,7 +30,6 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/EtherCatBus.cpp
   src/EtherCatBusManager.cpp
   src/EtherCatSlave.cpp
 )
