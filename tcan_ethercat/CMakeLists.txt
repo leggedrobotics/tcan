@@ -40,7 +40,7 @@ include_directories(
 if(catkin_FOUND)
   include_directories(
     ${catkin_INCLUDE_DIRS}
-    ${soem_INCLUDE_DIRS}/soem
+    ${soem_INCLUDE_DIRS}
   )
 else()
   include_directories(
@@ -60,6 +60,7 @@ if(catkin_FOUND)
 else()
   add_dependencies(${PROJECT_NAME}
     tcan
+    soem
   )
 
   target_link_libraries(${PROJECT_NAME}
