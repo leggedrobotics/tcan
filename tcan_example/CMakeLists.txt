@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tcan_example)
 
-find_package(catkin REQUIRED COMPONENTS
-  tcan
+find_package(catkin REQUIRED
+  COMPONENTS
+    tcan
+    tcan_can
+    tcan_ip
+    tcan_usb
 )
 
 ###################################
@@ -10,8 +14,13 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 
 catkin_package(
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS tcan
+  INCLUDE_DIRS
+    include
+  CATKIN_DEPENDS
+    tcan
+    tcan_can
+    tcan_ip
+    tcan_usb
 )
 
 ###########

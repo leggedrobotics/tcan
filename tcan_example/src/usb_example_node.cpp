@@ -1,15 +1,15 @@
 #include <signal.h>
 #include <unordered_map>
 
-#include "tcan/UniversalSerialBusManager.hpp"
-#include "tcan/UniversalSerialBusOptions.hpp"
+#include "tcan_usb/UniversalSerialBusManager.hpp"
+#include "tcan_usb/UniversalSerialBusOptions.hpp"
 
 #include "tcan_example/XbeeUsb.hpp"
 
 //#define USE_SYNCHRONOUS_MODE
 
 namespace tcan_example {
-class UsbManager : public tcan::UniversalSerialBusManager {
+class UsbManager : public tcan_usb::UniversalSerialBusManager {
 public:
 	enum class UsbId : unsigned int {
 		XBEE1=0
@@ -18,7 +18,7 @@ public:
 	typedef std::unordered_map<unsigned int, XbeeUsb*> UsbContainer;
 
 	UsbManager():
-	    tcan::UniversalSerialBusManager(),
+	    tcan_usb::UniversalSerialBusManager(),
 		usbContainer_()
 	{
 		addUsb(UsbId::XBEE1, "/dev/ttyUSB1");
@@ -31,7 +31,7 @@ public:
 	}
 
 	void addUsb(const UsbId usbId, const std::string& interface) {
-		std::unique_ptr<tcan::UniversalSerialBusOptions> options(new tcan::UniversalSerialBusOptions());
+		std::unique_ptr<tcan_usb::UniversalSerialBusOptions> options(new tcan_usb::UniversalSerialBusOptions());
 #ifdef USE_SYNCHRONOUS_MODE
 		options->mode = UniversalSerialBusOptions::Mode::Synchronous;
 #endif
@@ -73,7 +73,7 @@ int main() {
 	    usbManager_.sanityCheckSynchronous();
 #endif
 		for(auto xbee : usbManager_.getUsbContainer()) {
-		    xbee.second->emplaceMessage(tcan::UsbMsg("hi"));
+		    xbee.second->emplaceMessage(tcan_usb::UsbMsg("hi"));
 		    // as an alternative, sendMessage(..) can be used, if emplacing the message is not appropriate
 		}
 #ifdef USE_SYNCHRONOUS_MODE

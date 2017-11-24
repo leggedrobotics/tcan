@@ -6,15 +6,18 @@
 #include <signal.h>
 #include <unordered_map>
 
-#include "tcan/CanBusManager.hpp"
-#include "tcan/SocketBus.hpp"
+#include "tcan_can/CanBusManager.hpp"
+#include "tcan_can/SocketBus.hpp"
 
 #include "tcan_example/CanDeviceExample.hpp"
 
 #include "message_logger/message_logger.hpp"
 
-namespace tcan {
-class CanManager : public CanBusManager {
+namespace tcan_example {
+
+using namespace tcan_can;
+
+class CanManager : public tcan_can::CanBusManager {
 public:
 	enum class BusId : unsigned int {
 		BUS1=0,
@@ -80,7 +83,7 @@ public:
 
 		getCanBus(static_cast<unsigned int>(BusId::BUS2))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSyncBus2);
 
-		// add a third bus, asynchronous
+		// add a third bus, synchronous
 		options.mode_ = tcan::BusOptions::Mode::Synchronous;
 		options.name_ = "can2";
 		addSocketBus(BusId::BUS3, std::unique_ptr<SocketBusOptions>(new SocketBusOptions(options)));
@@ -92,7 +95,7 @@ public:
 
 		getCanBus(static_cast<unsigned int>(BusId::BUS3))->addCanMessage(DeviceCanOpen::RxPDOSyncId, this, &CanManager::parseIncomingSyncBus3);
 
-		// start the threads for semi-synchronous buses
+		// start the threads for semi-synchronous and asynchronous buses
 		startThreads();
 	}
 
@@ -141,7 +144,7 @@ protected:
 	DeviceExampleContainer deviceExampleContainer_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_example */
 
 bool g_running = true;
 
@@ -151,7 +154,7 @@ void signal_handler(int) {
 
 int main() {
 	signal(SIGINT, signal_handler);
-	tcan::CanManager canManager_;
+	tcan_example::CanManager canManager_;
 	canManager_.init();
 
 	auto nextStep = std::chrono::steady_clock::now();

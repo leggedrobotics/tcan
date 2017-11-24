@@ -27,14 +27,6 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/CanBusManager.cpp
-  src/UniversalSerialBusManager.cpp
-  src/IpBusManager.cpp
-  src/CanBus.cpp
-  src/SocketBus.cpp
-  src/UniversalSerialBus.cpp
-  src/IpBus.cpp
-  src/DeviceCanOpen.cpp
   src/helper_functions.cpp
 )
 target_link_libraries(${PROJECT_NAME}
@@ -53,9 +45,4 @@ install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY
-  scripts
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

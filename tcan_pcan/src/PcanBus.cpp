@@ -23,7 +23,7 @@
 #include "message_logger/message_logger.hpp"
 #include <sstream>
 
-namespace tcan {
+namespace tcan_pcan {
 
 PcanBus::PcanBus(const std::string& interface):
     PcanBus(std::unique_ptr<PcanBusOptions>(new PcanBusOptions(interface)))
@@ -31,7 +31,7 @@ PcanBus::PcanBus(const std::string& interface):
 }
 
 PcanBus::PcanBus(std::unique_ptr<PcanBusOptions>&& options):
-    CanBus(std::move(options)),
+    tcan_can::CanBus(std::move(options)),
     handle_(NULL)
 {
 }
@@ -135,7 +135,7 @@ bool PcanBus::readData() {
         handleBusError( frame );
     }
     else{
-        handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
+        handleMessage( tcan_can::CanMsg(frame.can_id, frame.can_dlc, frame.data) );
     }
   }
   }
@@ -144,7 +144,7 @@ bool PcanBus::readData() {
 
 
 bool PcanBus::writeData(std::unique_lock<std::mutex>* lock) {
-    CanMsg cmsg = outgoingMsgs_.front();
+    tcan_can::CanMsg cmsg = outgoingMsgs_.front();
     if(lock != nullptr) {
         lock->unlock();
     }
@@ -171,7 +171,7 @@ void PcanBus::handleBusError(const can_frame& msg) {
     errorMsgFlagPersistent_ = true;
     errorMsgFlag_ = true;
 
-    if(static_cast<const CanBusOptions*>(options_.get())->passivateOnBusError_) {
+    if(static_cast<const tcan_can::CanBusOptions*>(options_.get())->passivateOnBusError_) {
         if(!isPassive_) {
             MELO_WARN("Bus error on bus %s. This bus is now PASSIVE!", options_->name_.c_str());
         }
