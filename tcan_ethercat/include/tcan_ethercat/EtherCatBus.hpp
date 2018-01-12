@@ -106,10 +106,10 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                 break;
             }
             threadSleep(retrySleep);
-            MELO_INFO_STREAM("No slaves have been found, retrying ...");
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': No slaves have been found, retrying ...");
         }
         if (!initializedSuccessfully) {
-            MELO_ERROR_STREAM("No slaves have been found.");
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': No slaves have been found.");
             return false;
         }
 
@@ -150,7 +150,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         // Calculate the expected working counter.
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
-        MELO_INFO_STREAM("Calculated expected working counter: " << wkcExpected_.load());
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': Calculated expected working counter: " << wkcExpected_.load());
 
         readyForCommunication_ = true;
 
@@ -759,7 +759,7 @@ return;
      * Print all IO segments.
      */
     void printIoSegments() {
-        MELO_INFO_STREAM("IO Segments: " <<
+        MELO_INFO_STREAM("Bus '" << options_->name_ << "': IO Segments: " <<
                 ecatContext_.grouplist[0].nsegments << ": " <<
                 ecatContext_.grouplist[0].IOsegment[0] << ", " <<
                 ecatContext_.grouplist[0].IOsegment[1] << ", " <<
