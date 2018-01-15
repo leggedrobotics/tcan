@@ -58,6 +58,42 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     }
 
     /*!
+     * Check if a bus is available.
+     * @param name Name of the bus.
+     * @return True if available.
+     */
+    static bool BusIsAvailable(const std::string& name) {
+        ec_adaptert* adapter = ec_find_adapters();
+        while (adapter != nullptr) {
+            if (name == std::string(adapter->name)) {
+                return true;
+            }
+            adapter = adapter->next;
+        }
+        return false;
+    }
+
+    /*!
+     * Check if this bus is available.
+     * @return True if available.
+     */
+    bool busIsAvailable() {
+        return BusIsAvailable(options_->name_);
+    }
+
+    /*!
+     * Print all available busses.
+     */
+    static void PrintAvailableBusses() {
+        MELO_INFO_STREAM("Available adapters:");
+        ec_adaptert* adapter = ec_find_adapters();
+        while (adapter != nullptr) {
+            MELO_INFO_STREAM("- Name: '" << adapter->name << "', description: '" << adapter->desc << "'");
+            adapter = adapter->next;
+        }
+    }
+
+    /*!
      * In-place construction of a new slave.
      * @param options Pointer to the option class of the slave.
      * @return True if successful.
@@ -99,18 +135,18 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     bool setupCommunication(const unsigned int maxRetries = 0, const double retrySleep = 1.0) {
         // Initialize SOEM.
-        bool initializedSuccessfully = false;
         for (unsigned int retry = 0; retry <= maxRetries; retry++) {
             if (ecx_config_init(&ecatContext_, FALSE) > 0) {
-                initializedSuccessfully = true;
+                // Successful initialization.
                 break;
+            } else if (retry == maxRetries) {
+                // Too many failed attempts.
+                MELO_ERROR_STREAM("Bus '" << options_->name_ << "': No slaves have been found.");
+                return false;
             }
+            // Sleep and retry.
             threadSleep(retrySleep);
-            MELO_INFO_STREAM("Bus '" << options_->name_ << "': No slaves have been found, retrying ...");
-        }
-        if (!initializedSuccessfully) {
-            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': No slaves have been found.");
-            return false;
+            MELO_INFO_STREAM("Bus '" << options_->name_ << "': No slaves have been found, retrying " << retry+1 << "/" << maxRetries << " ...");
         }
 
         // Print the slaves which have been detected.
@@ -152,7 +188,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         wkcExpected_ = (ecatContext_.grouplist[0].outputsWKC * 2) + ecatContext_.grouplist[0].inputsWKC;
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': Calculated expected working counter: " << wkcExpected_.load());
 
-        readyForCommunication_ = true;
+        communicationIsSetUp_ = true;
 
 /*
         // Go to state Safe Op.
@@ -436,11 +472,16 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
          * will open a second port as backup. You can send NULL as ifname if you have a
          * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
          */
-        const char* ifname = options_->name_.c_str();
-        if (ecx_init(&ecatContext_, ifname) <= 0) {
+        if (!busIsAvailable()) {
+            MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Bus is not available.");
+            PrintAvailableBusses();
+            return false;
+        }
+        if (ecx_init(&ecatContext_, options_->name_.c_str()) <= 0) {
             MELO_ERROR_STREAM("Bus '" << options_->name_ << "': No socket connection. Execute as root.");
             return false;
         }
+        busIsOpen_ = true;
 
         MELO_INFO_STREAM("Bus '" << options_->name_ << "': EtherCAT initialization succeeded.");
 
@@ -451,12 +492,14 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Cleanup the interface.
      */
     void cleanupInterface() {
-        // Set the slaves to state Init.
-        setStateInit();
-        waitForStateInit();
+        if (*ecatContext_.slavecount > 0) {
+            // Set the slaves to state Init.
+            setStateInit();
+            waitForStateInit();
+        }
 
         // Close the port.
-        if (ecatContext_.port) {
+        if (busIsOpen_ && ecatContext_.port) {
             MELO_INFO_STREAM("Bus '" << options_->name_ << "': Closing socket ...");
             ecx_close(&ecatContext_);
             sleep(0.5); // Sleep to make sure the socket is closed, because ecx_close is non-blocking.
@@ -491,21 +534,9 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Send EtherCAT process data.
      */
     void sendProcessData() {
-        if (!readyForCommunication_) {
+        if (!communicationIsSetUp_) {
             return;
         }
-/*std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
-const std::chrono::duration<double> elapsedSeconds = now - last;
-const double sec = elapsedSeconds.count();
-last = now;
-
-if (sec > 0.1) {
-        MELO_ERROR_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
-} else if (sec > 0.05) {
-        MELO_WARN_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
-} else {
-        MELO_INFO_STREAM("Bus '" << options_->name_ << "': sendProcessData. " << sec);
-}*/
         ecx_send_processdata(&ecatContext_);
     }
 
@@ -513,8 +544,7 @@ if (sec > 0.1) {
      * Receive EtherCAT process data and update the working counter.
      */
     void receiveProcessData() {
-//        MELO_INFO("receiveProcessData");
-        if (!readyForCommunication_) {
+        if (!communicationIsSetUp_) {
             return;
         }
         wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
@@ -525,7 +555,6 @@ if (sec > 0.1) {
      * @return True the data has been written successfully.
      */
     virtual bool writeData(std::unique_lock<std::mutex>* lock) {
-
         // Copy the datagrams to send to the sent datagrams.
         sentDatagrams_.reset(new EtherCatDatagrams(outgoingMsgs_.front()));
         if (lock != nullptr) {
@@ -592,7 +621,6 @@ if (sec > 0.1) {
      * Do a sanity check of all slaves on this bus.
      */
     void sanityCheck() {
-return;
         // TODO: Restructure and use data from SOEM.
         uint8_t currentgroup = 0;
         if (!workingCounterIsOk() || ecatContext_.grouplist[currentgroup].docheckstate) {
@@ -692,8 +720,8 @@ return;
         int ret = 0;
         int Osize = 0, Isize = 0;
 
-        #define Nsdo  16
-        int sdodata[Nsdo], sdodatasize;
+        const unsigned int nsdo = 16;
+        int sdodata[nsdo], sdodatasize;
         char *databuf;
         databuf = (char*)&sdodata[0];
 
@@ -719,10 +747,10 @@ return;
             MELO_INFO_STREAM("    Description: " << &odinfo.Name[k][0]);
             MELO_INFO_STREAM("    OE Entries = " << odentryinfo.Entries);
             for (int j = 0; j < odentryinfo.Entries; j++) {
-                for (int n = 0; n < Nsdo; n++) {
+                for (int n = 0; n < nsdo; n++) {
                     sdodata[n] = 0;
                 }
-                sdodatasize = Nsdo*sizeof(int);
+                sdodatasize = nsdo*sizeof(int);
                 ecx_SDOread(&ecatContext_, odinfo.Slave, odinfo.Index[k], j, 0, &sdodatasize, &sdodata, EC_TIMEOUTRXM);
                 MELO_INFO_STREAM("    OE = " << j);
                 MELO_INFO_STREAM("        ValueInfo  = " << odentryinfo.ValueInfo[j]);
@@ -813,7 +841,6 @@ return;
     }
 
 protected:
-std::chrono::time_point<std::chrono::high_resolution_clock> last;
     // Default value for the maximal retries to wait for a state.
     static constexpr unsigned int maxRetriesDef_ = 40;
     // Default value for the duration to sleep between the retries.
@@ -839,7 +866,10 @@ std::chrono::time_point<std::chrono::high_resolution_clock> last;
     std::atomic<int> wkcExpected_;
     std::atomic<int> wkc_;
 
-    bool readyForCommunication_ = false;
+    // Bool indicating whether the bus has been opened.
+    bool busIsOpen_ = false;
+    // Bool indicating whether the communication has been set up.
+    bool communicationIsSetUp_ = false;
 
     // EtherCAT context data elements:
 
