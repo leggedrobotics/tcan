@@ -1,9 +1,12 @@
 # Threaded Communication and Networking library #
 
-## Overview
-
 [![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=bitbucket_leggedrobotics/tcan/master)](https://ci.leggedrobotics.com/job/bitbucket_leggedrobotics/job/tcan/job/master/)
 
+## Overview
+
+A library to communicate to devices connected through CAN, EtherCat, USB or TCP/IP.
+
+### License
 The source code is released under a [proprietary license](LICENSE).
 
 **Author(s):** Philipp Leemann, Christian Gehring, Remo Diethelm
