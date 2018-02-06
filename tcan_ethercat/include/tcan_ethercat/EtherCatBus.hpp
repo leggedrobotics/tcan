@@ -431,7 +431,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         stagedDatagrams_->rxAndTxPdoDatagrams_.insert({slave, rxAndTxPdoDatagram});
 
         // Only send the message once the Rx and Tx datagrams of all slaves have been staged.
-        if (stagedDatagrams_->rxAndTxPdoDatagrams_.size() < ecatSlavecount_) {
+        if (static_cast<int>(stagedDatagrams_->rxAndTxPdoDatagrams_.size()) < ecatSlavecount_) {
             return;
         }
 
@@ -737,7 +737,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         ret = ecx_readODlist(&ecatContext_, 1, &odinfo);
         MELO_INFO_STREAM("c_readODlist returned " << ret);
         MELO_INFO_STREAM("Slave = " << odinfo.Slave << ", Entries = " << odinfo.Entries);
-        for (int k = 0; k < odinfo.Entries; k++) {
+        for (uint16 k = 0; k < odinfo.Entries; k++) {
             ecx_readODdescription(&ecatContext_, k, &odinfo);
             ecx_readOE(&ecatContext_, k, &odinfo, &odentryinfo);
             MELO_INFO_STREAM("Index = 0x" << std::hex << odinfo.Index[k]);
@@ -746,8 +746,8 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             MELO_INFO_STREAM("    DataType   = " << odinfo.DataType[k]);
             MELO_INFO_STREAM("    Description: " << &odinfo.Name[k][0]);
             MELO_INFO_STREAM("    OE Entries = " << odentryinfo.Entries);
-            for (int j = 0; j < odentryinfo.Entries; j++) {
-                for (int n = 0; n < nsdo; n++) {
+            for (uint16 j = 0; j < odentryinfo.Entries; j++) {
+                for (unsigned int n = 0; n < nsdo; n++) {
                     sdodata[n] = 0;
                 }
                 sdodatasize = nsdo*sizeof(int);
