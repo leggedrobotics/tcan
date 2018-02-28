@@ -1,10 +1,8 @@
 /*!
- * @file 	Device.hpp
- * @brief
- * @author 	Christian Gehring
+ * @file 	CanDeviceExample.hpp
+ * @author 	Philipp Leemann
  * @date 	Jan, 2012
  * @version 1.0
- * @ingroup robotCAN, device
  *
  */
 
@@ -16,20 +14,14 @@
 
 #include "tcan_can/DeviceCanOpen.hpp"
 
-
 namespace tcan_example {
 
-namespace example_can {
-//! An example device that is connected via CAN.
-
-using namespace tcan_can;
-
-class CanDeviceExampleOptions : public DeviceCanOpenOptions {
+class CanDeviceExampleOptions : public tcan_can::DeviceCanOpenOptions {
 public:
 	CanDeviceExampleOptions() = delete;
 	CanDeviceExampleOptions(const uint32_t nodeId, const std::string& name):
-		DeviceCanOpenOptions(nodeId, name),
-		someParameter(0)
+			tcan_can::DeviceCanOpenOptions(nodeId, name),
+			someParameter(0)
 	{
 
 	}
@@ -38,7 +30,7 @@ public:
 };
 
 
-class CanDeviceExample : public DeviceCanOpen {
+class CanDeviceExample : public tcan_can::DeviceCanOpen {
 public:
 
 	/*! Constructors
@@ -49,18 +41,17 @@ public:
 	CanDeviceExample(const uint32_t nodeId, const std::string& name);
 	CanDeviceExample(std::unique_ptr<CanDeviceExampleOptions>&& options);
 
-	//! Destructor
-	virtual ~CanDeviceExample();
+	virtual ~CanDeviceExample() = default;
 
-	virtual bool initDevice();
+	virtual bool initDevice() override;
 
-	virtual bool configureDevice(const CanMsg& msg);
+	virtual bool configureDevice(const tcan_can::CanMsg& msg) override;
 
 	void setCommand(const float value);
 
-	bool parsePdo1(const CanMsg& cmsg);
+	bool parsePdo1(const tcan_can::CanMsg& cmsg);
 
-    void handleReadSdoAnswer(const SdoMsg& sdoMsg);
+	void handleReadSdoAnswer(const tcan_can::SdoMsg& sdoMsg);
 
 	float getMeasurement() const { return myMeasurement_; }
 
@@ -70,6 +61,5 @@ protected:
 	std::atomic<float> myMeasurement_;
 };
 
-} /* namespace example_can */
 
 } /* namespace tcan_example */

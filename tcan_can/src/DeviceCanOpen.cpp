@@ -29,11 +29,6 @@ DeviceCanOpen::DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options):
 
 }
 
-DeviceCanOpen::~DeviceCanOpen()
-{
-
-}
-
 void DeviceCanOpen::sanityCheck() {
     if(!isMissing()) {
         if(isTimedOut()) {

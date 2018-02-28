@@ -38,6 +38,7 @@ include_directories(
 
 add_executable(can_example_node
   src/CanDeviceExample.cpp
+  src/CanManagerExample.cpp
   src/can_example_node.cpp
 )
 target_link_libraries(can_example_node

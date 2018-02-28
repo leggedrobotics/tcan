@@ -55,7 +55,7 @@ class DeviceCanOpen : public CanDevice {
     DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options);
 
     //! Destructor
-    virtual ~DeviceCanOpen();
+    virtual ~DeviceCanOpen() = default;
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...

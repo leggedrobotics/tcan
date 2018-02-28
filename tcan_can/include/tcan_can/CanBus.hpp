@@ -12,7 +12,6 @@
 #include <memory>
 #include <functional>
 #include <vector>
-#include <atomic>
 
 #include "tcan/Bus.hpp"
 #include "tcan_can/CanBusOptions.hpp"

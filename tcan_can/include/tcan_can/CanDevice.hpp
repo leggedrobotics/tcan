@@ -49,10 +49,7 @@ class CanDevice {
     {
     }
 
-    //! Destructor
-    virtual ~CanDevice()
-    {
-    }
+    virtual ~CanDevice() = default;
 
     /*! Initialize the device. This function is automatically called by Bus::addDevice(..)
      *   (through initDeviceInternal(..))

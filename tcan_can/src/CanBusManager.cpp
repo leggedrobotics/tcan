@@ -9,15 +9,6 @@
 
 namespace tcan_can {
 
-CanBusManager::CanBusManager():
-    tcan::BusManager<CanMsg>()
-{
-}
-
-CanBusManager::~CanBusManager()
-{
-}
-
 void CanBusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
     const unsigned int bussize = buses_.size();
     std::unique_lock<std::mutex> locks[bussize];

@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "tcan_can/CanBus.hpp"
 #include "tcan_can/SocketBusOptions.hpp"
 
@@ -25,9 +23,9 @@ class SocketBus : public CanBus {
     int getPollableFileDescriptor() { return socket_; }
 
 protected:
-    bool initializeInterface();
-    bool readData();
-    bool writeData(std::unique_lock<std::mutex>* lock);
+    bool initializeInterface() override;
+    bool readData() override;
+    bool writeData(std::unique_lock<std::mutex>* lock) override;
 
     /*!
      * Is called on reception of a bus error message. Sets the flag
