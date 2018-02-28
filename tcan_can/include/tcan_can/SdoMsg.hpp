@@ -63,8 +63,7 @@ class SdoMsg : public CanMsg {
     {
     }
 
-    //! Destructor
-    virtual ~SdoMsg() = default;
+    ~SdoMsg() override = default;
 
     //! getters for index and subindex for answer verfication
     inline uint8_t getCommandByte() const { return readuint8(0); }

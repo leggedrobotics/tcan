@@ -22,17 +22,17 @@ class PcanfdBus : public tcan_can::CanBus {
     PcanfdBus(const std::string& interface);
     PcanfdBus(std::unique_ptr<PcanfdBusOptions>&& options);
 
-    virtual ~PcanfdBus();
+    ~PcanfdBus() override;
 
-    int getPollableFileDescriptor() {
+    int getPollableFileDescriptor() const  override {
         // todo: check if this is actually pollable!
         return fd_;
     }
 
  protected:
-    bool initializeInterface();
-    bool readData();
-    bool writeData(std::unique_lock<std::mutex>* lock);
+    bool initializeInterface() override;
+    bool readData() override;
+    bool writeData(std::unique_lock<std::mutex>* lock) override;
 
 
  protected:

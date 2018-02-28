@@ -23,7 +23,6 @@ struct BusOptions {
     BusOptions():
         BusOptions(std::string())
     {
-
     }
 
     BusOptions(const std::string& name):

@@ -30,7 +30,7 @@ class CanBus : public tcan::Bus<CanMsg> {
     CanBus() = delete;
     CanBus(std::unique_ptr<CanBusOptions>&& options);
 
-    virtual ~CanBus();
+    ~CanBus() override;
 
     /*!
      * in-place construction of a new device

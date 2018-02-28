@@ -18,9 +18,9 @@ class SocketBus : public CanBus {
     SocketBus(const std::string& interface);
     SocketBus(std::unique_ptr<SocketBusOptions>&& options);
 
-    virtual ~SocketBus();
+    ~SocketBus() override;
 
-    int getPollableFileDescriptor() { return socket_; }
+    int getPollableFileDescriptor() const override { return socket_; }
 
 protected:
     bool initializeInterface() override;

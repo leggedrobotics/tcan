@@ -18,7 +18,7 @@ class UniversalSerialBusManager : public tcan::BusManager<UsbMsg> {
  public:
     UniversalSerialBusManager();
 
-    virtual ~UniversalSerialBusManager();
+    ~UniversalSerialBusManager() override;
 
     UniversalSerialBus* getUniversalSerialBus(const unsigned int index) { return static_cast<UniversalSerialBus*>(buses_[index]); }
 };

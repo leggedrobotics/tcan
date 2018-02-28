@@ -24,9 +24,7 @@ struct CanBusOptions : public tcan::BusOptions {
     {
     }
 
-    virtual ~CanBusOptions()
-    {
-    }
+    ~CanBusOptions() override = default;
 
     //! If set to true, bus goes to passive mode (no message are sent on the bus) on reception of bus errors
     bool passivateOnBusError_;

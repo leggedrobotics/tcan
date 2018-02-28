@@ -28,7 +28,6 @@ IpBus::IpBus(std::unique_ptr<IpBusOptions>&& options):
 	sendFlag_(0),
     deviceTimeoutCounter_(0)
 {
-
 }
 
 IpBus::~IpBus()

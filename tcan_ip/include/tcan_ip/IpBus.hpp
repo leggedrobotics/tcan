@@ -20,18 +20,18 @@ class IpBus : public tcan::Bus<IpMsg> {
 	IpBus() = delete;
 	IpBus(std::unique_ptr<IpBusOptions>&& options);
 
-    virtual ~IpBus();
+    ~IpBus() override;
 
     /*! Do a sanity check of all devices on this bus.
      */
-    void sanityCheck();
+    void sanityCheck() override;
 
-    virtual int getPollableFileDescriptor() { return socket_; }
+    int getPollableFileDescriptor() const override { return socket_; }
 
 protected:
-    virtual bool initializeInterface();
-    virtual bool readData();
-    virtual bool writeData(std::unique_lock<std::mutex>* lock);
+    bool initializeInterface() override;
+    bool readData() override;
+    bool writeData(std::unique_lock<std::mutex>* lock) override;
 
  private:
     int socket_;

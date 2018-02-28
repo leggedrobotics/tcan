@@ -34,7 +34,7 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
     {
     }
 
-    virtual ~DeviceCanOpenOptions() = default;
+    ~DeviceCanOpenOptions() override = default;
 
     /*!
      * Set the maxSdoTimeoutCounter_

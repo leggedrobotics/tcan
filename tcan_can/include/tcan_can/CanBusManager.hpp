@@ -17,7 +17,7 @@ namespace tcan_can {
 class CanBusManager : public tcan::BusManager<CanMsg> {
  public:
     CanBusManager() = default;
-    virtual ~CanBusManager() = default;
+    ~CanBusManager() override = default;
 
     /*!
      * @param index     Index of the bus

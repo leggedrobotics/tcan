@@ -30,7 +30,7 @@ struct SocketBusOptions : public CanBusOptions {
     {
     }
 
-    virtual ~SocketBusOptions() = default;
+    ~SocketBusOptions() override = default;
 
     //! loop back sent messages
     bool loopback_;

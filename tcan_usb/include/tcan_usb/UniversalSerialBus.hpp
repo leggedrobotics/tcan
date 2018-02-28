@@ -21,16 +21,16 @@ class UniversalSerialBus : public tcan::Bus<UsbMsg> {
     UniversalSerialBus() = delete;
     UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions>&& options);
 
-    virtual ~UniversalSerialBus();
+    ~UniversalSerialBus() override;
 
-    void sanityCheck();
+    void sanityCheck() override;
 
-    virtual int getPollableFileDescriptor() { return fileDescriptor_; }
+    int getPollableFileDescriptor() const override { return fileDescriptor_; }
 
 protected:
-    virtual bool initializeInterface();
-    virtual bool readData();
-    virtual bool writeData(std::unique_lock<std::mutex>* lock);
+    bool initializeInterface() override;
+    bool readData() override;
+    bool writeData(std::unique_lock<std::mutex>* lock) override;
 
  private:
     void configureInterface();
