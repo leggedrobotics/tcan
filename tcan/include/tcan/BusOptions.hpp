@@ -23,7 +23,6 @@ struct BusOptions {
     BusOptions():
         BusOptions(std::string())
     {
-
     }
 
     BusOptions(const std::string& name):
@@ -43,7 +42,7 @@ struct BusOptions {
     {
     }
 
-    virtual ~BusOptions() { }
+    virtual ~BusOptions() = default;
 
     //! Mode to operate the bus in.
     //! Synchronous: It is up to the user to call BusManager's readMessagesSynchronous(), writeMessagesSynchronous() and sanityCheckSynchronous() functions.

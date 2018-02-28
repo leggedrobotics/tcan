@@ -15,7 +15,7 @@ public:
   SDOSetRS232Baudrate(const uint32_t nodeId, const uint32_t baudrate):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x2002, 0x00, baudrate)
   {}
-  virtual ~SDOSetRS232Baudrate(){}
+  ~SDOSetRS232Baudrate() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ public:
   SDOSetCANBitrate(const uint32_t nodeId, const uint32_t bitrate):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2001, 0x00, bitrate)
   {}
-  virtual ~SDOSetCANBitrate(){}
+  ~SDOSetCANBitrate() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ public:
   SDOSetAbortConnectionOptionCode(const uint32_t nodeId, const uint32_t value):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6007, 0x00, value)
   {}
-  virtual ~SDOSetAbortConnectionOptionCode(){}
+  ~SDOSetAbortConnectionOptionCode() override = default;
 };
 
 
@@ -49,7 +49,7 @@ public:
   SDOControlword(const uint32_t nodeId, const uint32_t controlword):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, controlword)
   {}
-  virtual ~SDOControlword(){}
+  ~SDOControlword() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOShutdown: public SdoMsg
@@ -58,7 +58,7 @@ public:
   SDOShutdown(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x06)
   {}
-  virtual ~SDOShutdown(){}
+  ~SDOShutdown() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ public:
   SDOSwitchOn(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x07)
   {}
-  virtual ~SDOSwitchOn(){}
+  ~SDOSwitchOn() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -78,7 +78,7 @@ public:
   SDOEnableOperation(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x0F)
   {}
-  virtual ~SDOEnableOperation(){}
+  ~SDOEnableOperation() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ public:
   SDODisableOperation(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x07)
   {}
-  virtual ~SDODisableOperation(){}
+  ~SDODisableOperation() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ public:
   SDOFaultReset(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x6040, 0x00, 0x80)
   {}
-  virtual ~SDOFaultReset(){}
+  ~SDOFaultReset() override = default;
 };
 
 /************************************************************************
@@ -111,7 +111,7 @@ public:
   SDOSetDigitalInputFunctionalitiesMask(const uint32_t nodeId, const uint32_t value):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2071, 0x02, value)
   {}
-  virtual ~SDOSetDigitalInputFunctionalitiesMask(){}
+  ~SDOSetDigitalInputFunctionalitiesMask() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ public:
   SDOSetDigitalInputFunctionalitiesPolarity(const uint32_t nodeId, const uint32_t value):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2071, 0x03, value)
   {}
-  virtual ~SDOSetDigitalInputFunctionalitiesPolarity(){}
+  ~SDOSetDigitalInputFunctionalitiesPolarity() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -133,7 +133,7 @@ public:
   SDOSetDigitalInputFunctionalitiesExecutionMask(const uint32_t nodeId, const uint32_t value):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x2071, 0x04, value)
   {}
-  virtual ~SDOSetDigitalInputFunctionalitiesExecutionMask(){}
+  ~SDOSetDigitalInputFunctionalitiesExecutionMask() override = default;
 };
 
 
@@ -147,7 +147,7 @@ public:
   SDOSetGuardTime(const uint32_t nodeId, const uint32_t time_ms):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x100C, 0x00, time_ms)
   {}
-  virtual ~SDOSetGuardTime(){}
+  ~SDOSetGuardTime() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ public:
   SDOSetLifeTimeFactor(const uint32_t nodeId, const uint32_t factor):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x100D, 0x00, factor)
   {}
-  virtual ~SDOSetLifeTimeFactor(){}
+  ~SDOSetLifeTimeFactor() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -167,7 +167,7 @@ public:
   SDOWriteProducerHeartbeatTime(const uint32_t nodeId, const uint32_t time_ms):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1017, 0x00, time_ms)
   {}
-  virtual ~SDOWriteProducerHeartbeatTime(){}
+  ~SDOWriteProducerHeartbeatTime() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -178,7 +178,7 @@ public:
     SdoMsg(nodeId, SdoMsg::Command::READ, 0x1017, 0x00, 0x0)
   {}
 
-  virtual ~SDOReadProducerHeartbeatTime(){}
+  ~SDOReadProducerHeartbeatTime() override = default;
 };
 
 /***********************************************************************
@@ -191,7 +191,7 @@ public:
   SDOSetCOBIDSYNC(const uint32_t nodeId, const uint32_t ID):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1005, 0x00, ID)
   {}
-  virtual ~SDOSetCOBIDSYNC(){}
+  ~SDOSetCOBIDSYNC() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -201,7 +201,7 @@ public:
   SDOSaveAllParameters(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1010, 0x01, 0x65766173)
   {}
-  virtual ~SDOSaveAllParameters(){}
+  ~SDOSaveAllParameters() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ public:
   SDORestoreAllDefaultParameters(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1011, 0x01, 0x64616F6C)
   {}
-  virtual ~SDORestoreAllDefaultParameters(){}
+  ~SDORestoreAllDefaultParameters() override = default;
 };
 
 
@@ -230,7 +230,7 @@ public:
   SDOTxPDO1Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1800, 0x01, 0x80000180 + nodeId)
   {}
-  virtual ~SDOTxPDO1Disable(){}
+  ~SDOTxPDO1Disable() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -240,7 +240,7 @@ public:
   SDOTxPDO1SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1800, 0x03, time_100us)
   {}
-  virtual ~SDOTxPDO1SetInhibitTime(){}
+  ~SDOTxPDO1SetInhibitTime() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -250,7 +250,7 @@ public:
   SDOTxPDO1SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A00, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDOTxPDO1SetNumberOfMappedApplicationObjects(){}
+  ~SDOTxPDO1SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -260,7 +260,7 @@ public:
   SDOTxPDO1ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1800, 0x01, 0x40000180 + nodeId)
   {}
-  virtual ~SDOTxPDO1ConfigureCOBID(){}
+  ~SDOTxPDO1ConfigureCOBID() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO1SetTransmissionType: public SdoMsg
@@ -269,7 +269,7 @@ public:
   SDOTxPDO1SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1800, 0x02, type)
   {}
-  virtual ~SDOTxPDO1SetTransmissionType(){}
+  ~SDOTxPDO1SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -279,7 +279,7 @@ public:
   SDOTxPDO1SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A00, indexOfObject, object)
   {}
-  virtual ~SDOTxPDO1SetMapping(){}
+  ~SDOTxPDO1SetMapping() override = default;
 };
 
 
@@ -293,7 +293,7 @@ public:
   SDOTxPDO2SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A01, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDOTxPDO2SetNumberOfMappedApplicationObjects(){}
+  ~SDOTxPDO2SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -303,7 +303,7 @@ public:
   SDOTxPDO2ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1801, 0x01, 0x40000280 + nodeId)
   {}
-  virtual ~SDOTxPDO2ConfigureCOBID(){}
+  ~SDOTxPDO2ConfigureCOBID() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO2Disable: public SdoMsg
@@ -312,7 +312,7 @@ public:
   SDOTxPDO2Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1801, 0x01, 0x80000280 + nodeId)
   {}
-  virtual ~SDOTxPDO2Disable(){}
+  ~SDOTxPDO2Disable() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO2SetInhibitTime: public SdoMsg
@@ -321,7 +321,7 @@ public:
     SDOTxPDO2SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
             SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1801, 0x03, time_100us)
     {}
-    virtual ~SDOTxPDO2SetInhibitTime(){}
+    ~SDOTxPDO2SetInhibitTime() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -331,7 +331,7 @@ public:
   SDOTxPDO2SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1801, 0x02, type)
   {}
-  virtual ~SDOTxPDO2SetTransmissionType(){}
+  ~SDOTxPDO2SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -341,7 +341,7 @@ public:
   SDOTxPDO2SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A01, indexOfObject, object)
   {}
-  virtual ~SDOTxPDO2SetMapping(){}
+  ~SDOTxPDO2SetMapping() override = default;
 };
 
 /*********************************************************************
@@ -354,7 +354,7 @@ public:
   SDOTxPDO3SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A02, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDOTxPDO3SetNumberOfMappedApplicationObjects(){}
+  ~SDOTxPDO3SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -364,7 +364,7 @@ public:
   SDOTxPDO3ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1802, 0x01, 0x40000380 + nodeId)
   {}
-  virtual ~SDOTxPDO3ConfigureCOBID(){}
+  ~SDOTxPDO3ConfigureCOBID() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO3Disable: public SdoMsg
@@ -373,7 +373,7 @@ public:
   SDOTxPDO3Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1802, 0x01, 0x80000380 + nodeId)
   {}
-  virtual ~SDOTxPDO3Disable(){}
+  ~SDOTxPDO3Disable() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO3SetInhibitTime: public SdoMsg
@@ -382,7 +382,7 @@ public:
     SDOTxPDO3SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
             SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1802, 0x03, time_100us)
     {}
-    virtual ~SDOTxPDO3SetInhibitTime(){}
+    ~SDOTxPDO3SetInhibitTime() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO3SetTransmissionType: public SdoMsg
@@ -391,7 +391,7 @@ public:
   SDOTxPDO3SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1802, 0x02, type)
   {}
-  virtual ~SDOTxPDO3SetTransmissionType(){}
+  ~SDOTxPDO3SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -401,7 +401,7 @@ public:
   SDOTxPDO3SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A02, indexOfObject, object)
   {}
-  virtual ~SDOTxPDO3SetMapping(){}
+  ~SDOTxPDO3SetMapping() override = default;
 };
 
 /*********************************************************************
@@ -414,7 +414,7 @@ public:
   SDOTxPDO4SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1A03, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDOTxPDO4SetNumberOfMappedApplicationObjects(){}
+  ~SDOTxPDO4SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -424,7 +424,7 @@ public:
   SDOTxPDO4ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0x40000480 + nodeId)
   {}
-  virtual ~SDOTxPDO4ConfigureCOBID(){}
+  ~SDOTxPDO4ConfigureCOBID() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO4Disable: public SdoMsg
@@ -433,7 +433,7 @@ public:
 	SDOTxPDO4Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1803, 0x01, 0xFFFFFFFF)
   {}
-  virtual ~SDOTxPDO4Disable(){}
+  ~SDOTxPDO4Disable() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO4SetInhibitTime: public SdoMsg
@@ -442,7 +442,7 @@ public:
     SDOTxPDO4SetInhibitTime(const uint32_t nodeId, const uint32_t time_100us):
             SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1803, 0x03, time_100us)
     {}
-    virtual ~SDOTxPDO4SetInhibitTime(){}
+    ~SDOTxPDO4SetInhibitTime() override = default;
 };
 //////////////////////////////////////////////////////////////////////////////
 class SDOTxPDO4SetTransmissionType: public SdoMsg
@@ -451,7 +451,7 @@ public:
   SDOTxPDO4SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1803, 0x02, type)
   {}
-  virtual ~SDOTxPDO4SetTransmissionType(){}
+  ~SDOTxPDO4SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -461,7 +461,7 @@ public:
   SDOTxPDO4SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1A03, indexOfObject, object)
   {}
-  virtual ~SDOTxPDO4SetMapping(){}
+  ~SDOTxPDO4SetMapping() override = default;
 };
 
 
@@ -478,7 +478,7 @@ public:
   SDORxPDO1SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1600, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDORxPDO1SetNumberOfMappedApplicationObjects(){}
+  ~SDORxPDO1SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -488,7 +488,7 @@ public:
   SDORxPDO1ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1400, 0x01, 0x40000200 + nodeId)
   {}
-  virtual ~SDORxPDO1ConfigureCOBID(){}
+  ~SDORxPDO1ConfigureCOBID() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -498,7 +498,7 @@ public:
   SDORxPDO1Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1400, 0x01, 0xFFFFFFFF)
   {}
-  virtual ~SDORxPDO1Disable(){}
+  ~SDORxPDO1Disable() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -508,7 +508,7 @@ public:
   SDORxPDO1SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1400, 0x02, type)
   {}
-  virtual ~SDORxPDO1SetTransmissionType(){}
+  ~SDORxPDO1SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -518,7 +518,7 @@ public:
   SDORxPDO1SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1600, indexOfObject, object)
   {}
-  virtual ~SDORxPDO1SetMapping(){}
+  ~SDORxPDO1SetMapping() override = default;
 };
 
 /*********************************************************************
@@ -531,7 +531,7 @@ public:
   SDORxPDO2SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1601, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDORxPDO2SetNumberOfMappedApplicationObjects(){}
+  ~SDORxPDO2SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -541,7 +541,7 @@ public:
   SDORxPDO2ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1401, 0x01, 0x40000300 + nodeId)
   {}
-  virtual ~SDORxPDO2ConfigureCOBID(){}
+  ~SDORxPDO2ConfigureCOBID() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -551,7 +551,7 @@ public:
 	SDORxPDO2Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1401, 0x01, 0xFFFFFFFF)
   {}
-  virtual ~SDORxPDO2Disable(){}
+  ~SDORxPDO2Disable() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -561,7 +561,7 @@ public:
   SDORxPDO2SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1401, 0x02, type)
   {}
-  virtual ~SDORxPDO2SetTransmissionType(){}
+  ~SDORxPDO2SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -571,7 +571,7 @@ public:
   SDORxPDO2SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1601, indexOfObject, object)
   {}
-  virtual ~SDORxPDO2SetMapping(){}
+  ~SDORxPDO2SetMapping() override = default;
 };
 
 /*********************************************************************
@@ -584,7 +584,7 @@ public:
   SDORxPDO3SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1602, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDORxPDO3SetNumberOfMappedApplicationObjects(){}
+  ~SDORxPDO3SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -594,7 +594,7 @@ public:
   SDORxPDO3ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1402, 0x01, 0x40000400 + nodeId)
   {}
-  virtual ~SDORxPDO3ConfigureCOBID(){}
+  ~SDORxPDO3ConfigureCOBID() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -604,7 +604,7 @@ public:
 	SDORxPDO3Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1402, 0x01, 0xFFFFFFFF)
   {}
-  virtual ~SDORxPDO3Disable(){}
+  ~SDORxPDO3Disable() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -614,7 +614,7 @@ public:
   SDORxPDO3SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1402, 0x02, type)
   {}
-  virtual ~SDORxPDO3SetTransmissionType(){}
+  ~SDORxPDO3SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -624,7 +624,7 @@ public:
   SDORxPDO3SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1602, indexOfObject, object)
   {}
-  virtual ~SDORxPDO3SetMapping(){}
+  ~SDORxPDO3SetMapping() override = default;
 };
 
 /*********************************************************************
@@ -637,7 +637,7 @@ public:
   SDORxPDO4SetNumberOfMappedApplicationObjects(const uint32_t nodeId, const uint32_t number_of_mapped_objects):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1603, 0x00, number_of_mapped_objects)
   {}
-  virtual ~SDORxPDO4SetNumberOfMappedApplicationObjects(){}
+  ~SDORxPDO4SetNumberOfMappedApplicationObjects() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -647,7 +647,7 @@ public:
   SDORxPDO4ConfigureCOBID(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1403, 0x01, 0x40000500 + nodeId)
   {}
-  virtual ~SDORxPDO4ConfigureCOBID(){}
+  ~SDORxPDO4ConfigureCOBID() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -657,7 +657,7 @@ public:
 	SDORxPDO4Disable(const uint32_t nodeId):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1403, 0x01, 0xFFFFFFFF)
   {}
-  virtual ~SDORxPDO4Disable(){}
+  ~SDORxPDO4Disable() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -667,7 +667,7 @@ public:
   SDORxPDO4SetTransmissionType(const uint32_t nodeId, const uint32_t type):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_1_BYTE, 0x1403, 0x02, type)
   {}
-  virtual ~SDORxPDO4SetTransmissionType(){}
+  ~SDORxPDO4SetTransmissionType() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -677,7 +677,7 @@ public:
   SDORxPDO4SetMapping(const uint32_t nodeId, const uint8_t indexOfObject, const uint32_t object):
     SdoMsg(nodeId, SdoMsg::Command::WRITE_4_BYTE, 0x1603, indexOfObject, object)
   {}
-  virtual ~SDORxPDO4SetMapping(){}
+  ~SDORxPDO4SetMapping() override = default;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -687,7 +687,7 @@ public:
   SDOReadErrorRegister(const uint32_t nodeId):
 	  SdoMsg(nodeId, SdoMsg::Command::READ, 0x1001, 0x00, 0x0)
   {}
-  virtual ~SDOReadErrorRegister(){}
+  ~SDOReadErrorRegister() override = default;
 
   std::string getErrorAsString() {
     uint8_t error = readuint8(4);

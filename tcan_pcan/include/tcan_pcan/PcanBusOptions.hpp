@@ -26,7 +26,7 @@ struct PcanBusOptions : public tcan_can::CanBusOptions {
     {
     }
 
-    virtual ~PcanBusOptions() { }
+    ~PcanBusOptions() override = default;
 
     double canErrorThrottleTime_;
 };

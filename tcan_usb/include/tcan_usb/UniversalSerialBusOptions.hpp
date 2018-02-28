@@ -23,7 +23,6 @@ struct UniversalSerialBusOptions : public tcan::BusOptions {
     UniversalSerialBusOptions():
         UniversalSerialBusOptions(std::string())
     {
-
     }
 
     UniversalSerialBusOptions(const std::string& name, const unsigned int bufSize=1024):
@@ -39,10 +38,9 @@ struct UniversalSerialBusOptions : public tcan::BusOptions {
         hardwareHandshake(false),
         skipConfiguration(false)
     {
-
     }
 
-    virtual ~UniversalSerialBusOptions() { }
+    ~UniversalSerialBusOptions() override = default;
 
     //
     unsigned int maxDeviceTimeoutCounter;

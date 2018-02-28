@@ -33,7 +33,6 @@ class CanDeviceOptions {
         maxDeviceTimeoutCounter_(maxDeviceTimeoutCounter),
         printConfigInfo_(true)
     {
-
     }
 
     /*!
@@ -50,10 +49,9 @@ class CanDeviceOptions {
         const double looprate):
         CanDeviceOptions(nodeId, name, static_cast<unsigned int>(timeout*looprate))
     {
-
     }
 
-    virtual ~CanDeviceOptions() { }
+    virtual ~CanDeviceOptions() = default;
 
     /*!
      * set the maxDeviceTimeoutCounter_

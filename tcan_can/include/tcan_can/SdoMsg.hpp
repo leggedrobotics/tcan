@@ -35,41 +35,35 @@ class SdoMsg : public CanMsg {
      * @param command   SDO command (read or write)
      */
     SdoMsg():
-        CanMsg(0),
-        requiresAnswer_(true)
+            CanMsg(0),
+            requiresAnswer_(true)
     {
 
     }
 
     SdoMsg(const uint32_t nodeId, const Command command, const uint16_t index, const uint8_t subIndex, const uint32_t data):
-        CanMsg(0x600 + nodeId, 8, {
-                static_cast<uint8_t>(command),
-                static_cast<uint8_t>(index & 0xff),
-                static_cast<uint8_t>((index >> 8) & 0xff),
-                subIndex,
-                static_cast<uint8_t>((data >> 0) & 0xff),
-                static_cast<uint8_t>((data >> 8) & 0xff),
-                static_cast<uint8_t>((data >> 16) & 0xff),
-                static_cast<uint8_t>((data >> 24) & 0xff)
-    }),
-    requiresAnswer_(true)
+            CanMsg(0x600 + nodeId, 8, {
+                    static_cast<uint8_t>(command),
+                    static_cast<uint8_t>(index & 0xff),
+                    static_cast<uint8_t>((index >> 8) & 0xff),
+                    subIndex,
+                    static_cast<uint8_t>((data >> 0) & 0xff),
+                    static_cast<uint8_t>((data >> 8) & 0xff),
+                    static_cast<uint8_t>((data >> 16) & 0xff),
+                    static_cast<uint8_t>((data >> 24) & 0xff)
+            }),
+            requiresAnswer_(true)
     {
-
     }
 
     // special constructor for NMT messages
     SdoMsg(const uint8_t nodeId, const uint8_t nmtState):
-        CanMsg(0x0, 2, {nmtState, nodeId}),
-        requiresAnswer_(false)
+            CanMsg(0x0, 2, {nmtState, nodeId}),
+            requiresAnswer_(false)
     {
-
     }
 
-    //! Destructor
-    virtual ~SdoMsg()
-    {
-
-    }
+    ~SdoMsg() override = default;
 
     //! getters for index and subindex for answer verfication
     inline uint8_t getCommandByte() const { return readuint8(0); }

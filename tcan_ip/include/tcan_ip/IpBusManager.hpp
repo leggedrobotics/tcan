@@ -18,7 +18,7 @@ class IpBusManager : public tcan::BusManager<IpMsg> {
  public:
 	IpBusManager();
 
-    virtual ~IpBusManager();
+    ~IpBusManager() override;
 
     IpBus* getIpBus(const unsigned int index) { return static_cast<IpBus*>(buses_[index]); }
 };

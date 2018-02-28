@@ -22,7 +22,6 @@ struct IpBusOptions : public tcan::BusOptions {
     IpBusOptions():
     	IpBusOptions(std::string(), 9999)
     {
-
     }
 
     IpBusOptions(const std::string& name, const uint16_t port):
@@ -31,10 +30,9 @@ struct IpBusOptions : public tcan::BusOptions {
 		port_(port),
         maxDeviceTimeoutCounter_(20)
     {
-
     }
 
-    virtual ~IpBusOptions() { }
+    ~IpBusOptions() override = default;
 
     ConnectionType connectionType_;
 

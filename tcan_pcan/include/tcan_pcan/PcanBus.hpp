@@ -24,12 +24,12 @@ class PcanBus : public tcan_can::CanBus {
     PcanBus(std::unique_ptr<tcan::BusOptions>&& options) = delete;
     PcanBus(std::unique_ptr<PcanBusOptions>&& options);
 
-    virtual ~PcanBus();
+    ~PcanBus() override;
 
  protected:
-    bool initializeInterface();
-    bool readData();
-    bool writeData(std::unique_lock<std::mutex>* lock);
+    bool initializeInterface() override;
+    bool readData() override;
+    bool writeData(std::unique_lock<std::mutex>* lock) override;
 
     /*!
      * Is called on reception of a bus error message. Sets the flag

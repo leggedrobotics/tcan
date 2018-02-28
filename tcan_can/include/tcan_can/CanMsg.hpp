@@ -27,7 +27,6 @@ class CanMsg {
         length_{0},
         data_{0, 0, 0, 0, 0, 0, 0, 0}
     {
-
     }
 
     CanMsg(const uint32_t CobId, const uint8_t length, const uint8_t* data):
@@ -47,7 +46,7 @@ class CanMsg {
     }
 
     //! Destructor
-    virtual ~CanMsg() { }
+    virtual ~CanMsg() = default;
 
     /*! Gets the Communication Object Identifier
      *

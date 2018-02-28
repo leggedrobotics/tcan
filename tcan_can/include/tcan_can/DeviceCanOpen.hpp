@@ -55,14 +55,14 @@ class DeviceCanOpen : public CanDevice {
     DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options);
 
     //! Destructor
-    virtual ~DeviceCanOpen();
+    ~DeviceCanOpen() override = default;
 
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
      * This function is automatically called if the Bus has sanityCheckInterval > 0
      * @return true if everything is ok.
      */
-    virtual void sanityCheck();
+    void sanityCheck() override;
 
     /*! Send a PDO message.
      * @param pdoMsg Message to be sent.
@@ -117,7 +117,7 @@ class DeviceCanOpen : public CanDevice {
     bool isPreOperational()	const { return isActive() && (nmtState_ == NMTStates::preOperational); }
     bool isOperational()	const { return isActive() && (nmtState_ == NMTStates::operational); }
 
-    virtual int getStatus() const {
+    int getStatus() const override {
         if(static_cast<int>(state_.load()) <= 0) {
             // device is initializing, missing or has an error
             return static_cast<int>(state_.load());
@@ -128,7 +128,7 @@ class DeviceCanOpen : public CanDevice {
     /*!
      * Resets the device to Initializing state and sends the RestartRemoteDevice NMT command.
      */
-    virtual void resetDevice();
+    void resetDevice() override;
 
  public: /// Internal functions
     /*! Parse a heartbeat message

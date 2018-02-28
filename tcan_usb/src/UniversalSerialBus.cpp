@@ -22,7 +22,6 @@ UniversalSerialBus::UniversalSerialBus(std::unique_ptr<UniversalSerialBusOptions
     fileDescriptor_(0),
     deviceTimeoutCounter_(0)
 {
-
 }
 
 UniversalSerialBus::~UniversalSerialBus()

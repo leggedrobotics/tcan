@@ -25,7 +25,7 @@ struct PcanfdBusOptions : public tcan_can::CanBusOptions {
     {
     }
 
-    virtual ~PcanfdBusOptions() { }
+    ~PcanfdBusOptions() override = default;
 
     //! loop back sent messages
     bool loopback_;

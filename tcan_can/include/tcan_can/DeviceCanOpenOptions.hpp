@@ -8,6 +8,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <string>
 
 #include "tcan_can/CanDeviceOptions.hpp"
 
@@ -31,10 +32,9 @@ class DeviceCanOpenOptions : public CanDeviceOptions {
         maxSdoSentCounter_(maxSdoSentCounter),
         producerHeartBeatTime_(producerHeartBeatTime)
     {
-
     }
 
-    virtual ~DeviceCanOpenOptions() { }
+    ~DeviceCanOpenOptions() override = default;
 
     /*!
      * Set the maxSdoTimeoutCounter_

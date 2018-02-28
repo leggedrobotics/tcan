@@ -15,7 +15,6 @@ namespace tcan_can {
 DeviceCanOpen::DeviceCanOpen(const uint32_t nodeId, const std::string& name):
     DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>(new DeviceCanOpenOptions(nodeId, name)))
 {
-
 }
 
 DeviceCanOpen::DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options):
@@ -26,12 +25,6 @@ DeviceCanOpen::DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options):
     sdoMsgsMutex_(),
     sdoMsgs_()
 {
-
-}
-
-DeviceCanOpen::~DeviceCanOpen()
-{
-
 }
 
 void DeviceCanOpen::sanityCheck() {
