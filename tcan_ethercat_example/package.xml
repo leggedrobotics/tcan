@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>tcan_ethercat_example</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>The tcan_ethercat_example package</description>
 
   <maintainer email="diethelm@mavt.ethz.ch">Remo Diethelm</maintainer>
