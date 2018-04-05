@@ -131,6 +131,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
                 MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Slave " << slave->getAddress() << " did not reach the safe-op state.");
                 return false;
             }
+            MELO_INFO_STREAM("      actual state: " << ecatContext_.slavelist[slave->getAddress()].state);
         }
 
         // Go to state Operational.
@@ -138,6 +139,8 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
             setStateOperational(slave->getAddress());
             if (!waitForStateOperational(slave->getAddress())) {
                 MELO_ERROR_STREAM("Bus '" << options_->name_ << "': Slave " << slave->getAddress() << " did not reach the operational state.");
+                MELO_ERROR_STREAM("      actual state: " << ecatContext_.slavelist[slave->getAddress()].state);
+                MELO_ERROR_STREAM("      actual status code: " << ecatContext_.slavelist[slave->getAddress()].ALstatuscode );
                 return false;
             }
         }
