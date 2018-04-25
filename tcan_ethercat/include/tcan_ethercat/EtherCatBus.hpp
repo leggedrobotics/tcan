@@ -551,7 +551,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      */
     bool waitForState(const uint16_t state, const uint16_t slave = 0) {
         //ecx_statecheck(&ecatContext_, slave, state,  EC_TIMEOUTSTATE * 2);
-        const unsigned int maxChecks = 1000;
+        const unsigned int maxChecks = 200;
         unsigned int check = 0;
         do {
             sendProcessData();
