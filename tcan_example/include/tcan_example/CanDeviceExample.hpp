@@ -43,9 +43,8 @@ public:
 
 	virtual ~CanDeviceExample() = default;
 
-	virtual bool initDevice() override;
-
-	virtual bool configureDevice(const tcan_can::CanMsg& msg) override;
+	bool initDevice() override;
+	bool configureDevice(const tcan_can::CanMsg& msg) override;
 
 	void setCommand(const float value);
 
@@ -54,8 +53,6 @@ public:
 	void handleReadSdoAnswer(const tcan_can::SdoMsg& sdoMsg);
 
 	float getMeasurement() const { return myMeasurement_; }
-
-
 
 protected:
 	std::atomic<float> myMeasurement_;
