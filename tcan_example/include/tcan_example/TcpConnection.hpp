@@ -16,12 +16,12 @@ class TcpConnection : public tcan_ip::IpBus {
     TcpConnection() = delete;
     TcpConnection(std::unique_ptr<tcan_ip::IpBusOptions>&& options);
 
-    virtual ~TcpConnection();
+    ~TcpConnection() override;
 
     /*! Callback called after reception of a message.
      * @param msg	reference to the usb message
      */
-    virtual void handleMessage(const tcan_ip::IpMsg& msg);
+    void handleMessage(const tcan_ip::IpMsg& msg) override;
 
  private:
 

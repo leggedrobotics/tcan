@@ -111,7 +111,7 @@ class CanBus : public tcan::Bus<CanMsg> {
     /*! Is called after reception of a message. Routes the message to the callback and clears the errorMsgFlag_
      * @param cmsg	reference to the can message
      */
-    void handleMessage(const CanMsg& cmsg);
+    void handleMessage(const CanMsg& cmsg) override;
 
     /*! Do a sanity check of all devices on this bus.
      */
