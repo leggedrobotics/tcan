@@ -21,6 +21,7 @@ JoystickUsb::JoystickUsb(std::unique_ptr<JoystickUsbOptions>&& options):
 }
 
 void JoystickUsb::handleMessage(const tcan_usb::UsbMsg& msg) {
+    // code inspired by https://github.com/ros-drivers/joystick_drivers/blob/indigo-devel/joy/src/joy_node.cpp
     if(msg.getLength() != sizeof(js_event)) {
         return;
     }
