@@ -34,11 +34,13 @@ UniversalSerialBus::~UniversalSerialBus()
     close(fileDescriptor_);
 }
 
-void UniversalSerialBus::sanityCheck() {
+bool UniversalSerialBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const UniversalSerialBusOptions*>(options_.get())->maxDeviceTimeoutCounter;
     isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDeviceOrHasError_;
     allDevicesMissing_ = isMissingDeviceOrHasError_.load();
+
+    return !(isMissingDeviceOrHasError_ || hasBusError_);
 }
 
 
@@ -67,6 +69,9 @@ bool UniversalSerialBus::initializeInterface() {
 bool UniversalSerialBus::readData() {
 
     int ret;
+
+    hasBusError_= false;
+
     // only poll in asynchronous mode. No polling for synchronous mode, for semi-synchronous the polling is done elsewhere
     if(isAsynchronous()) {
         pollfd fds = {fileDescriptor_, POLLIN, 0};
@@ -75,6 +80,7 @@ bool UniversalSerialBus::readData() {
 
         if ( ret == -1 ) {
             MELO_ERROR("polling for fileDescriptor readability failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
+            hasBusError_= true;
             return false;
         }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
             // poll timed out, without being able to read => return silently
@@ -92,12 +98,13 @@ bool UniversalSerialBus::readData() {
     if(bytes_read <= 0) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("read failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
+            hasBusError_= true;
         }
         return false;
-    } else {
-        buf[bytes_read] = '\0';
-        handleMessage( UsbMsg(bytes_read, buf) );
     }
+
+    buf[bytes_read] = '\0';
+    handleMessage( UsbMsg(bytes_read, buf) );
 
     return true;
 }

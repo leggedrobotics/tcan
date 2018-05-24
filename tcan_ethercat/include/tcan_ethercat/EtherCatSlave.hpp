@@ -74,13 +74,15 @@ class EtherCatSlave {
      * This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0
      * @return True if everything is ok.
      */
-    virtual void sanityCheck() {
+    virtual bool sanityCheck() {
         if(!isMissing()) {
             if(isTimedOut()) {
                 state_ = Missing;
                 MELO_WARN("Slave %s timed out!", getName().c_str());
             }
         }
+
+        return !(isMissing() || hasError());
     }
 
     /*!

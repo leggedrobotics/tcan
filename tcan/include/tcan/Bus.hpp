@@ -30,21 +30,22 @@ class Bus {
 
     Bus() = delete;
     Bus(std::unique_ptr<BusOptions>&& options):
-        isMissingDeviceOrHasError_(false),
-        allDevicesActive_(false),
-        allDevicesMissing_(false),
-        isPassive_(options->startPassive_),
-        options_(std::move(options)),
-        outgoingMsgsMutex_(),
-        outgoingMsgs_(),
-        receiveThread_(),
-        transmitThread_(),
-        sanityCheckThread_(),
-        running_{false},
-        condTransmitThread_(),
-        condOutputQueueEmpty_(),
-        errorMsgFlagPersistent_(false),
-        errorMsgFlag_(false)
+            hasBusError_{false},
+            isMissingDeviceOrHasError_{false},
+            allDevicesActive_{false},
+            allDevicesMissing_{false},
+            isPassive_{options->startPassive_},
+            options_(std::move(options)),
+            outgoingMsgsMutex_(),
+            outgoingMsgs_(),
+            receiveThread_(),
+            transmitThread_(),
+            sanityCheckThread_(),
+            running_{false},
+            condTransmitThread_(),
+            condOutputQueueEmpty_(),
+            errorMsgFlagPersistent_{false},
+            errorMsgFlag_(false)
     {
     }
 
@@ -64,8 +65,11 @@ class Bus {
 
     /*!
      * Do a sanity check of the bus.
+     * This function shall check hasBusError_, call sanityCheck() on all its devices and set isMissingDeviceOrHasError_, allDevicesActive_ and
+     * allDevicesMissing_ accordingly. It also shall passivate() the bus if all its device(s) are missing (may be configurable with specific bus options)
+     * @return true if hasBusError_ and isMissingDeviceOrHasError_ are false
      */
-    virtual void sanityCheck() = 0;
+    virtual bool sanityCheck() = 0;
 
     /*!
      * Starts threads for this bus (send, recieve, sanity check) if it is configured to be asynchronous
@@ -269,12 +273,14 @@ public: /// Internal functions
 
     /*! read CAN message from the device driver. This function shall be blocking in asynchronous mode and non-blocking in synchronous and semi-synchronous!
      * It shall set errorMsgFlag_ and errorMsgFlagPersistent_ to true if it successfully read a message but identified it as error message (used for passive bus feature)
-     * and set errorMsgFlag_ to false on successful reads of non-error messages.
+     * and set errorMsgFlag_ to false on successful reads of non-error messages. It shall also set hasBusError_ to true if read operations fail due to
+     * non-easily recoverable reasons (like buffer-full errors) and to false on succcessful read operations.
      * @return true if a message was successfully read and parsed
      */
     virtual bool readData() = 0;
 
     /*! write CAN message to the device driver.  This function shall be blocking in asynchronous mode and non-blocking in synchronous and semi-synchronous!
+     * It shall set hasBusError_ to true if write operations fail due to non-easily recoverable reasons (like buffer-full errors) and to false on succcessful write operations.
      * @param lock      pointer to the lock protecting the output queue, which is in LOCKED state when the function is called.
      *                  Use nullptr if queue is unprotected.
      * @return          True if no error occurred
@@ -359,6 +365,9 @@ public: /// Internal functions
     }
 
  protected:
+    //! true if a read/write operation on a bus failed, for not easily recoverable reasons (like buffer-full errors)
+    std::atomic<bool> hasBusError_;
+
     //! true if a device is in 'Missing' or 'Error' state.
     std::atomic<bool> isMissingDeviceOrHasError_;
 
@@ -393,7 +402,7 @@ public: /// Internal functions
     std::atomic<bool> errorMsgFlagPersistent_;
 
     //! flag indicating that the last received message was an error message. This flag is reset upon successfull
-    // reception of a non-error message.
+    // reception of a non-error message. (No need for thread safety, is only used in readMessage(..) and its sub functions)
     bool errorMsgFlag_;
 };
 

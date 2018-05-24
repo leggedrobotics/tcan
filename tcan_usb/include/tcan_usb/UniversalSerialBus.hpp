@@ -23,7 +23,7 @@ class UniversalSerialBus : public tcan::Bus<UsbMsg> {
 
     ~UniversalSerialBus() override;
 
-    void sanityCheck() override;
+    bool sanityCheck() override;
 
     int getPollableFileDescriptor() const override { return fileDescriptor_; }
 

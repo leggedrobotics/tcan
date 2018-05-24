@@ -24,7 +24,7 @@ class IpBus : public tcan::Bus<IpMsg> {
 
     /*! Do a sanity check of all devices on this bus.
      */
-    void sanityCheck() override;
+    bool sanityCheck() override;
 
     int getPollableFileDescriptor() const override { return socket_; }
 

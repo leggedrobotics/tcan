@@ -85,13 +85,13 @@ class BusManager {
     }
 
     /*! Call sanityCheck(..) on all buses. Call this function in the control loop if synchronous mode is used.
+     * @return True if no device is missing or has error nor any bus has any errors
      */
     bool sanityCheckSynchronous() {
         bool allFine = true;
         for(auto bus : buses_) {
             if(bus->isSynchronous()) {
-                bus->sanityCheck();
-                allFine &= bus->allDevicesActive();
+                allFine &= bus->sanityCheck();
             }
         }
 
@@ -122,6 +122,33 @@ class BusManager {
             }
         }
         return true;
+    }
+
+    /*!
+     * Checks if a error message was received on one of the buses.
+     * @return true if a error message was received
+     */
+    bool getErrorMsgFlag() const {
+        for(auto bus : buses_) {
+            if(bus->getErrorMsgFlag()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /*!
+     * Checks if a error message was received on one of the buses and resets the flag.
+     * @return true if a error message was received
+     */
+    bool resetErrorMsgFlag() {
+        bool hadBusError = false;
+        for(auto bus : buses_) {
+            if(bus->resetErrorMsgFlag()) {
+                hadBusError = true;
+            }
+        }
+        return hadBusError;
     }
 
     /*!

@@ -115,7 +115,7 @@ class CanBus : public tcan::Bus<CanMsg> {
 
     /*! Do a sanity check of all devices on this bus.
      */
-    void sanityCheck();
+    bool sanityCheck() override;
 
  protected:
     // vector containing all devices

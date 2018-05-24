@@ -42,13 +42,12 @@ void CanBus::handleMessage(const CanMsg& msg) {
     }
 }
 
-void CanBus::sanityCheck() {
+bool CanBus::sanityCheck() {
     bool isMissingOrError = false;
     bool allMissing = true;
     bool allActive = true;
     for(auto device : devices_) {
-        device->sanityCheck();
-        isMissingOrError |= device->isMissing() | device->hasError();
+        isMissingOrError |= device->sanityCheck();
         allMissing &= device->isMissing();
         allActive &= device->isActive();
     }
@@ -61,6 +60,8 @@ void CanBus::sanityCheck() {
     isMissingDeviceOrHasError_ = isMissingOrError;
     allDevicesActive_ = allActive;
     allDevicesMissing_ = allMissing;
+
+    return !(isMissingOrError || hasBusError_);
 }
 
 void CanBus::resetAllDevices() {
