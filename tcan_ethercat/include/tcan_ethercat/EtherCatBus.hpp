@@ -679,7 +679,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
         bool allActive = true;
         bool allMissing = true;
         for (auto slave : slaves_) {
-            isMissingOrError |= slave->sanityCheck();
+            isMissingOrError |= !slave->sanityCheck();
             allActive &= slave->isActive();
             allMissing &= slave->isMissing();
         }

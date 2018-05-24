@@ -47,7 +47,7 @@ bool CanBus::sanityCheck() {
     bool allMissing = true;
     bool allActive = true;
     for(auto device : devices_) {
-        isMissingOrError |= device->sanityCheck();
+        isMissingOrError |= !device->sanityCheck();
         allMissing &= device->isMissing();
         allActive &= device->isActive();
     }
