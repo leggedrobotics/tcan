@@ -159,6 +159,11 @@ class Bus {
     inline bool isPassive() const { return isPassive_; }
 
     /*!
+     * @return True if the previous write/read operation has failed
+     */
+    inline bool hasBusError() const { return hasBusError_; }
+
+    /*!
      * @return false if no device timed out
      */
     inline bool isMissingDeviceOrHasError() const { return isMissingDeviceOrHasError_; }
