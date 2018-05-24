@@ -152,8 +152,6 @@ bool SocketBus::readData() {
     // In synchronous mode, the socket is non-blocking, so this function returns as soon as there is no data available to be read
     // If asynchronous, we set the socket to blocking and have a separate thread reading from it.
 
-    hasBusError_ = false;
-
     can_frame frame;
     const int bytes_read = recv( socket_, &frame, sizeof(struct can_frame), recvFlag_);
     //	printf("CanManager_ bytes read: %i\n", bytes_read);
@@ -162,10 +160,13 @@ bool SocketBus::readData() {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Failed to read data from bus %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
             hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 //	pintf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+    hasBusError_ = false;
 
     if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
         handleBusErrorMessage( frame );
@@ -184,8 +185,6 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
         lock->unlock();
     }
 
-    hasBusError_ = false;
-
     can_frame frame;
     frame.can_id = cmsg.getCobId();
     frame.can_dlc = cmsg.getLength();
@@ -201,10 +200,13 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d): (%d)\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, errno, strerror(errno));
             hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 
+    hasBusError_ = false;
     outgoingMsgs_.pop_front();
     return true;
 }

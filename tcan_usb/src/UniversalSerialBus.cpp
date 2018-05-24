@@ -70,8 +70,6 @@ bool UniversalSerialBus::readData() {
 
     int ret;
 
-    hasBusError_= false;
-
     // only poll in asynchronous mode. No polling for synchronous mode, for semi-synchronous the polling is done elsewhere
     if(isAsynchronous()) {
         pollfd fds = {fileDescriptor_, POLLIN, 0};
@@ -84,6 +82,7 @@ bool UniversalSerialBus::readData() {
             return false;
         }else if ( ret == 0 || !(fds.revents & POLLIN) ) {
             // poll timed out, without being able to read => return silently
+            hasBusError_ = false;
             return false;
         }else{
             // there is something in the fd ready to be read -> continue
@@ -99,10 +98,13 @@ bool UniversalSerialBus::readData() {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("read failed on interface %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
             hasBusError_= true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 
+    hasBusError_ = false;
     buf[bytes_read] = '\0';
     handleMessage( UsbMsg(bytes_read, buf) );
 

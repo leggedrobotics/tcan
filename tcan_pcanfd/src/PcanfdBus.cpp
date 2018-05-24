@@ -60,16 +60,17 @@ bool PcanfdBus::readData() {
     pcanfd_msg inMsgs[maxMsgs];
     const int numReceived = pcanfd_recv_msgs_list(fd_, maxMsgs, inMsgs);
 
-    hasBusError_ = false;
-
     if(numReceived <= 0) {
         if(numReceived != EWOULDBLOCK) {
             MELO_ERROR("Error while receiving messages: %d", numReceived);
             hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 
+    hasBusError_ = false;
     for(unsigned int i=0; i<maxMsgs; ++i) {
         // todo: handle error messages
         handleMessage( tcan_can::CanMsg(inMsgs[i].id, inMsgs[i].data_len, inMsgs[i].data) );
@@ -97,8 +98,6 @@ bool PcanfdBus::writeData(std::unique_lock<std::mutex>* lock) {
     }
     const int numSent = pcanfd_send_msgs_list(fd_, numMsgs, outMsgs);
 
-    hasBusError_ = false;
-
     if(lock != nullptr) {
         lock->lock();
     }
@@ -107,10 +106,13 @@ bool PcanfdBus::writeData(std::unique_lock<std::mutex>* lock) {
         if(numSent != EWOULDBLOCK) {
             MELO_ERROR("Error while sending messages: %d", numSent);
             hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 
+    hasBusError_ = false;
     outgoingMsgs_.erase(outgoingMsgs_.begin(), outgoingMsgs_.begin()+numSent);
     return true;
 }

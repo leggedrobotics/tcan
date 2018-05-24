@@ -101,16 +101,17 @@ bool IpBus::readData() {
     uint8_t buf[maxMessageSize];
     const int bytes_read = recv( socket_, &buf, maxMessageSize, recvFlag_);
 
-    hasBusError_ = false;
-
     if(bytes_read <= 0) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Failed to read data from IP interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
             hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 
+    hasBusError_ = false;
     handleMessage( IpMsg(bytes_read, buf) );
     return true;
 }
@@ -124,8 +125,6 @@ bool IpBus::writeData(std::unique_lock<std::mutex>* lock) {
 
     const int ret = send(socket_, msg.getData(), msg.getLength(), sendFlag_);
 
-    hasBusError_ = false;
-
     if(lock != nullptr) {
         lock->lock();
     }
@@ -134,10 +133,13 @@ bool IpBus::writeData(std::unique_lock<std::mutex>* lock) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Error at sending TCP/UDP message on interface %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
             hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
     }
 
+    hasBusError_ = false;
     outgoingMsgs_.pop_front();
     return true;
 }
