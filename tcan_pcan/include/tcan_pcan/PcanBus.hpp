@@ -35,7 +35,7 @@ class PcanBus : public tcan_can::CanBus {
      * Is called on reception of a bus error message. Sets the flag
      * @param msg  reference to the bus error message
      */
-    void handleBusError(const can_frame& msg);
+    void handleBusErrorMessage(const can_frame& msg);
 
  protected:
     HANDLE handle_;

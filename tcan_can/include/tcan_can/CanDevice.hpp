@@ -71,15 +71,17 @@ class CanDevice {
     /*! Do a sanity check of the device. This function is intended to be called with constant rate
      * and shall check heartbeats, SDO timeouts, ...
      * This function is automatically called if the Bus has asynchronous=true and sanityCheckInterval > 0
-     * @return true if everything is ok.
+     * @return true if hasError() and isMissing() are false
      */
-    virtual void sanityCheck() {
+    virtual bool sanityCheck() {
         if(!isMissing()) {
             if(isTimedOut()) {
                 state_ = Missing;
                 MELO_WARN("Device %s timed out!", getName().c_str());
             }
         }
+
+        return !(hasError() || isMissing());
     }
 
     inline uint32_t getNodeId() const { return options_->nodeId_; }

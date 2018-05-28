@@ -27,7 +27,7 @@ DeviceCanOpen::DeviceCanOpen(std::unique_ptr<DeviceCanOpenOptions>&& options):
 {
 }
 
-void DeviceCanOpen::sanityCheck() {
+bool DeviceCanOpen::sanityCheck() {
     if(!isMissing()) {
         if(isTimedOut()) {
             state_ = Missing;
@@ -38,6 +38,8 @@ void DeviceCanOpen::sanityCheck() {
             checkSdoTimeout();
         }
     }
+
+    return !(hasError() || isMissing());
 }
 
 void DeviceCanOpen::sendPdo(const CanMsg& pdoMsg) {

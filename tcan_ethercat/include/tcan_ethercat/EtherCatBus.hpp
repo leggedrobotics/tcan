@@ -2,7 +2,9 @@
  * EtherCatBus.hpp
  *
  *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
+ *      Author: Remo Diethelm, Philipp Leemann
+ *
+ * THIS IMPLEMENTATION IS INCOMPLETE! It does not support the full sanityCheck() capabilities.
  */
 
 #pragma once
@@ -554,7 +556,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Write datagrams to the device driver.
      * @return True the data has been written successfully.
      */
-    virtual bool writeData(std::unique_lock<std::mutex>* lock) {
+    bool writeData(std::unique_lock<std::mutex>* lock) override {
         // Copy the datagrams to send to the sent datagrams.
         sentDatagrams_.reset(new EtherCatDatagrams(outgoingMsgs_.front()));
         if (lock != nullptr) {
@@ -584,7 +586,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
      * Read datagrams from the device driver.
      * @return True the data has been read and parsed successfully.
      */
-    virtual bool readData() {
+    bool readData() override {
         // readData() is called as long as it returns successful.
         // Therefore is has to return false as soon as there is nothing to read anymore.
         if (!sentDatagrams_) {
@@ -620,7 +622,7 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
     /*!
      * Do a sanity check of all slaves on this bus.
      */
-    void sanityCheck() {
+    bool sanityCheck() override {
         // TODO: Restructure and use data from SOEM.
         uint8_t currentgroup = 0;
         if (!workingCounterIsOk() || ecatContext_.grouplist[currentgroup].docheckstate) {
@@ -675,14 +677,18 @@ class EtherCatBus : public tcan::Bus<EtherCatDatagrams> {
 
         bool isMissingOrError = false;
         bool allActive = true;
+        bool allMissing = true;
         for (auto slave : slaves_) {
-            slave->sanityCheck();
-            isMissingOrError |= slave->isMissing() | slave->hasError();
+            isMissingOrError |= !slave->sanityCheck();
             allActive &= slave->isActive();
+            allMissing &= slave->isMissing();
         }
 
         isMissingDeviceOrHasError_ = isMissingOrError;
         allDevicesActive_ = allActive;
+        allDevicesMissing_ = allMissing;
+
+        return !(isMissingOrError || hasBusError_);
     }
 
     /*!

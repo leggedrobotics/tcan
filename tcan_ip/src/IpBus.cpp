@@ -37,11 +37,13 @@ IpBus::~IpBus()
     close(socket_);
 }
 
-void IpBus::sanityCheck() {
+bool IpBus::sanityCheck() {
     const unsigned int maxTimeout = static_cast<const IpBusOptions*>(options_.get())->maxDeviceTimeoutCounter_;
     isMissingDeviceOrHasError_ = (maxTimeout != 0 && (deviceTimeoutCounter_++ > maxTimeout) );
     allDevicesActive_ = !isMissingDeviceOrHasError_;
     allDevicesMissing_ = isMissingDeviceOrHasError_.load();
+
+    return !(isMissingDeviceOrHasError_ || hasBusError_);
 }
 
 
@@ -102,12 +104,15 @@ bool IpBus::readData() {
     if(bytes_read <= 0) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Failed to read data from IP interface %s:\n  %s", options_->name_.c_str(), strerror(errno));
+            hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
-    } else {
-        handleMessage( IpMsg(bytes_read, buf) );
     }
 
+    hasBusError_ = false;
+    handleMessage( IpMsg(bytes_read, buf) );
     return true;
 }
 
@@ -119,19 +124,24 @@ bool IpBus::writeData(std::unique_lock<std::mutex>* lock) {
     }
 
     const int ret = send(socket_, msg.getData(), msg.getLength(), sendFlag_);
+
+    if(lock != nullptr) {
+        lock->lock();
+    }
+
     if( ret != static_cast<int>(msg.getLength())) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Error at sending TCP/UDP message on interface %s (return value=%d, length=%d):\n  %s", options_->name_.c_str(), ret, msg.getLength(), strerror(errno));
+            hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
-    }else{
-        if(lock != nullptr) {
-            lock->lock();
-        }
-        outgoingMsgs_.pop_front();
-        return true;
+        return false;
     }
 
-    return false;
+    hasBusError_ = false;
+    outgoingMsgs_.pop_front();
+    return true;
 }
 
 } /* namespace tcan_ip */

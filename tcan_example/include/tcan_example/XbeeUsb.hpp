@@ -16,12 +16,12 @@ class XbeeUsb : public tcan_usb::UniversalSerialBus {
     XbeeUsb() = delete;
     XbeeUsb(std::unique_ptr<tcan_usb::UniversalSerialBusOptions>&&);
 
-    virtual ~XbeeUsb();
+    ~XbeeUsb() override;
 
     /*! Callback called after reception of a message.
      * @param msg	reference to the usb message
      */
-    virtual void handleMessage(const tcan_usb::UsbMsg& msg);
+    void handleMessage(const tcan_usb::UsbMsg& msg) override;
 
  private:
 

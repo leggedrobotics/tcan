@@ -159,16 +159,19 @@ bool SocketBus::readData() {
     if(bytes_read <= 0) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Failed to read data from bus %s: (%d)\n  %s", options_->name_.c_str(), errno, strerror(errno));
+            hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
         return false;
-    } else {
-//		printf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+    }
+//	pintf("CanManager:bus_routine: Data received from iBus %i, n. Bytes: %i \n", iBus, bytes_read);
+    hasBusError_ = false;
 
-        if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
-            handleBusError( frame );
-        }else{
-            handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
-        }
+    if(frame.can_id > CAN_ERR_FLAG && frame.can_id < CAN_RTR_FLAG) {
+        handleBusErrorMessage( frame );
+    }else{
+        handleMessage( CanMsg(frame.can_id, frame.can_dlc, frame.data) );
     }
 
     return true;
@@ -196,16 +199,19 @@ bool SocketBus::writeData(std::unique_lock<std::mutex>* lock) {
     if( ret != sizeof(struct can_frame) ) {
         if(errno != EAGAIN && errno != EWOULDBLOCK) {
             MELO_ERROR("Error at sending CAN message %x on bus %s (return value=%d): (%d)\n  %s", cmsg.getCobId(), options_->name_.c_str(), ret, errno, strerror(errno));
+            hasBusError_ = true;
+        }else{
+            hasBusError_ = false;
         }
-    }else{
-        outgoingMsgs_.pop_front();
-        return true;
+        return false;
     }
 
-    return false;
+    hasBusError_ = false;
+    outgoingMsgs_.pop_front();
+    return true;
 }
 
-void SocketBus::handleBusError(const can_frame& msg) {
+void SocketBus::handleBusErrorMessage(const can_frame& msg) {
 
     errorMsgFlagPersistent_ = true;
     errorMsgFlag_ = true;

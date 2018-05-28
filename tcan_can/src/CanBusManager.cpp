@@ -35,25 +35,6 @@ void CanBusManager::sendSync(const unsigned int busIndex) {
     }
 }
 
-bool CanBusManager::getErrorMsgFlag() const {
-    for(auto bus : buses_) {
-        if(static_cast<CanBus*>(bus)->getErrorMsgFlag()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CanBusManager::resetErrorMsgFlag() {
-    bool hadBusError = false;
-    for(auto bus : buses_) {
-        if(static_cast<CanBus*>(bus)->resetErrorMsgFlag()) {
-            hadBusError = true;
-        }
-    }
-    return hadBusError;
-}
-
 void CanBusManager::resetAllDevices() {
     for(auto bus : buses_) {
         static_cast<CanBus*>(bus)->resetAllDevices();
