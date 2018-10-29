@@ -3,7 +3,7 @@ project(pcan_driver)
 
 find_package(catkin REQUIRED)
 
-set( TAR_FILE ${CMAKE_SOURCE_DIR}/peak-linux-driver-8.3.1.tar.gz )
+set( TAR_FILE ${CMAKE_CURRENT_SOURCE_DIR}/peak-linux-driver-8.3.1.tar.gz )
 set( EXTRACTED_DIR ${CMAKE_BINARY_DIR}/peak-linux-driver-8.3.1 )
 set( SRC_DIR ${EXTRACTED_DIR}/lib/src )
 set( DEVEL_INCLUDE_DIR ${CATKIN_DEVEL_PREFIX}/include )

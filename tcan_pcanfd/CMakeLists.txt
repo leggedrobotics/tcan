@@ -1,28 +1,32 @@
 cmake_minimum_required(VERSION 2.6)
 project(tcan_pcanfd)
 
-find_package(catkin REQUIRED COMPONENTS
-  tcan
-  pcan_driver
+find_package(catkin REQUIRED
+  COMPONENTS
+    tcan
+    tcan_can
+    pcan_driver
 )
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${PROJECT_NAME}
+    pthread
   CATKIN_DEPENDS
     tcan
+    tcan_can
     pcan_driver
 )
 
 ###########
 ## Build ##
 ###########
-add_definitions(-Wall )
-add_definitions(-fPIC)
-add_definitions(-std=c++11)
+add_definitions(-std=c++11 -fPIC -Wall -Werror)
 
 include_directories(
   include

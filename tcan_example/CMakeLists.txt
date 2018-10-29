@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tcan_example)
 
-find_package(catkin REQUIRED COMPONENTS
-  tcan
+find_package(catkin REQUIRED
+  COMPONENTS
+    tcan
+    tcan_can
+    tcan_ip
+    tcan_usb
 )
 
 ###################################
@@ -10,15 +14,20 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 
 catkin_package(
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS tcan
+  INCLUDE_DIRS
+    include
+  CATKIN_DEPENDS
+    tcan
+    tcan_can
+    tcan_ip
+    tcan_usb
 )
 
 ###########
 ## Build ##
 ###########
 
-add_definitions(--std=c++11)
+add_definitions(-std=c++11 -fPIC -Wall -Werror)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -29,6 +38,7 @@ include_directories(
 
 add_executable(can_example_node
   src/CanDeviceExample.cpp
+  src/CanManagerExample.cpp
   src/can_example_node.cpp
 )
 target_link_libraries(can_example_node

@@ -12,9 +12,9 @@
 
 #include "tcan/BusOptions.hpp"
 
-namespace tcan {
+namespace tcan_pcan {
 
-struct PcanBusOptions : public CanBusOptions {
+struct PcanBusOptions : public tcan_can::CanBusOptions {
     PcanBusOptions():
         PcanBusOptions(std::string())
     {
@@ -26,9 +26,9 @@ struct PcanBusOptions : public CanBusOptions {
     {
     }
 
-    virtual ~PcanBusOptions() { }
+    ~PcanBusOptions() override = default;
 
     double canErrorThrottleTime_;
 };
 
-} /* namespace tcan */
+} /* namespace tcan_pcan */

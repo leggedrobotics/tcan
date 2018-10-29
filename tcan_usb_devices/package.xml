@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tcan_usb_devices</name>
+  <version>0.2.0</version>
+  <description>Package containing interfaces for generic USB devices</description>
+  <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
+  <license>Proprietary</license>
+  <author email="pleemann@ethz.ch">Philipp Leemann</author>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>message_logger</depend>
+  <depend>tcan_usb</depend>
+</package>

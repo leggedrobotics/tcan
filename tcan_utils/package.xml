@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tcan_utils</name>
+  <version>0.2.0</version>
+  <description>The tcan_utils package</description>
+  <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
+  <license>Proprietary</license>
+  <author email="pleemann@ethz.ch">Philipp Leemann</author>
+  <author email="gehrinch@ethz.ch">Christian Gehring</author>
+  <author email="tsounisv@ethz.ch">Vassilios Tsounis</author>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

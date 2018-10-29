@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>tcan_ethercat</name>
-  <version>0.0.1</version>
+  <version>0.2.0</version>
   <description>The tcan_ethercat package</description>
   <maintainer email="diethelm@mavt.ethz.ch">Remo Diethelm</maintainer>
   <license>Proprietary</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
   <author email="diethelm@mavt.ethz.ch">Remo Diethelm</author>
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>tcan</depend>
   <depend>soem</depend>
+  <depend>tcan</depend>
 </package>
