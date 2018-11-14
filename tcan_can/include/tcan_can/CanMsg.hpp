@@ -10,6 +10,7 @@
 #include <algorithm> // std::copy
 #include <stdint.h>
 #include <initializer_list>
+#include <cassert>
 
 namespace tcan_can {
 
@@ -84,6 +85,7 @@ class CanMsg {
 
     inline void write(const int32_t value)
     {
+        assert(length_ + 4 <= 8);
         data_[3 + length_] = static_cast<uint8_t>((value >> 24) & 0xFF);
         data_[2 + length_] = static_cast<uint8_t>((value >> 16) & 0xFF);
         data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
@@ -94,6 +96,7 @@ class CanMsg {
 
     inline void write(const uint32_t value)
     {
+        assert(length_ + 4 <= 8);
         data_[3 + length_] = static_cast<uint8_t>((value >> 24) & 0xFF);
         data_[2 + length_] = static_cast<uint8_t>((value >> 16) & 0xFF);
         data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
@@ -104,6 +107,7 @@ class CanMsg {
 
     inline void write(const int16_t value)
     {
+        assert(length_ + 2 <= 8);
         data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
         data_[0 + length_] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
@@ -112,6 +116,7 @@ class CanMsg {
 
     inline void write(const uint16_t value)
     {
+        assert(length_ + 2 <= 8);
         data_[1 + length_] = static_cast<uint8_t>((value >> 8) & 0xFF);
         data_[0 + length_] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
@@ -120,6 +125,7 @@ class CanMsg {
 
     inline void write(const int8_t value)
     {
+        assert(length_ + 1 <= 8);
         data_[0 + length_] = static_cast<uint8_t>(value);
 
         length_ += 1;
@@ -127,6 +133,7 @@ class CanMsg {
 
     inline void write(const uint8_t value)
     {
+        assert(length_ + 1 <= 8);
         data_[0 + length_] = value;
 
         length_ += 1;
@@ -134,6 +141,7 @@ class CanMsg {
 
     inline void write(const int32_t value, const uint8_t pos)
     {
+        assert(pos + 4 <= 8);
         data_[3 + pos] = static_cast<uint8_t>((value >> 24) & 0xFF);
         data_[2 + pos] = static_cast<uint8_t>((value >> 16) & 0xFF);
         data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
@@ -146,6 +154,7 @@ class CanMsg {
 
     inline void write(const uint32_t value, const uint8_t pos)
     {
+        assert(pos + 4 <= 8);
         data_[3 + pos] = static_cast<uint8_t>((value >> 24) & 0xFF);
         data_[2 + pos] = static_cast<uint8_t>((value >> 16) & 0xFF);
         data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
@@ -158,6 +167,7 @@ class CanMsg {
 
     inline void write(const int16_t value, const uint8_t pos)
     {
+        assert(pos + 2 <= 8);
         data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
         data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
@@ -168,6 +178,7 @@ class CanMsg {
 
     inline void write(const uint16_t value, const uint8_t pos)
     {
+        assert(pos + 2 <= 8);
         data_[1 + pos] = static_cast<uint8_t>((value >> 8) & 0xFF);
         data_[0 + pos] = static_cast<uint8_t>((value >> 0) & 0xFF);
 
@@ -178,6 +189,7 @@ class CanMsg {
 
     inline void write(const int8_t value, const uint8_t pos)
     {
+        assert(pos + 1 <= 8);
         data_[0 + pos] = static_cast<uint8_t>(value);
 
         if(pos + 1 > length_) {
@@ -187,6 +199,7 @@ class CanMsg {
 
     inline void write(const uint8_t value, const uint8_t pos)
     {
+        assert(pos + 1 <= 8);
         data_[0 + pos] = value;
 
         if(pos + 1 > length_) {
@@ -196,6 +209,7 @@ class CanMsg {
 
     inline int32_t readint32(uint8_t pos) const
     {
+        assert(pos + 4 <= length_);
         return (static_cast<int32_t>(data_[3 + pos]) << 24)
                 | (static_cast<int32_t>(data_[2 + pos]) << 16)
                 | (static_cast<int32_t>(data_[1 + pos]) << 8)
@@ -204,6 +218,7 @@ class CanMsg {
 
     inline uint32_t readuint32(uint8_t pos) const
     {
+        assert(pos + 4 <= length_);
         return (static_cast<uint32_t>(data_[3 + pos]) << 24)
                 | (static_cast<uint32_t>(data_[2 + pos]) << 16)
                 | (static_cast<uint32_t>(data_[1 + pos]) << 8)
@@ -212,23 +227,27 @@ class CanMsg {
 
     inline int16_t readint16(uint8_t pos) const
     {
+        assert(pos + 2 <= length_);
         return (static_cast<int16_t>(data_[1 + pos]) << 8)
                 | (static_cast<int16_t>(data_[0 + pos]));
     }
 
     inline uint16_t readuint16(uint8_t pos) const
     {
+        assert(pos + 2 <= length_);
         return (static_cast<uint16_t>(data_[1 + pos]) << 8)
                 | (static_cast<uint16_t>(data_[0 + pos]));
     }
 
     inline int8_t readint8(uint8_t pos) const
     {
+        assert(pos + 1 <= length_);
         return static_cast<int8_t>(data_[0 + pos]);
     }
 
     inline uint8_t readuint8(uint8_t pos) const
     {
+        assert(pos + 1 <= length_);
         return data_[0 + pos];
     }
 
