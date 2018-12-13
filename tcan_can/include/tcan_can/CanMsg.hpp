@@ -30,6 +30,13 @@ class CanMsg {
     {
     }
 
+    CanMsg(const uint32_t CobId, const uint8_t length):
+          CobId_(CobId),
+          length_(length),
+          data_{0, 0, 0, 0, 0, 0, 0, 0}
+    {
+    }
+
     CanMsg(const uint32_t CobId, const uint8_t length, const uint8_t* data):
         CobId_(CobId),
         length_(length),
