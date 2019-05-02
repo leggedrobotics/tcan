@@ -166,7 +166,7 @@ then
   BT=${BT_800KB}
 elif [ $4 -eq 500 ]
 then
-  echo "Bit-rate is set to 5000Kbps"
+  echo "Bit-rate is set to 500Kbps"
   BT=${BT_500KB}
 elif [ $4 -eq 250 ]
 then
