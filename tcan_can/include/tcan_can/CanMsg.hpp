@@ -50,6 +50,7 @@ class CanMsg {
         length_(length),
         data_{0, 0, 0, 0, 0, 0, 0, 0}
     {
+        assert(length == data.size());
         std::copy(data.begin(), data.end(), data_);
     }
 
