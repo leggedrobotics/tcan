@@ -54,6 +54,14 @@ class CanMsg {
         std::copy(data.begin(), data.end(), data_);
     }
 
+    CanMsg(const uint32_t CobId, const std::initializer_list<uint8_t> data):
+        CobId_(CobId),
+        length_(data.size()),
+        data_{0, 0, 0, 0, 0, 0, 0, 0}
+    {
+        std::copy(data.begin(), data.end(), data_);
+    }
+
     //! Destructor
     virtual ~CanMsg() = default;
 
