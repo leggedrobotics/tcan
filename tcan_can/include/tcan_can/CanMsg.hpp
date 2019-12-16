@@ -18,10 +18,10 @@ namespace tcan_can {
 
 class CanMsg {
  public:
-	static constexpr size_t Capacity = 8;
+    static constexpr size_t Capacity = 8;
 
     /*! Constructor
-     * @param	COBId	Communication Object Identifier
+     * @param  COBId  Communication Object Identifier
      */
     CanMsg() = delete;
 
@@ -37,7 +37,7 @@ class CanMsg {
           length_(length),
           data_{0, 0, 0, 0, 0, 0, 0, 0}
     {
-    	assert(length <= Capacity);
+        assert(length <= Capacity);
     }
 
     CanMsg(const uint32_t CobId, const uint8_t length, const uint8_t* data):
@@ -45,7 +45,7 @@ class CanMsg {
         length_(length),
         data_{0, 0, 0, 0, 0, 0, 0, 0}
     {
-    	assert(length <= Capacity);
+        assert(length <= Capacity);
         std::copy(&data[0], &data[length], data_);
     }
 
@@ -54,7 +54,7 @@ class CanMsg {
         length_(length),
         data_{0, 0, 0, 0, 0, 0, 0, 0}
     {
-    	assert(length <= Capacity);
+        assert(length <= Capacity);
         assert(length == data.size());
         std::copy(data.begin(), data.end(), data_);
     }
@@ -64,7 +64,7 @@ class CanMsg {
         length_(data.size()),
         data_{0, 0, 0, 0, 0, 0, 0, 0}
     {
-		assert(data.size() <= Capacity);
+        assert(data.size() <= Capacity);
         std::copy(data.begin(), data.end(), data_);
     }
 
@@ -98,10 +98,10 @@ class CanMsg {
 
 
     /*! Sets the stack of values
-     * @param value	 array of length 8
+     * @param value   array of length 8
      */
     inline void setData(const uint8_t length, const uint8_t* data) {
-    	assert(length <= Capacity);
+        assert(length <= Capacity);
         length_ = length;
         std::copy(&data[0], &data[length], data_);
     }
