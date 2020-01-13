@@ -1,3 +1,7 @@
+ProjectHelper.cmake
+src/.include_hack.cpp
+CMakeLists.txt
+cmake-build-*
 .idea
 *.DS_STORE
 *~
