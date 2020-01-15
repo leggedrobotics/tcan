@@ -30,7 +30,10 @@ void CanBus::handleMessage(const CanMsg& msg) {
     errorMsgFlag_ = false;
 
     // Check if CAN message is handled.
-    CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
+    auto it = std::find_if(cobIdToFunctionMap_.cbegin(), cobIdToFunctionMap_.cend(), [&msg](auto p){
+        return !((msg.getCobId() ^ p.first.cob) & p.first.mask);
+    });
+
     if (it != cobIdToFunctionMap_.end()) {
         if(it->second.first) {
             it->second.first->resetDeviceTimeoutCounter();

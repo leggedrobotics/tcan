@@ -23,8 +23,27 @@ namespace tcan_can {
 class CanBus : public tcan::Bus<CanMsg> {
  public:
 
+    struct CobMatcher {
+        explicit CobMatcher(uint32_t c, uint32_t m = 0xffffffffu) : cob(c), mask(m) {};
+        uint32_t cob;
+        uint32_t mask;
+
+        bool operator==(const CobMatcher& rhs) const {
+            return cob == rhs.cob && mask == rhs.mask;
+        }
+    };
+
+    struct CobMatcherHasher {
+        size_t operator()(const CobMatcher& matcher) const {
+            size_t h = 0;
+            boost::hash_combine(h, matcher.mask);
+            boost::hash_combine(h, matcher.cob);
+            return h;
+        };
+    };
+
     using CallbackPtr =  std::function<bool(const CanMsg&)>;
-    using CobIdToFunctionMap = std::unordered_map<uint32_t, std::pair<CanDevice*, CallbackPtr>>;
+    using CobIdToFunctionMap = std::unordered_map<CobMatcher, std::pair<CanDevice*, CallbackPtr>, CobMatcherHasher>;
     using DeviceContainer = std::vector<CanDevice*>;
 
     CanBus() = delete;
@@ -63,13 +82,32 @@ class CanBus : public tcan::Bus<CanMsg> {
     template <class T>
     inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<!std::is_base_of<CanDevice, T>::value>::type* = 0)
     {
-        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
+        return cobIdToFunctionMap_.emplace(CobMatcher{ cobId }, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
     }
 
     template <class T>
     inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<std::is_base_of<CanDevice, T>::value>::type* = 0)
     {
-        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
+        return cobIdToFunctionMap_.emplace(CobMatcher{ cobId }, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    /*! Like addCanMessage with a specific CobId, but matches against a range of Cobs through a mask.
+    * To match all messages, 0x..FA..33, one would pass CobMatcher { 0x00FA0033, 0x00FF00FF }, i.e. the Cob and the mask.
+    * @param matcher           CobMatcher for the message
+    * @param device            pointer to the device
+    * @param fp                pointer to the parse function
+    * @return true if successful
+    */
+    template <class T>
+    inline bool addCanMessage(const CobMatcher matcher, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<!std::is_base_of<CanDevice, T>::value>::type* = 0)
+    {
+        return cobIdToFunctionMap_.emplace(matcher, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    template <class T>
+    inline bool addCanMessage(const CobMatcher matcher, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<std::is_base_of<CanDevice, T>::value>::type* = 0)
+    {
+        return cobIdToFunctionMap_.emplace(matcher, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
     }
 
     /*! Send a sync message on the bus. Is called by BusManager::sendSyncOnAllBuses or directly.

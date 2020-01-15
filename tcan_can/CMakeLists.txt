@@ -22,7 +22,9 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-add_definitions(-std=c++11 -fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Werror)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 include_directories(
   include
@@ -39,6 +41,15 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   pthread
 )
+
+##########
+## Test ##
+##########
+if(CATKIN_ENABLE_TESTING)
+    catkin_add_gtest(test_sae_can_msg test/sae_can_msg.cpp)
+    catkin_add_gtest(test_can_bus test/can_bus.cpp)
+    target_link_libraries(test_can_bus ${PROJECT_NAME})
+endif()
 
 #############
 ## Install ##
