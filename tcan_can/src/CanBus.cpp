@@ -31,7 +31,7 @@ void CanBus::handleMessage(const CanMsg& msg) {
 
     // Check if CAN message is handled.
     auto it = std::find_if(cobIdToFunctionMap_.cbegin(), cobIdToFunctionMap_.cend(), [&msg](auto p){
-        return !((msg.getCobId() ^ p.first.cob) & p.first.mask);
+        return !((msg.getCobId() ^ p.first.identifier) & p.first.mask);
     });
 
     if (it != cobIdToFunctionMap_.end()) {

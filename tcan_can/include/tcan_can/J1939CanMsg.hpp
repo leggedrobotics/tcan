@@ -7,12 +7,12 @@ namespace tcan_can {
 /**
  * SAE J1939 Can message
  */
-class SaeCanMsg : public CanMsg {
+class J1939CanMsg : public CanMsg {
 public:
 
     static const uint32_t CAN_ID_PGN_MASK = 0x3ffff00u;
 
-    constexpr explicit SaeCanMsg(const CanMsg& msg) : CanMsg(msg) {}
+    constexpr explicit J1939CanMsg(const CanMsg& msg) : CanMsg(msg) {}
 
     constexpr uint8_t getPriority() const { return getCobId() >> 26u & 0x7u; }
 

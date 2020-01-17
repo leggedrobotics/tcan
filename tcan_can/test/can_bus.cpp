@@ -36,7 +36,7 @@ TEST(can_bus, handle_exact_cob) {
 }
 
 TEST(can_bus, handle_cob_mask) {
-	auto mask = tcan_can::CanBus::CobMatcher {0x00FF00FF, 0x00120034};
+	auto mask = tcan_can::CanBus::CanFrameIdentifier {0x00FF00FF, 0x00120034};
 
 	tcan_can::SocketBus bus { std::make_unique<tcan_can::SocketBusOptions>("Foo") };
 	BarDevice dev {0x123, "Bar"};

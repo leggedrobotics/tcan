@@ -75,7 +75,7 @@ class CanMsg {
      *
      * @return COBId
      */
-    inline uint32_t getCobId() const { return CobId_; }
+    constexpr uint32_t getCobId() const { return CobId_; }
 
 
     /*! Gets the stack of values
@@ -87,7 +87,7 @@ class CanMsg {
     /*! Gets the lengths of the values in the stack
      * @return reference to length
      */
-    inline uint8_t getLength() const { return length_; }
+    constexpr uint8_t getLength() const { return length_; }
 
 
     /*!

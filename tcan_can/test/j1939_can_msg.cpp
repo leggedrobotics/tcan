@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <tcan_can/SaeCanMsg.hpp>
+#include <tcan_can/J1939CanMsg.hpp>
 
-tcan_can::SaeCanMsg msg(uint32_t cob) {
-	return tcan_can::SaeCanMsg { tcan_can::CanMsg { cob } };
+tcan_can::J1939CanMsg msg(uint32_t cob) {
+	return tcan_can::J1939CanMsg {tcan_can::CanMsg {cob } };
 }
 
-TEST(sae_can_msg, construct) {
+TEST(j1939_can_msg, construct) {
 	auto msg = tcan_can::CanMsg(0xdefacedu, {0x10, 0x20});
 
-	auto sae = tcan_can::SaeCanMsg {msg};
+	auto sae = tcan_can::J1939CanMsg {msg};
 
 	EXPECT_EQ(0xdefacedu, msg.getCobId());
 	ASSERT_EQ(2, msg.getLength());
@@ -20,7 +20,7 @@ TEST(sae_can_msg, construct) {
 	ASSERT_THAT(d, testing::ElementsAre(0x10, 0x20));
 }
 
-TEST(sae_can_msg, pgn) {
+TEST(j1939_can_msg, pgn) {
 	EXPECT_EQ(
 		0xfe31u,
 		msg( 0x18fe3185 ).getParameterGroupNumber() );
@@ -31,10 +31,10 @@ TEST(sae_can_msg, pgn) {
 
 	EXPECT_EQ(
 		msg(0x18fe385).getParameterGroupCanId(),
-		msg(0x18fe385).getCobId() & tcan_can::SaeCanMsg::CAN_ID_PGN_MASK );
+		msg(0x18fe385).getCobId() & tcan_can::J1939CanMsg::CAN_ID_PGN_MASK );
 }
 
-TEST(sae_can_msg, priority) {
+TEST(j1939_can_msg, priority) {
 	EXPECT_EQ(
 		6,
 		msg( 0x18fe3185 ).getPriority() );
@@ -44,7 +44,7 @@ TEST(sae_can_msg, priority) {
 		msg( 0xcfe3185 ).getPriority() );
 }
 
-TEST(sae_can_msg, pf) {
+TEST(j1939_can_msg, pf) {
 	EXPECT_EQ(
 		0xFE,
 		msg( 0x18fe3185 ).getPduFormat() );
@@ -54,13 +54,13 @@ TEST(sae_can_msg, pf) {
 		msg( 0x183e3185 ).getPduFormat() );
 }
 
-TEST(sae_can_msg, ps) {
+TEST(j1939_can_msg, ps) {
 	EXPECT_EQ(
 		49,
 		msg( 0x18fe3185 ).getPduSpecific() );
 }
 
-TEST(sae_can_msg, dp_edp) {
+TEST(j1939_can_msg, dp_edp) {
 	EXPECT_TRUE(msg( 0x18fe3186u | 0x1u << 24u ).getDataPage());
 	EXPECT_FALSE(msg( 0x18fe3186 ).getDataPage());
 
@@ -68,7 +68,7 @@ TEST(sae_can_msg, dp_edp) {
 	EXPECT_FALSE(msg( 0x18fe3185 ).getExtendedDataPage());
 }
 
-TEST(sae_can_msg, src) {
+TEST(j1939_can_msg, src) {
 	EXPECT_EQ(0x85, msg( 0x18fe3185 ).getSourceAddress());
 }
 
