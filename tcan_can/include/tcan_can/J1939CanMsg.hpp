@@ -16,25 +16,22 @@ public:
 
     constexpr uint8_t getPriority() const { return getCobId() >> 26u & 0x7u; }
 
-    constexpr bool getExtendedDataPage() const { return getCobId() >> 25u & 0x1u; }
+    constexpr bool getExtendedDataPage() const { return getParameterGroupNumber() >> 17u & 0x1u; }
 
-    constexpr bool getDataPage() const { return getCobId() >> 24u & 0x1u; }
+    constexpr bool getDataPage() const { return getParameterGroupNumber() >> 16u & 0x1u; }
 
-    constexpr uint8_t getPduFormat() const { return getCobId() >> 16u & 0xFFu; }
+    constexpr uint8_t getPduFormat() const { return getParameterGroupNumber() >> 8u & 0xFFu; }
 
-    constexpr uint8_t getPduSpecific() const { return getCobId() >> 8u & 0xFFu; }
+    constexpr uint8_t getPduSpecific() const { return getParameterGroupNumber() & 0xFFu; }
 
     constexpr uint8_t getSourceAddress() const { return getCobId() & 0xFFu; }
 
     constexpr uint32_t getParameterGroupNumber() const {
-      return getExtendedDataPage() << 17u |
-             getDataPage() << 16u |
-             getPduFormat() << 8u |
-             getPduSpecific();
+      return getParameterGroupCanId() >> 8;
     }
 
     constexpr uint32_t getParameterGroupCanId() const {
-      return getParameterGroupNumber() << 8u;
+      return getCobId() & CAN_ID_PGN_MASK;
     }
 
     using CanMsg::getCobId;
