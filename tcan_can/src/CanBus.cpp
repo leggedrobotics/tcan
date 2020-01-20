@@ -13,7 +13,7 @@ namespace tcan_can {
 CanBus::CanBus(std::unique_ptr<CanBusOptions>&& options):
     tcan::Bus<CanMsg>( std::move(options) ),
     devices_(),
-    cobIdToFunctionMap_(),
+    canFrameIdentifierToFunctionMap_(),
     unmappedMessageCallbackFunction_(std::bind(&CanBus::defaultHandleUnmappedMessage, this, std::placeholders::_1))
 {
 }
@@ -30,8 +30,11 @@ void CanBus::handleMessage(const CanMsg& msg) {
     errorMsgFlag_ = false;
 
     // Check if CAN message is handled.
-    CobIdToFunctionMap::iterator it = cobIdToFunctionMap_.find(msg.getCobId());
-    if (it != cobIdToFunctionMap_.end()) {
+    auto it = std::find_if(canFrameIdentifierToFunctionMap_.cbegin(), canFrameIdentifierToFunctionMap_.cend(), [&msg](auto p){
+        return !((msg.getCobId() ^ p.first.identifier) & p.first.mask);
+    });
+
+    if (it != canFrameIdentifierToFunctionMap_.end()) {
         if(it->second.first) {
             it->second.first->resetDeviceTimeoutCounter();
             it->second.first->configureDeviceInternal(msg);

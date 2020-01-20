@@ -23,8 +23,27 @@ namespace tcan_can {
 class CanBus : public tcan::Bus<CanMsg> {
  public:
 
+    struct CanFrameIdentifier {
+        explicit CanFrameIdentifier(uint32_t id, uint32_t msk = 0xffffffffu) : identifier(id), mask(msk) {};
+        uint32_t identifier;
+        uint32_t mask;
+
+        bool operator==(const CanFrameIdentifier& rhs) const {
+            return identifier == rhs.identifier && mask == rhs.mask;
+        }
+    };
+
+    struct CanFrameIdentifierHasher {
+        size_t operator()(const CanFrameIdentifier& matcher) const {
+            size_t h = 0;
+            boost::hash_combine(h, matcher.identifier);
+            boost::hash_combine(h, matcher.mask);
+            return h;
+        };
+    };
+
     using CallbackPtr =  std::function<bool(const CanMsg&)>;
-    using CobIdToFunctionMap = std::unordered_map<uint32_t, std::pair<CanDevice*, CallbackPtr>>;
+    using CanFrameIdentifierToFunctionMap = std::unordered_map<CanFrameIdentifier, std::pair<CanDevice*, CallbackPtr>, CanFrameIdentifierHasher>;
     using DeviceContainer = std::vector<CanDevice*>;
 
     CanBus() = delete;
@@ -53,23 +72,43 @@ class CanBus : public tcan::Bus<CanMsg> {
         return device->initDeviceInternal(this);
     }
 
-    /*! Adds a device and callback function for incoming messages identified by its cobId. The timeout counter of the device is
-     *  reset on reception of the message (treated as heartbeat).
-     * @param cobId             cobId of the message
+    /*! Adds a device and callback function for incoming messages identified by its CAN frame identifier. The timeout
+     *  counter of the device is reset on reception of the message (treated as heartbeat).
+     * @param canFrameId        29 or 11 bit frame ID of the message
      * @param device            pointer to the device
      * @param fp                pointer to the parse function
      * @return true if successful
      */
     template <class T>
-    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<!std::is_base_of<CanDevice, T>::value>::type* = 0)
+    inline bool addCanMessage(const uint32_t canFrameId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<!std::is_base_of<CanDevice, T>::value>::type* = 0)
     {
-        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
+        return canFrameIdentifierToFunctionMap_.emplace(CanFrameIdentifier{canFrameId }, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
     }
 
     template <class T>
-    inline bool addCanMessage(const uint32_t cobId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<std::is_base_of<CanDevice, T>::value>::type* = 0)
+    inline bool addCanMessage(const uint32_t canFrameId, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<std::is_base_of<CanDevice, T>::value>::type* = 0)
     {
-        return cobIdToFunctionMap_.emplace(cobId, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
+        return canFrameIdentifierToFunctionMap_.emplace(CanFrameIdentifier{canFrameId }, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    /*! Like addCanMessage with a specific CanId, but matches against a range of CanIds through a mask.
+    * To match all messages, 0x..FA..33, one would pass CanFrameIdentifier { 0x00FA0033, 0x00FF00FF }, i.e. the ID and the mask.
+    * Bits in the ID that correspond to zeros in the mask are ignored.
+    * @param matcher           CanFrameIdentifier for the message
+    * @param device            pointer to the device
+    * @param fp                pointer to the parse function
+    * @return true if successful
+    */
+    template <class T>
+    inline bool addCanMessage(const CanFrameIdentifier matcher, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<!std::is_base_of<CanDevice, T>::value>::type* = 0)
+    {
+        return canFrameIdentifierToFunctionMap_.emplace(matcher, std::make_pair(nullptr, std::bind(fp, device, std::placeholders::_1))).second;
+    }
+
+    template <class T>
+    inline bool addCanMessage(const CanFrameIdentifier matcher, T* device, bool(std::common_type<T>::type::*fp)(const CanMsg&), typename std::enable_if<std::is_base_of<CanDevice, T>::value>::type* = 0)
+    {
+        return canFrameIdentifierToFunctionMap_.emplace(matcher, std::make_pair(device, std::bind(fp, device, std::placeholders::_1))).second;
     }
 
     /*! Send a sync message on the bus. Is called by BusManager::sendSyncOnAllBuses or directly.
@@ -122,7 +161,7 @@ class CanBus : public tcan::Bus<CanMsg> {
     DeviceContainer devices_;
 
     // map mapping COB id to parse functions
-    CobIdToFunctionMap cobIdToFunctionMap_;
+    CanFrameIdentifierToFunctionMap canFrameIdentifierToFunctionMap_;
 
     // function pointer to be called for unmapped COB ids
     CallbackPtr unmappedMessageCallbackFunction_;
