@@ -18,7 +18,8 @@ public:
         uint8_t priority,
         uint32_t pgn,
         uint8_t source_address,
-        std::initializer_list<uint8_t> data) : CanMsg(static_cast<uint32_t>(priority) << 26 | pgn << 8 | source_address, data) {}
+        std::initializer_list<uint8_t> data) 
+	    : CanMsg((1UL << 31) | static_cast<uint32_t>(priority) << 26 | pgn << 8 | source_address, data) {}
 
     constexpr uint8_t getPriority() const { return getCobId() >> 26u & 0x7u; }
 
