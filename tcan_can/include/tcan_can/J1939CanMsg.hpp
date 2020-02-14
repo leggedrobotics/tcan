@@ -11,6 +11,7 @@ class J1939CanMsg : public CanMsg {
 public:
 
     static const uint32_t CAN_ID_PGN_MASK = 0x3ffff00u;
+    static const uint32_t extendedFlag = 1UL << 31;
 
     constexpr explicit J1939CanMsg(const CanMsg& msg) : CanMsg(msg) {}
 
@@ -19,7 +20,7 @@ public:
         uint32_t pgn,
         uint8_t source_address,
         std::initializer_list<uint8_t> data) 
-	    : CanMsg((1UL << 31) | static_cast<uint32_t>(priority) << 26 | pgn << 8 | source_address, data) {}
+	    : CanMsg(extendedFlag | static_cast<uint32_t>(priority) << 26 | pgn << 8 | source_address, data) {}
 
     constexpr uint8_t getPriority() const { return getCobId() >> 26u & 0x7u; }
 
