@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(tcan_ethercat)
 
 find_package(catkin REQUIRED COMPONENTS
-  soem
+  soem_rsl
   tcan
 )
 
@@ -15,7 +15,7 @@ catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
   CATKIN_DEPENDS
-    soem
+    soem_rsl
     tcan
 )
 
