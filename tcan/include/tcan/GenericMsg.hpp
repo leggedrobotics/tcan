@@ -8,6 +8,7 @@
 #pragma once
 
 #include <algorithm> // copy(..)
+#include <string>
 
 namespace tcan {
 
