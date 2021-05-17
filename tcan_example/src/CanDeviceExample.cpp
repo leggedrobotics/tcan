@@ -1,11 +1,3 @@
-/*!
- * @file 	CanDeviceExample.cpp
- * @author 	Philipp Leemann
- * @date 	Jan, 2012
- * @version 1.0
- *
- */
-
 #include <iostream>
 
 #include "tcan/Bus.hpp"

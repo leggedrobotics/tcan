@@ -1,10 +1,3 @@
-/*
- * Bus.cpp
- *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
- */
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>

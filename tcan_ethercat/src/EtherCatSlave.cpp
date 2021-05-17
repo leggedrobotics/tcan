@@ -1,11 +1,3 @@
-/*
- * EthernetCatDevice.cpp
- *
- *  Created on: Mar 24, 2017
- *      Author: Remo Diethelm
- */
-
-
 #include "tcan_ethercat/EtherCatSlave.hpp"
 #include "tcan_ethercat/EtherCatBus.hpp"
 

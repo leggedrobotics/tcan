@@ -1,11 +1,3 @@
-/*!
- * @file 	CanManagerExample.hpp
- * @author 	Philipp Leemann
- * @date 	Jan, 2012
- * @version 1.0
- *
- */
-
 #pragma once
 
 #include <unordered_map>

@@ -1,10 +1,3 @@
-/*
- * Bus.cpp
- *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
- */
-
 #include <fcntl.h> // open(..) etc.
 #include <unistd.h>
 #include <sys/ioctl.h>

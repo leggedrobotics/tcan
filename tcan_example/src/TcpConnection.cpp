@@ -1,11 +1,3 @@
-/*
- * TcpConnection.cpp
- *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
- */
-
-
 #include "message_logger/message_logger.hpp"
 #include "tcan_example/TcpConnection.hpp"
 
