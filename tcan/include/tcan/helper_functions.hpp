@@ -1,10 +1,3 @@
-/*
- * helper_functions.hpp
- *
- *  Created on: May 19, 2017
- *      Author: Philipp Leemann
- */
-
 #pragma once
 
 #include <thread>

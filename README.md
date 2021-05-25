@@ -7,7 +7,7 @@
 A library to communicate to devices connected through CAN, EtherCat, USB or TCP/IP.
 
 ### License
-The source code is released under a [proprietary license](LICENSE).
+The source code is released under the [MIT license](LICENSE).
 
 **Author(s):** Philipp Leemann, Christian Gehring, Remo Diethelm
 
@@ -15,11 +15,11 @@ The source code is released under a [proprietary license](LICENSE).
 
 Common
 
-- [message_logger](https://bitbucket.org/leggedrobotics/message_logger)
+- [message_logger](https://github.com/leggedrobotics/message_logger)
 
 Ethercat
 
-- [openethercat_soem](https://bitbucket.org/leggedrobotics/openethercat_soem)
+- [soem_rsl](https://github.com/leggedrobotics/soem_interface)
 
 
 ## Usage

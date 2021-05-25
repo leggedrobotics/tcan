@@ -1,10 +1,3 @@
-/*
- * EtherCatDatagramData.hpp
- *
- *  Created on: Mar 24, 2017
- *      Author: Remo Diethelm
- */
-
 #pragma once
 
 

@@ -1,10 +1,3 @@
-/*
- * SocketBus.cpp
- *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
- */
-
 #include <sys/socket.h>
 #include <linux/can.h>
 #include <linux/can/raw.h>

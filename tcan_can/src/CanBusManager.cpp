@@ -1,10 +1,3 @@
-/*
- * BusManager.cpp
- *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
- */
-
 #include "tcan_can/CanBusManager.hpp"
 
 namespace tcan_can {

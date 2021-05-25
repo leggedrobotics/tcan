@@ -1,10 +1,3 @@
-/*
- * DeviceCanOpen.cpp
- *
- *  Created on: Mar 27, 2016
- *      Author: Philipp Leemann
- */
-
 #include "tcan_can/DeviceCanOpen.hpp"
 #include "tcan/Bus.hpp"
 

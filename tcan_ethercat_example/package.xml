@@ -4,8 +4,8 @@
   <version>0.2.0</version>
   <description>The tcan_ethercat_example package</description>
 
-  <maintainer email="diethelm@mavt.ethz.ch">Remo Diethelm</maintainer>
-  <license>Proprietary</license>
+  <maintainer email="simon.kerscher@mavt.ethz.ch">Simon Kerscher</maintainer>
+  <license>MIT</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
   <author email="diethelm@mavt.ethz.ch">Remo Diethelm</author>
 

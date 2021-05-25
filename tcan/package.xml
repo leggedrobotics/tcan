@@ -3,8 +3,8 @@
   <name>tcan</name>
   <version>0.2.0</version>
   <description>The tcan package</description>
-  <maintainer email="pleemann@ethz.ch">Philipp Leemann</maintainer>
-  <license>Proprietary</license>
+  <maintainer email="simon.kerscher@mavt.ethz.ch">Simon Kerscher</maintainer>
+  <license>MIT</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
   <author email="gehrinch@ethz.ch">Christian Gehring</author>
   <buildtool_depend>catkin</buildtool_depend>

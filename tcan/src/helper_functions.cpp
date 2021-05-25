@@ -1,10 +1,3 @@
-/*
- * helper_functions.cpp
- *
- *  Created on: May 19, 2017
- *      Author: Philipp Leemann
- */
-
 #include "tcan/helper_functions.hpp"
 
 namespace tcan {
