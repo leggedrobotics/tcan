@@ -1,6 +1,6 @@
 # Threaded Communication and Networking library #
 
-[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=bitbucket_leggedrobotics/tcan/master)](https://ci.leggedrobotics.com/job/bitbucket_leggedrobotics/job/tcan/job/master/)
+[![Build Status](https://ci.leggedrobotics.com/buildStatus/icon?job=github_leggedrobotics/tcan/master)](https://ci.leggedrobotics.com/job/github_leggedrobotics/job/tcan/job/master/)
 
 ## Overview
 
