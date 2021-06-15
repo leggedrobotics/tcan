@@ -31,6 +31,7 @@ jobs:
     - name: Rsldep
       run: |
         wget https://github.com/leggedrobotics/message_logger/archive/refs/heads/master.tar.gz -O message_logger.tar.gz && tar -xf message_logger.tar.gz -C ./src
+        wget https://github.com/leggedrobotics/soem_interface/archive/refs/heads/master.tar.gz -O soem_interface.tar.gz && tar -xf soem_interface.tar.gz -C ./src
 
     - name: Rosdep
       run: |
@@ -43,7 +44,7 @@ jobs:
         source /opt/ros/noetic/setup.bash
         tree 
         catkin init
-        catkin build --cmake-args -DCMAKE_BUILD_TYPE=Release
+        catkin build --cmake-args -DCMAKE_BUILD_TYPE=Release tcan tcan_can tcan_ip tcan_usb
         
     - name: Test
       shell: bash
