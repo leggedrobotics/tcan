@@ -28,6 +28,10 @@ jobs:
       with: 
         path: src/ros_best_practices 
 
+    - name: Rsldep
+      run: |
+        wget https://github.com/leggedrobotics/message_logger/archive/refs/heads/master.tar.gz -O message_logger.tar.gz && tar -xf message_logger.tar.gz -C ./src
+
     - name: Rosdep
       run: |
         rosdep update
