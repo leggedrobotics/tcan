@@ -1,23 +1,31 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 project(tcan_can)
 
-find_package(catkin REQUIRED COMPONENTS
-  message_logger
-  tcan
-  tcan_utils
-)
+# Add support for C++11
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+endif()
+
+find_package(tcan_utils REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(message_logger REQUIRED)
+find_package(tcan REQUIRED)
+
+set(INCLUDE_DIRS include ${tcan_utils_INCLUDE_DIRS} ${ament_cmake_INCLUDE_DIRS}
+  ${message_logger_INCLUDE_DIRS} ${tcan_INCLUDE_DIRS})
+include_directories(${INCLUDE_DIRS})
+
+set(LIBRARY_DIRS ${tcan_utils_LIBRARY_DIRS} ${ament_cmake_LIBRARY_DIRS}
+  ${message_logger_LIBRARY_DIRS} ${tcan_LIBRARY_DIRS})
+
+link_directories(${LIBRARY_DIRS})
+
+set(LIBS ${tcan_utils_LIBRARIES} ${ament_cmake_LIBRARIES}
+  ${message_logger_LIBRARIES} ${tcan_LIBRARIES})
 
 ###################################
 ## catkin specific configuration ##
 ###################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS
-    message_logger
-    tcan
-    tcan_utils
-)
 
 ###########
 ## Build ##
@@ -26,40 +34,39 @@ add_definitions(-fPIC -Wall -Werror)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-add_library(${PROJECT_NAME}
-  src/CanBusManager.cpp
-  src/CanBus.cpp
-  src/SocketBus.cpp
-  src/DeviceCanOpen.cpp
-)
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  pthread
-)
+add_library(${PROJECT_NAME} src/CanBusManager.cpp src/CanBus.cpp
+  src/SocketBus.cpp src/DeviceCanOpen.cpp)
+target_link_libraries(${PROJECT_NAME} ${LIBS} pthread)
 
 ##########
 ## Test ##
 ##########
-if(CATKIN_ENABLE_TESTING)
-    catkin_add_gtest(test_sae_can_msg test/j1939_can_msg.cpp)
-    catkin_add_gtest(test_can_bus test/can_bus.cpp)
-    target_link_libraries(test_can_bus ${PROJECT_NAME})
-endif()
+# if(BUILD_TESTING)
+#   ament_add_gtest(test_sae_can_msg test/j1939_can_msg.cpp)
+#   ament_add_gtest(test_can_bus test/can_bus.cpp)
+#   target_link_libraries(test_can_bus ${PROJECT_NAME})
+# endif()
 
 #############
 ## Install ##
 #############
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
+  DESTINATION include/${PROJECT_NAME}
+  PATTERN ".svn"
+  EXCLUDE)
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+  ARCHIVE
+  DESTINATION lib
+  LIBRARY
+  DESTINATION lib
+  RUNTIME
+  DESTINATION lib/${PROJECT_NAME})
+
+ament_export_dependencies(tcan_utils)
+ament_export_dependencies(ament_cmake)
+ament_export_dependencies(message_logger)
+ament_export_dependencies(tcan)
+ament_export_include_directories(${INCLUDE_DIRS})
+ament_export_libraries(tcan_can)
+
+ament_package()

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version='1.0' encoding='utf-8'?>
 <package format="2">
   <name>tcan_can</name>
   <version>0.2.0</version>
@@ -7,10 +7,14 @@
   <license>MIT</license>
   <author email="pleemann@ethz.ch">Philipp Leemann</author>
   <author email="gehrinch@ethz.ch">Christian Gehring</author>
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>message_logger</depend>
   <depend>tcan</depend>
   <depend>tcan_utils</depend>
   <test_depend>libgmock-dev</test_depend>
   <test_depend>libgtest-dev</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

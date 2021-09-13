@@ -1,46 +1,54 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 project(tcan)
 
-find_package(catkin REQUIRED COMPONENTS
-  message_logger
-)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(message_logger REQUIRED)
+
+set(INCLUDE_DIRS include ${ament_cmake_INCLUDE_DIRS}
+  ${message_logger_INCLUDE_DIRS})
+include_directories(${INCLUDE_DIRS})
+
+set(LIBRARY_DIRS ${ament_cmake_LIBRARY_DIRS})
+
+link_directories(${LIBRARY_DIRS})
+
+set(LIBS ${ament_cmake_LIBRARIES} pthread)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS message_logger
-)
 
 ###########
 ## Build ##
 ###########
-add_definitions(-std=c++11 -fPIC -Wall -Werror)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-add_library(${PROJECT_NAME}
-  src/helper_functions.cpp
-)
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  pthread
-)
+  add_library(${PROJECT_NAME} src/helper_functions.cpp)
+target_link_libraries(${PROJECT_NAME} ${LIBS})
 
 #############
 ## Install ##
 #############
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
+  DESTINATION include/${PROJECT_NAME}
+  PATTERN ".svn"
+  EXCLUDE)
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+  ARCHIVE
+  DESTINATION lib
+  LIBRARY
+  DESTINATION lib
+  RUNTIME
+  DESTINATION lib/${PROJECT_NAME})
+
+ament_export_dependencies(ament_cmake)
+ament_export_dependencies(message_logger)
+ament_export_include_directories(${INCLUDE_DIRS})
+ament_export_libraries(${PROJECT_NAME} ${LIBS})
+
+ament_package()

@@ -1,81 +1,54 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(tcan_example)
+find_package(tcan_ip REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(tcan_can REQUIRED)
+find_package(tcan REQUIRED)
+find_package(tcan_usb REQUIRED)
 
-find_package(catkin REQUIRED
-  COMPONENTS
-    tcan
-    tcan_can
-    tcan_ip
-    tcan_usb
-)
+include_directories(include)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 
-catkin_package(
-  INCLUDE_DIRS
-    include
-  CATKIN_DEPENDS
-    tcan
-    tcan_can
-    tcan_ip
-    tcan_usb
-)
-
 ###########
 ## Build ##
 ###########
 
-add_definitions(-std=c++11 -fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Werror)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
 
-add_executable(can_example_node
-  src/CanDeviceExample.cpp
-  src/CanManagerExample.cpp
-  src/can_example_node.cpp
-)
-target_link_libraries(can_example_node
-  ${catkin_LIBRARIES}
-)
+add_executable(can_example_node src/CanDeviceExample.cpp
+  src/CanManagerExample.cpp src/can_example_node.cpp)
+ament_target_dependencies(can_example_node tcan_can)
 
-add_executable(usb_example_node
-  src/XbeeUsb.cpp
-  src/usb_example_node.cpp
-)
-target_link_libraries(usb_example_node
-  ${catkin_LIBRARIES}
-)
+add_executable(usb_example_node src/XbeeUsb.cpp src/usb_example_node.cpp)
+ament_target_dependencies(usb_example_node tcan_usb)
 
-add_executable(tcp_example_node
-  src/TcpConnection.cpp
-  src/tcp_example_node.cpp
-)
-target_link_libraries(tcp_example_node
-  ${catkin_LIBRARIES}
-)
+add_executable(tcp_example_node src/TcpConnection.cpp src/tcp_example_node.cpp)
+ament_target_dependencies(tcp_example_node tcan_ip)
 
 #############
 ## Install ##
 #############
 
-
-install(TARGETS can_example_node usb_example_node tcp_example_node
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+install(TARGETS can_example_node 
+usb_example_node 
+tcp_example_node
+  ARCHIVE
+  DESTINATION lib
+  LIBRARY
+  DESTINATION lib
+  RUNTIME
+  DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
+  DESTINATION include/${PROJECT_NAME}
+  PATTERN ".svn"
+  EXCLUDE)
 
 #############
 ## Testing ##
@@ -89,3 +62,12 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+ament_export_dependencies(tcan_ip)
+ament_export_dependencies(ament_cmake)
+ament_export_dependencies(tcan_can)
+ament_export_dependencies(tcan)
+ament_export_dependencies(tcan_usb)
+ament_export_include_directories(include)
+
+ament_package()

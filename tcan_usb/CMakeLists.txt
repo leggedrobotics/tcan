@@ -1,51 +1,40 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 project(tcan_usb)
+find_package(ament_cmake REQUIRED)
+find_package(message_logger REQUIRED)
+find_package(tcan REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS
-  message_logger
-  tcan
-)
 
-###################################
-## catkin specific configuration ##
-###################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME} pthread
-  CATKIN_DEPENDS
-    message_logger
-    tcan
-)
+include_directories(include)
 
 ###########
 ## Build ##
 ###########
-add_definitions(-std=c++11 -fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Werror)
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-add_library(${PROJECT_NAME}
-  src/UniversalSerialBusManager.cpp
-  src/UniversalSerialBus.cpp
-)
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  pthread
-)
+add_library(${PROJECT_NAME} src/UniversalSerialBusManager.cpp
+  src/UniversalSerialBus.cpp)
+ament_target_dependencies(${PROJECT_NAME} message_logger tcan)
 
 #############
 ## Install ##
 #############
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
+  DESTINATION include/${PROJECT_NAME}
+  PATTERN ".svn"
+  EXCLUDE)
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+  ARCHIVE
+  DESTINATION lib
+  LIBRARY
+  DESTINATION lib
+  RUNTIME
+  DESTINATION lib/${PROJECT_NAME})
 
+ament_export_dependencies(ament_cmake)
+ament_export_dependencies(message_logger)
+ament_export_dependencies(tcan)
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+
+ament_package()
