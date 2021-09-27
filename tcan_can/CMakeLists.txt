@@ -4,7 +4,6 @@ project(tcan_can)
 find_package(catkin REQUIRED COMPONENTS
   message_logger
   tcan
-  tcan_utils
 )
 
 ###################################
@@ -16,7 +15,6 @@ catkin_package(
   CATKIN_DEPENDS
     message_logger
     tcan
-    tcan_utils
 )
 
 ###########
