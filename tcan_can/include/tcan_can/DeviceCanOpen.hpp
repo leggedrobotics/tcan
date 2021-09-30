@@ -72,7 +72,7 @@ class DeviceCanOpen : public CanDevice {
      * this function is automatically called by parseSDO(..) and provides the possibility to save data from read SDO requests.
      * @param sdoMsg	the SDO response message (Note that sdoMsg is not a complete instance of an SdoMsg, only the members defined in CanMsg are initialized)
      */
-    virtual void handleReadSdoAnswer(const SdoMsg& sdoMsg) { }
+    virtual void handleReadSdoAnswer(const SdoMsg& /*sdoMsg*/) { }
 
     /*!
      * This function is automatically called by sanityCheck(..) if a sdo message exceeded the timeout and the number of retries.

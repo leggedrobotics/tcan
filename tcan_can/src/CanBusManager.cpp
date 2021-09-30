@@ -1,10 +1,12 @@
 #include "tcan_can/CanBusManager.hpp"
 
+#include <vector>
+
 namespace tcan_can {
 
 void CanBusManager::sendSyncOnAllBuses(const bool waitForEmptyQueues) {
     const unsigned int bussize = buses_.size();
-    std::unique_lock<std::mutex> locks[bussize];
+    std::vector<std::unique_lock<std::mutex>> locks(bussize);
 
     if(waitForEmptyQueues) {
         for(unsigned int i=0; i<bussize; i++) {

@@ -85,7 +85,7 @@ inline ElmoTwitterOutdata createOutdata(Dsp402Command command, double torque)
 
     // Covert torque data to INT16 from double
     double rated_current = 20000.0;
-    double rated_torque = (20000.0*0.27)*0.001;
+    double rated_torque = (rated_current*0.27)*0.001;
     int16_t torque_data = (int16_t)(torque/rated_torque*1000.0);
 
     // Copy to internal struct

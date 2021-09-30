@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 project(tcan_ip)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -20,10 +20,13 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-add_definitions(-std=c++11 -fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Wextra -Wpedantic -Werror)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 include_directories(
   include
+  SYSTEM
   ${catkin_INCLUDE_DIRS}
 )
 

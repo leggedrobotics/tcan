@@ -4,11 +4,11 @@
 
 struct BarDevice : public tcan_can::CanDevice {
 	template<typename... Args>
-	explicit BarDevice(Args&&... args) : tcan_can::CanDevice(std::forward<Args>(args)...) {};
+	explicit BarDevice(Args&&... args) : tcan_can::CanDevice(std::forward<Args>(args)...) {}
 	bool initDevice() override { return true; }
-	bool configureDevice(const tcan_can::CanMsg& msg) override { return true; }
+	bool configureDevice(const tcan_can::CanMsg& /*msg*/) override { return true; }
 
-	bool callMe(const tcan_can::CanMsg& msg) {
+	bool callMe(const tcan_can::CanMsg& /*msg*/) {
 		isCalled = true;
 		return true;
 	}

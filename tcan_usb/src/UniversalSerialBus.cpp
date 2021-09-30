@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <poll.h>
+#include <vector>
 
 #include "tcan/helper_functions.hpp"
 #include "tcan_usb/UniversalSerialBus.hpp"
@@ -83,8 +84,8 @@ bool UniversalSerialBus::readData() {
     }
 
     const unsigned int bufSize = static_cast<const UniversalSerialBusOptions*>(options_.get())->bufferSize;
-    uint8_t buf[bufSize+1]; // +1 to have space for terminating \0
-    const int bytes_read = read( fileDescriptor_, &buf, bufSize);
+    std::vector<uint8_t> buf(bufSize+1); // +1 to have space for terminating \0
+    const int bytes_read = read( fileDescriptor_, buf.data(), bufSize);
     //  printf("CanManager_ bytes read: %i\n", bytes_read);
 
     if(bytes_read <= 0) {
@@ -99,7 +100,7 @@ bool UniversalSerialBus::readData() {
 
     hasBusError_ = false;
     buf[bytes_read] = '\0';
-    handleMessage( UsbMsg(bytes_read, buf) );
+    handleMessage( UsbMsg(bytes_read, buf.data()) );
 
     return true;
 }

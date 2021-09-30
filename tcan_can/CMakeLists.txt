@@ -1,10 +1,9 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 project(tcan_can)
 
 find_package(catkin REQUIRED COMPONENTS
   message_logger
   tcan
-  tcan_utils
 )
 
 ###################################
@@ -16,18 +15,18 @@ catkin_package(
   CATKIN_DEPENDS
     message_logger
     tcan
-    tcan_utils
 )
 
 ###########
 ## Build ##
 ###########
-add_definitions(-fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Wextra -Wpedantic -Werror)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 include_directories(
   include
+  SYSTEM
   ${catkin_INCLUDE_DIRS}
 )
 

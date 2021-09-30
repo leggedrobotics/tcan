@@ -10,7 +10,6 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>message_logger</depend>
   <depend>tcan</depend>
-  <depend>tcan_utils</depend>
   <test_depend>libgmock-dev</test_depend>
   <test_depend>libgtest-dev</test_depend>
 </package>

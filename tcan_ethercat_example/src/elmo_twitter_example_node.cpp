@@ -176,7 +176,7 @@ tcan_ethercat::EtherCatDatagrams createDatagrams(ElmoTwitterOutdata& outdata) {
 
 bool g_running = true;
 
-void signal_handler(int signal) {
+void signal_handler(int /*signal*/) {
     g_running = false;
 }
 
