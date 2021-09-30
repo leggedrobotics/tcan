@@ -17,13 +17,15 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
-add_definitions(--std=c++11)
+add_definitions(-Wall -Wextra -Wpedantic -Werror)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
   include
+  SYSTEM
   ${catkin_INCLUDE_DIRS}
 )
 

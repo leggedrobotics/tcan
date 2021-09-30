@@ -28,10 +28,10 @@ class EtherCatDatagram {
         std::copy(&data_[memoryPosition], &data_[memoryPosition + sizeof(T)], &data);
     }
 
-    inline const uint16_t getTotalLength() const { return getDataLength() + 12; }
-    inline const uint16_t getDataLength() const { return header_.lenRCM_.elements_.len_; }
-    inline const uint8_t* getData() const { return data_; }
-    inline const uint16_t getWorkingCounter() const { return workingCounter_; }
+    inline uint16_t getTotalLength() const { return getDataLength() + 12; }
+    inline uint16_t getDataLength() const { return header_.lenRCM_.elements_.len_; }
+    inline uint8_t* getData() const { return data_; }
+    inline uint16_t getWorkingCounter() const { return workingCounter_; }
 
     inline void setZero() {
         for (uint16_t i = 0; i < getDataLength(); i++) {

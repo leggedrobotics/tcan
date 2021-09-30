@@ -20,12 +20,13 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-add_definitions(-fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Wextra -Wpedantic -Werror)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 include_directories(
   include
+  SYSTEM
   ${catkin_INCLUDE_DIRS}
 )
 
