@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>tcan_bridge</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="simon.kerscher@mavt.ethz.ch">Simon Kerscher</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
+
+  <depend>message_logger</depend>
+  <depend>tcan_can</depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
