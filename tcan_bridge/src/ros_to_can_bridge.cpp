@@ -11,9 +11,11 @@ namespace tcan_bridge {
 
 class RosToCanBridge : public rclcpp::Node, public TcanBridge {
  public:
-  RosToCanBridge() : rclcpp::Node("ros_to_can_bridge"), TcanBridge("can1") {
-    subscriber_ = this->create_subscription<tcan_bridge_msgs::msg::CanFrame>(
-        "can0", 10, std::bind(&RosToCanBridge::rosMsgCallback, this, std::placeholders::_1));
+  RosToCanBridge() = delete;
+  RosToCanBridge(const std::string& nodeName, const std::string& rosTopicName, const std::string& canInterfaceName)
+      : rclcpp::Node(nodeName), TcanBridge(canInterfaceName) {
+    subscribers_.emplace_back(this->create_subscription<tcan_bridge_msgs::msg::CanFrame>(
+        rosTopicName, 10, std::bind(&RosToCanBridge::rosMsgCallback, this, std::placeholders::_1)));
 
     canManager_.startThreads();
   }
@@ -25,14 +27,24 @@ class RosToCanBridge : public rclcpp::Node, public TcanBridge {
   }
 
  private:
-  rclcpp::Subscription<tcan_bridge_msgs::msg::CanFrame>::SharedPtr subscriber_;
+  std::vector<rclcpp::Subscription<tcan_bridge_msgs::msg::CanFrame>::SharedPtr> subscribers_;
 };
 
 }  // namespace tcan_bridge
 
 int main(int argc, char* argv[]) {
+  if (argc != 3) {
+    std::cout << "Call with\n";
+    std::cout << "`ros2 run tcan_bridge ros_to_can_bridge <rostopicName> <canInterfaceName>`\n";
+    std::cout << "e.g. `ros2 run tcan_bridge ros_to_can_bridge can0AsRos can0`" << std::endl;
+    return -1;
+  }
+  const std::string rosTopicName = argv[1];
+  const std::string canInterfaceName = argv[2];
+  const std::string nodeName = "rostopic_" + rosTopicName + "_to_can_" + canInterfaceName + "_bridge_";
+
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<tcan_bridge::RosToCanBridge>());
+  rclcpp::spin(std::make_shared<tcan_bridge::RosToCanBridge>("ros_to_can_bridge", rosTopicName, canInterfaceName));
   rclcpp::shutdown();
   return 0;
 }
