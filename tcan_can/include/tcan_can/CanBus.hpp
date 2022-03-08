@@ -8,6 +8,7 @@
 
 #include "tcan/Bus.hpp"
 #include "tcan_can/CanBusOptions.hpp"
+#include "tcan_can/CanFrameIdentifier.hpp"
 #include "tcan_can/CanMsg.hpp"
 #include "tcan_can/CanDevice.hpp"
 
@@ -15,26 +16,6 @@ namespace tcan_can {
 
 class CanBus : public tcan::Bus<CanMsg> {
  public:
-
-    struct CanFrameIdentifier {
-        explicit CanFrameIdentifier(uint32_t id, uint32_t msk = 0xffffffffu) : identifier(id), mask(msk) {};
-        uint32_t identifier;
-        uint32_t mask;
-
-        bool operator==(const CanFrameIdentifier& rhs) const {
-            return identifier == rhs.identifier && mask == rhs.mask;
-        }
-    };
-
-    struct CanFrameIdentifierHasher {
-        size_t operator()(const CanFrameIdentifier& matcher) const {
-            size_t h = 0;
-            boost::hash_combine(h, matcher.identifier);
-            boost::hash_combine(h, matcher.mask);
-            return h;
-        };
-    };
-
     using CallbackPtr =  std::function<bool(const CanMsg&)>;
     using CanFrameIdentifierToFunctionMap = std::unordered_map<CanFrameIdentifier, std::pair<CanDevice*, CallbackPtr>, CanFrameIdentifierHasher>;
     using DeviceContainer = std::vector<CanDevice*>;

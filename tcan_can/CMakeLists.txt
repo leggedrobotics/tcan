@@ -33,8 +33,9 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/CanBusManager.cpp
   src/CanBus.cpp
-  src/SocketBus.cpp
   src/DeviceCanOpen.cpp
+  src/DeviceJ1939.cpp
+  src/SocketBus.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
