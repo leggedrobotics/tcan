@@ -1,31 +1,28 @@
 #pragma once
 
-#include <tcan_can/CanBus.hpp>
-#include <tcan_can/CanDevice.hpp>
-#include <tcan_can/CanFrameIdentifier.hpp>
+#include "tcan_can/CanBus.hpp"
+#include "tcan_can/CanDevice.hpp"
+#include "tcan_can/CanFrameIdentifier.hpp"
+#include "tcan_can/J1939PgnParser.hpp"
 
 namespace tcan_can {
 
-namespace utils {
-double scaledMessageFromRaw(double raw, double resolution, double offset) {
-    return raw / resolution + offset;
-}
-}  // namespace utils
-
-class DeviceJ1939 : public tcan_can::CanDevice {
+class DeviceJ1939 : public CanDevice {
    public:
     static const uint32_t CAN_ID_PGN_MASK = 0x3ffff00u;
     static const uint32_t extendedFlag = 1UL << 31;
 
-    using tcan_can::CanDevice::CanDevice;
+    using CanDevice::CanDevice;
     ~DeviceJ1939() override = default;
+    bool initDevice() override;
+    bool configureDevice(const CanMsg& /*msg*/) { return true; }
 
-    template <class T>
-    bool addPgn(uint32_t pgn, T* device, bool (std::common_type<T>::type::*fp)(const CanMsg&)) {
-        const uint32_t cobId = extendedFlag | pgn << 8 | getNodeId();
-        const uint32_t mask = 0xD3FFFFFFu;  // Ignore priority (bits 29-27)
-        return bus_->addCanMessage(CanFrameIdentifier(cobId, mask), device, fp);
-    }
+  protected:
+   void addParser(J1939PgnParser& parser) { pgnMap_.emplace(parser.pgn_, &parser); }
+
+  private:
+   bool parseMessage(const CanMsg& msg);
+   std::map<uint32_t, J1939PgnParser*> pgnMap_;
 };
 
 }  // namespace tcan_can
