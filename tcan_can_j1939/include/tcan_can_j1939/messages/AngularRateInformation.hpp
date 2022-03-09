@@ -1,10 +1,11 @@
 #pragma once
 
-#include <tcan_can/J1939PgnParser.hpp>
+#include "tcan_can_j1939/J1939PgnParser.hpp"
 
-namespace tcan_can_j1939_devices {
-struct AngularRateInformation : public tcan_can::J1939PgnParser {
-    AngularRateInformation() : tcan_can::J1939PgnParser(0xF02A) {}
+namespace tcan_can_j1939 {
+namespace messages {
+struct AngularRateInformation : public J1939PgnParser {
+    AngularRateInformation() : J1939PgnParser(0xF02A) {}
 
     bool parse(const tcan_can::CanMsg& msg) {
         pitchRate_ = scaledMessageFromRaw(msg.readuint16(0), 1. / 128., -250.);
@@ -17,4 +18,5 @@ struct AngularRateInformation : public tcan_can::J1939PgnParser {
     double rollRate_{0.};
     double yawRate_{0.};
 };
-}  // namespace tcan_can_j1939_devices
+}  // namespace messages
+}  // namespace tcan_can_j1939

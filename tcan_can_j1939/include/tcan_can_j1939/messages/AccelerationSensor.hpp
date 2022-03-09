@@ -1,10 +1,11 @@
 #pragma once
 
-#include <tcan_can/J1939PgnParser.hpp>
+#include "tcan_can_j1939/J1939PgnParser.hpp"
 
-namespace tcan_can_j1939_devices {
-struct AccelerationSensor : public tcan_can::J1939PgnParser {
-    AccelerationSensor() : tcan_can::J1939PgnParser(0xF02D) {}
+namespace tcan_can_j1939 {
+namespace messages {
+struct AccelerationSensor : public J1939PgnParser {
+    AccelerationSensor() : J1939PgnParser(0xF02D) {}
 
     bool parse(const tcan_can::CanMsg& msg) {
         lateralAcceleration_ = scaledMessageFromRaw(msg.readuint16(0), 0.01, -320.);
@@ -17,4 +18,5 @@ struct AccelerationSensor : public tcan_can::J1939PgnParser {
     double longitudinalAcceleration_{0.};
     double verticalAcceleration{0.};
 };
-}  // namespace tcan_can_j1939_devices
+}  // namespace messages
+}  // namespace tcan_can_j1939

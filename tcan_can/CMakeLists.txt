@@ -34,7 +34,6 @@ add_library(${PROJECT_NAME}
   src/CanBusManager.cpp
   src/CanBus.cpp
   src/DeviceCanOpen.cpp
-  src/DeviceJ1939.cpp
   src/SocketBus.cpp
 )
 target_link_libraries(${PROJECT_NAME}

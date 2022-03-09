@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>tcan_can_j1939_devices</name>
+  <name>tcan_can_j1939</name>
   <version>0.0.0</version>
   <description>J1939 CAN devices</description>
   <maintainer email="simon.kerscher@mavt.ethz.ch">Simon Kerscher</maintainer>
