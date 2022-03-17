@@ -9,7 +9,7 @@ A library to communicate to devices connected through CAN, EtherCat, USB or TCP/
 ### License
 The source code is released under the [MIT license](LICENSE).
 
-**Author(s):** Philipp Leemann, Christian Gehring, Remo Diethelm
+**Authors:** Philipp Leemann, Christian Gehring, Remo Diethelm
 
 ## Dependencies
 
@@ -40,12 +40,12 @@ To prevent overflow of the output buffer of the SocketCAN driver (which is used 
 
 ### Virtual can interface
 
-Use the ```vcan.sh``` script provided in ```tcan/scripts```:
+Use the ```vcan.sh``` script provided in ```tcan_utils/bash```:
 
 ```
 #!bash
 
-rosrun tcan vcan.sh {start|stop|restart} <name>
+rosrun tcan_utils vcan.sh {start|stop|restart} <name>
 ```
 e.g.
 
@@ -53,25 +53,25 @@ e.g.
 ```
 #!bash
 
-rosrun tcan vcan.sh start can0
+rosrun tcan_utils vcan.sh start can0
 ```
 
 ### CAN-USB Adapter
 
-Use the ```canusb.sh``` script provided in ```tcan/scripts```:
+Use the ```canusb.sh``` script provided in ```tcan_utils/bash```:
 
 ```
 #!bash
 
-rosrun tcan canusb.sh {start|stop|restart} [<dev>] <name> [<can_rate>]
+rosrun tcan_utils canusb.sh {start|stop|restart} [<dev>] <name> [<can_rate>]
 ```
 e.g.:
 ```
 #!bash
 
-rosrun tcan canusb.sh start /dev/ttyUSB0 can0 -s8
+rosrun tcan_utils canusb.sh start /dev/ttyUSB0 can0 -s8
 
-rosrun tcan canusb.sh stop can0
+rosrun tcan_utils canusb.sh stop can0
 ```
 where ```-s8``` sets the can baud rate according to the following table:
 
