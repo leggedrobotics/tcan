@@ -10,10 +10,7 @@ struct J1939PgnParser {
     J1939PgnParser(uint32_t pgn) : pgn_(pgn) {}
     virtual ~J1939PgnParser() = default;
 
-    static double scaledMessageFromRaw(double raw, double resolution, double offset) {
-        std::cout << raw << " * " << resolution << " + " << offset << '\n';
-        return raw * resolution + offset;
-    }
+    static double scaledMessageFromRaw(double raw, double resolution, double offset) { return raw * resolution + offset; }
 
     const uint32_t pgn_;
     virtual bool parse(const tcan_can::CanMsg& msg) = 0;

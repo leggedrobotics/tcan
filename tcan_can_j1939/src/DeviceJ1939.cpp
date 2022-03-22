@@ -13,7 +13,6 @@ bool DeviceJ1939::initDevice() {
 
 bool DeviceJ1939::parseMessage(const tcan_can::CanMsg& msg) {
     const auto pgn = static_cast<const J1939CanMsg&>(msg).getParameterGroupNumber();
-    std::cout << "Parsing message " << msg.getCobId() << '\n';
     if (pgnMap_.find(pgn) == pgnMap_.end()) {
         std::cout << "Got unknown message\n";
         return true;
