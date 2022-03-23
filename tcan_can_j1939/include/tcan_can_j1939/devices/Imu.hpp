@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tcan_can_j1939/DeviceJ1939.hpp"
+#include "tcan_can_j1939/unit_conversions.hpp"
 #include "tcan_can_j1939/messages/AccelerationSensor.hpp"
 #include "tcan_can_j1939/messages/AngularRateInformation.hpp"
 #include "tcan_can_j1939/messages/SlopeSensorInformation2.hpp"
@@ -18,10 +19,22 @@ class Imu : public DeviceJ1939 {
     }
     ~Imu() override = default;
 
-    double getRollAngle() const { return slopeSensorInformation2_.rollAngle_; }
-    double getPitchAngle() const { return slopeSensorInformation2_.pitchAngle_; }
-    double getPitchRate() const { return angularRateInformation_.pitchRate_; }
-    double getRollRate() const { return angularRateInformation_.rollRate_; }
+    /**
+     * @return roll angle in radians
+     */
+    double getRollAngle() const { return radiansFromDegrees(slopeSensorInformation2_.rollAngle_); }
+    /**
+     * @return pitch angle in radians
+     */
+    double getPitchAngle() const { return radiansFromDegrees(slopeSensorInformation2_.pitchAngle_); }
+    /**
+     * @return pitch rate in radians/second
+     */
+    double getPitchRate() const { return radiansFromDegrees(angularRateInformation_.pitchRate_); }
+    /**
+     * @return roll rate in radians/second
+     */
+    double getRollRate() const { return radiansFromDegrees(angularRateInformation_.rollRate_); }
 
    private:
     messages::AccelerationSensor accelerationSensor_;

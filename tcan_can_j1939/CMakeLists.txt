@@ -36,9 +36,8 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/devices/Imu.cpp
   src/DeviceJ1939.cpp
-
+  src/Devices.cpp
   )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
