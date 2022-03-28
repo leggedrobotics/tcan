@@ -46,18 +46,18 @@ target_link_libraries(${PROJECT_NAME}
 #############
 ## Testing ##
 #############
-# if(CATKIN_ENABLE_TESTING)
-#   file(GLOB test_srcs ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)
+if(CATKIN_ENABLE_TESTING)
+  file(GLOB test_srcs ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)
 
-#   catkin_add_gtest(test_${PROJECT_NAME}
-#     ${test_srcs}
-#     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
-#     )
+  catkin_add_gtest(test_${PROJECT_NAME}
+    ${test_srcs}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
+    )
 
-#   if(TARGET test_${PROJECT_NAME})
-#     target_link_libraries(test_${PROJECT_NAME} ${catkin_LIBRARIES} ${PROJECT_NAME})
-#   endif()
-# endif()
+  if(TARGET test_${PROJECT_NAME})
+    target_link_libraries(test_${PROJECT_NAME} ${catkin_LIBRARIES} ${PROJECT_NAME})
+  endif()
+endif()
 
 #############
 ## Install ##
