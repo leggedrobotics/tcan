@@ -242,7 +242,7 @@ class CanMsg {
     }
 
     uint32_t readuint24(uint8_t pos) const {
-        assert(pos + 3u <= msg.getLength());
+        assert(pos + 3u <= length_);
         return (static_cast<uint32_t>(data_[2 + pos]) << 16) 
                 | (static_cast<uint32_t>(data_[1 + pos]) << 8) 
                 | (static_cast<uint32_t>(data_[0 + pos]));
