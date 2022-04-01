@@ -33,8 +33,8 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/CanBusManager.cpp
   src/CanBus.cpp
-  src/SocketBus.cpp
   src/DeviceCanOpen.cpp
+  src/SocketBus.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -45,7 +45,6 @@ target_link_libraries(${PROJECT_NAME}
 ## Test ##
 ##########
 if(CATKIN_ENABLE_TESTING)
-    catkin_add_gtest(test_sae_can_msg test/j1939_can_msg.cpp)
     catkin_add_gtest(test_can_bus test/can_bus.cpp)
     target_link_libraries(test_can_bus ${PROJECT_NAME})
 endif()

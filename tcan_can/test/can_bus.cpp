@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <tcan_can/SocketBus.hpp>
+#include "tcan_can/CanFrameIdentifier.hpp"
+#include "tcan_can/SocketBus.hpp"
 
 struct BarDevice : public tcan_can::CanDevice {
 	template<typename... Args>
@@ -36,7 +37,7 @@ TEST(can_bus, handle_exact_cob) {
 }
 
 TEST(can_bus, handle_cob_mask) {
-	auto mask = tcan_can::CanBus::CanFrameIdentifier {0x00FF00FF, 0x00120034};
+	auto mask = tcan_can::CanFrameIdentifier {0x00FF00FF, 0x00120034};
 
 	tcan_can::SocketBus bus { std::make_unique<tcan_can::SocketBusOptions>("Foo") };
 	BarDevice dev {0x123, "Bar"};
