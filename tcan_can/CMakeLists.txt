@@ -23,20 +23,17 @@ link_directories(${LIBRARY_DIRS})
 set(LIBS ${tcan_utils_LIBRARIES} ${ament_cmake_LIBRARIES}
   ${message_logger_LIBRARIES} ${tcan_LIBRARIES})
 
-###################################
-## catkin specific configuration ##
-###################################
-
 ###########
 ## Build ##
 ###########
-add_definitions(-fPIC -Wall -Werror)
+add_definitions(-fPIC -Wall -Wextra -Wpedantic -Werror)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 add_library(${PROJECT_NAME} src/CanBusManager.cpp src/CanBus.cpp
   src/SocketBus.cpp src/DeviceCanOpen.cpp)
 target_link_libraries(${PROJECT_NAME} ${LIBS} pthread)
+
 
 ##########
 ## Test ##
