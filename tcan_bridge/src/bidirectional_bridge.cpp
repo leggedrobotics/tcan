@@ -15,7 +15,7 @@ class BidirectionalBridge : public rclcpp::Node, public TcanBridge {
   BidirectionalBridge(const std::string& nodeName, const std::string& canInterfaceName, const std::string& publishedName,
                       const std::string& subscribedName)
       : rclcpp::Node(nodeName), TcanBridge(canInterfaceName) {
-    canManager_.getCanBus(0)->addCanMessage(tcan_can::CanBus::CanFrameIdentifier(0x0, 0x0), this, &BidirectionalBridge::canMsgCallback);
+    canManager_.getCanBus(0)->addCanMessage(tcan_can::CanFrameIdentifier(0x0, 0x0), this, &BidirectionalBridge::canMsgCallback);
     canManager_.startThreads();
 
     publisher_ = this->create_publisher<tcan_bridge_msgs::msg::CanFrame>(publishedName, 10);

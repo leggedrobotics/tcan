@@ -14,7 +14,7 @@ class CanToRosBridge : public rclcpp::Node, public TcanBridge {
   CanToRosBridge() = delete;
   CanToRosBridge(const std::string& nodeName, const std::string& canInterfaceName, const std::string& rosTopicName)
       : rclcpp::Node(nodeName), TcanBridge(canInterfaceName) {
-    canManager_.getCanBus(0)->addCanMessage(tcan_can::CanBus::CanFrameIdentifier(0x0, 0x0), this, &CanToRosBridge::canMsgCallback);
+    canManager_.getCanBus(0)->addCanMessage(tcan_can::CanFrameIdentifier(0x0, 0x0), this, &CanToRosBridge::canMsgCallback);
     canManager_.startThreads();
 
     publisher_ = this->create_publisher<tcan_bridge_msgs::msg::CanFrame>(rosTopicName, 10);
