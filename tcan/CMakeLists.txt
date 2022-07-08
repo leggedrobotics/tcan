@@ -28,8 +28,9 @@ set(LIBS ${ament_cmake_LIBRARIES} pthread)
 ###########
 ## Build ##
 ###########
-  add_library(${PROJECT_NAME} src/helper_functions.cpp)
+add_library(${PROJECT_NAME} src/helper_functions.cpp)
 target_link_libraries(${PROJECT_NAME} ${LIBS})
+
 
 #############
 ## Install ##

@@ -12,4 +12,4 @@ inline int calculatePollTimeoutMs(const timeval& tv) {
     return (tv.tv_sec*1000 + tv.tv_usec/1000)-1;
 }
 
-};
+} // namespace tcan

@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <tcan_can/J1939CanMsg.hpp>
+#include "tcan_can_j1939/J1939CanMsg.hpp"
 
-tcan_can::J1939CanMsg msg(uint32_t cob) {
-	return tcan_can::J1939CanMsg {tcan_can::CanMsg {cob } };
+tcan_can_j1939::J1939CanMsg msg(uint32_t cob) {
+    return tcan_can_j1939::J1939CanMsg{tcan_can::CanMsg{cob}};
 }
 
 TEST(j1939_can_msg, construct) {
 	auto msg = tcan_can::CanMsg(0xdefacedu, {0x10, 0x20});
 
-	auto sae = tcan_can::J1939CanMsg {msg};
+	auto sae = tcan_can_j1939::J1939CanMsg {msg};
 
 	EXPECT_EQ(0xdefacedu, msg.getCobId());
 	ASSERT_EQ(2, msg.getLength());
@@ -29,9 +29,7 @@ TEST(j1939_can_msg, pgn) {
 		0x1fe31u,
 		msg( 0x1dfe3185 ).getParameterGroupNumber() );
 
-	EXPECT_EQ(
-		msg(0x18fe385).getParameterGroupCanId(),
-		msg(0x18fe385).getCobId() & tcan_can::J1939CanMsg::CAN_ID_PGN_MASK );
+        EXPECT_EQ(msg(0x18fe385).getParameterGroupCanId(), msg(0x18fe385).getCobId() & tcan_can_j1939::J1939CanMsg::CAN_ID_PGN_MASK);
 }
 
 TEST(j1939_can_msg, priority) {

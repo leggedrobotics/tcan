@@ -41,7 +41,7 @@ bool CanDeviceExample::initDevice() {
     return true;
 }
 
-bool CanDeviceExample::configureDevice(const tcan_can::CanMsg& msg) {
+bool CanDeviceExample::configureDevice(const tcan_can::CanMsg& /*msg*/) {
     // This function is automatically called on reception of the first message from this device ("bootup message")
     // Configure the device here by sending the SDOs with sendSdo(..). Set the device to operational mode by calling setNmtStartRemoteDevice()
     // parameter 'msg' contains the received message which caused the call of this function. You can check if it is an

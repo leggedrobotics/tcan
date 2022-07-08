@@ -77,17 +77,17 @@ void CanManagerExample::addSocketBus(const BusId busId, std::unique_ptr<tcan_can
     busContainer_.insert({static_cast<unsigned int>(busId), bus});
 }
 
-bool CanManagerExample::parseIncomingSyncBus1(const tcan_can::CanMsg& cmsg) {
+bool CanManagerExample::parseIncomingSyncBus1(const tcan_can::CanMsg& /*cmsg*/) {
     std::cout << "Bus1: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     return true;
 }
 
-bool CanManagerExample::parseIncomingSyncBus2(const tcan_can::CanMsg& cmsg) {
+bool CanManagerExample::parseIncomingSyncBus2(const tcan_can::CanMsg& /*cmsg*/) {
     std::cout << "Bus2: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     return true;
 }
 
-bool CanManagerExample::parseIncomingSyncBus3(const tcan_can::CanMsg& cmsg) {
+bool CanManagerExample::parseIncomingSyncBus3(const tcan_can::CanMsg& /*cmsg*/) {
     std::cout << "Bus3: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() << std::endl;
     return true;
 }

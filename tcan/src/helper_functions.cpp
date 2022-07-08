@@ -22,4 +22,4 @@ bool raiseThreadPriority(std::thread& thread, const int priority) {
     return true;
 }
 
-};
+} // namespace tcan
