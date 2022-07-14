@@ -5,16 +5,17 @@
 #include <tcan_can/SocketBus.hpp>
 #include <tcan_can/SocketBusOptions.hpp>
 
-#include <tcan_bridge/tcan_bridge.hpp>
-
 namespace tcan_bridge {
 
-class BidirectionalBridge : public rclcpp::Node, public TcanBridge {
+class BidirectionalBridge : public rclcpp::Node {
  public:
   BidirectionalBridge() = delete;
   BidirectionalBridge(const std::string& nodeName, const std::string& canInterfaceName, const std::string& publishedName,
-                      const std::string& subscribedName)
-      : rclcpp::Node(nodeName), TcanBridge(canInterfaceName) {
+                      const std::string& subscribedName) : rclcpp::Node(nodeName) {
+    auto options = std::make_unique<tcan_can::SocketBusOptions>(canInterfaceName);
+    options->loopback_ = true;
+    canManager_.addBus(new tcan_can::SocketBus(std::move(options)));
+
     canManager_.getCanBus(0)->addCanMessage(tcan_can::CanFrameIdentifier(0x0, 0x0), this, &BidirectionalBridge::canMsgCallback);
     canManager_.startThreads();
 
@@ -24,6 +25,10 @@ class BidirectionalBridge : public rclcpp::Node, public TcanBridge {
   }
 
   bool canMsgCallback(const tcan_can::CanMsg& cmsg) {
+    if (publisher_->get_subscription_count() == 0) {
+      std::cout << "Not forwarding\n";
+      return true;
+    }
     tcan_bridge_msgs::msg::CanFrame rosMsg;
     rosMsg.id = cmsg.getCobId();
     rosMsg.length = cmsg.getLength();
@@ -41,6 +46,8 @@ class BidirectionalBridge : public rclcpp::Node, public TcanBridge {
  private:
   rclcpp::Publisher<tcan_bridge_msgs::msg::CanFrame>::SharedPtr publisher_;
   std::vector<rclcpp::Subscription<tcan_bridge_msgs::msg::CanFrame>::SharedPtr> subscribers_;
+
+  tcan_can::CanBusManager canManager_;
 };
 
 }  // namespace tcan_bridge
