@@ -10,8 +10,8 @@ namespace tcan_bridge {
 class BidirectionalBridge : public rclcpp::Node {
  public:
   BidirectionalBridge() = delete;
-  BidirectionalBridge(const std::string& nodeName, const std::string& canInterfaceName, const std::string& publishedName,
-                      const std::string& subscribedName) : rclcpp::Node(nodeName) {
+  BidirectionalBridge(const std::string& nodeName, const std::string& canInterfaceName, const std::string& publishedRosTopicName,
+                      const std::string& subscribedRosTopicName) : rclcpp::Node(nodeName) {
     auto options = std::make_unique<tcan_can::SocketBusOptions>(canInterfaceName);
     options->loopback_ = true;
     canManager_.addBus(new tcan_can::SocketBus(std::move(options)));
@@ -19,14 +19,13 @@ class BidirectionalBridge : public rclcpp::Node {
     canManager_.getCanBus(0)->addCanMessage(tcan_can::CanFrameIdentifier(0x0, 0x0), this, &BidirectionalBridge::canMsgCallback);
     canManager_.startThreads();
 
-    publisher_ = this->create_publisher<tcan_bridge_msgs::msg::CanFrame>(publishedName, 10);
-    subscribers_.emplace_back(this->create_subscription<tcan_bridge_msgs::msg::CanFrame>(
-        subscribedName, 10, std::bind(&BidirectionalBridge::rosMsgCallback, this, std::placeholders::_1)));
+    publisher_ = this->create_publisher<tcan_bridge_msgs::msg::CanFrame>(publishedRosTopicName, 10);
+    subscribers_ = this->create_subscription<tcan_bridge_msgs::msg::CanFrame>(
+        subscribedRosTopicName, 10, std::bind(&BidirectionalBridge::rosMsgCallback, this, std::placeholders::_1));
   }
 
   bool canMsgCallback(const tcan_can::CanMsg& cmsg) {
     if (publisher_->get_subscription_count() == 0) {
-      std::cout << "Not forwarding\n";
       return true;
     }
     tcan_bridge_msgs::msg::CanFrame rosMsg;
@@ -45,7 +44,7 @@ class BidirectionalBridge : public rclcpp::Node {
 
  private:
   rclcpp::Publisher<tcan_bridge_msgs::msg::CanFrame>::SharedPtr publisher_;
-  std::vector<rclcpp::Subscription<tcan_bridge_msgs::msg::CanFrame>::SharedPtr> subscribers_;
+  rclcpp::Subscription<tcan_bridge_msgs::msg::CanFrame>::SharedPtr subscribers_;
 
   tcan_can::CanBusManager canManager_;
 };
@@ -60,12 +59,12 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   const std::string canInterfaceName = argv[1];
-  const std::string publishedName = argv[2];
-  const std::string subscribedName = argv[3];
-  const std::string nodeName = canInterfaceName + "_to_" + publishedName + "_and_from_" + subscribedName + "_bridge_";
+  const std::string publishedRosTopicName = argv[2];
+  const std::string subscribedRosTopicName = argv[3];
+  const std::string nodeName = canInterfaceName + "_to_" + publishedRosTopicName + "_and_from_" + subscribedRosTopicName + "_bridge_";
 
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<tcan_bridge::BidirectionalBridge>(nodeName, canInterfaceName, publishedName, subscribedName));
+  rclcpp::spin(std::make_shared<tcan_bridge::BidirectionalBridge>(nodeName, canInterfaceName, publishedRosTopicName, subscribedRosTopicName));
   rclcpp::shutdown();
   return 0;
 }

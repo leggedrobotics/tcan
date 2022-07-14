@@ -2,9 +2,9 @@
 <package format="3">
   <name>tcan_bridge</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>A node forwards CAN messages to ROS2 messages and vice versa</description>
   <maintainer email="simon.kerscher@mavt.ethz.ch">Simon Kerscher</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
