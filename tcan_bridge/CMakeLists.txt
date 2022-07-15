@@ -35,6 +35,11 @@ ament_target_dependencies(
 install(TARGETS bidirectional_bridge
   DESTINATION lib/${PROJECT_NAME})
 
+install(
+  DIRECTORY config launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_export_include_directories(
   include
 )
