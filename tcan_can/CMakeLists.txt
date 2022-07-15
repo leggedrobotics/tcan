@@ -6,7 +6,6 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 11)
 endif()
 
-find_package(tcan_utils REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(message_logger REQUIRED)
 find_package(tcan REQUIRED)
@@ -59,7 +58,6 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME
   DESTINATION lib/${PROJECT_NAME})
 
-ament_export_dependencies(tcan_utils)
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(message_logger)
 ament_export_dependencies(tcan)

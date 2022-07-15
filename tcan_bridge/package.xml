@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>tcan_bridge</name>
+  <version>0.0.0</version>
+  <description>A node forwards CAN messages to ROS2 messages and vice versa</description>
+  <maintainer email="simon.kerscher@mavt.ethz.ch">Simon Kerscher</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
+
+  <depend>message_logger</depend>
+  <depend>tcan_can</depend>
+  <depend>tcan_bridge_msgs</depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
