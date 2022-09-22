@@ -61,6 +61,7 @@ class BidirectionalBridge {
   }
 
   bool canMsgCallback(const tcan_can::CanMsg& cmsg) {
+    std::lock_guard<std::mutex> guard(mutexCan_);
     if (publisher_ == nullptr || publisher_->getNumSubscribers() == 0) {
       return true;
     }
@@ -74,6 +75,7 @@ class BidirectionalBridge {
   }
 
   void rosMsgCallback(const tcan_bridge_msgs_ros1::CanFrame::ConstPtr msg) {
+    std::lock_guard<std::mutex> guard(mutexRos_);
     tcan_can::CanMsg canMsg(msg->id, msg->length, msg->data.data());
     canManager_.getCanBus(0)->sendMessage(canMsg);
   }
@@ -81,6 +83,9 @@ class BidirectionalBridge {
  private:
   ros::Publisher* publisher_{nullptr};
   ros::Subscriber* subscribers_{nullptr};
+
+  std::mutex mutexCan_;
+  std::mutex mutexRos_;
 
   tcan_can::CanBusManager canManager_;
 };
