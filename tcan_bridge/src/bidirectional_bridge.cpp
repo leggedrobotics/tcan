@@ -27,8 +27,8 @@ class BidirectionalBridge {
     ros::param::get(ros::this_node::getName() + "/subscribed_ros_topic_name", subscribedRosTopicName);
     {
       double tmp = 10.;
-      ros::param::get(ros::this_node::getName() + "/seconds_without_writing_to_canbus", tmp);
-      durationWithoutWritingToCanbus_ = Seconds(tmp);
+      ros::param::get(ros::this_node::getName() + "/time_before_writing_to_canbus", tmp);
+      durationBeforeWritingToCanbus_ = Seconds(tmp);
     }
 
     if (canInterfaceName.empty()) {
@@ -83,7 +83,7 @@ class BidirectionalBridge {
   void rosMsgCallback(const tcan_bridge_msgs::CanFrame::ConstPtr msg) {
     std::lock_guard<std::mutex> guard(mutex_);
 
-    if (Clock::now() - startTime_ < durationWithoutWritingToCanbus_) {
+    if (Clock::now() - startTime_ < durationBeforeWritingToCanbus_) {
       // Still creating list of CAN messages received on Canbus, do not forward message
       return;
     }
@@ -105,7 +105,7 @@ class BidirectionalBridge {
   ros::Subscriber* subscribers_{nullptr};
 
   std::chrono::time_point<Clock> startTime_;
-  Seconds durationWithoutWritingToCanbus_;
+  Seconds durationBeforeWritingToCanbus_;
 
   tcan_can::CanBusManager canManager_;
 

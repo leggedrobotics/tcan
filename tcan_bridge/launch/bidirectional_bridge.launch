@@ -4,11 +4,16 @@
     <arg name="can_interface_name"/>
     <arg name="published_ros_topic_name" default=""/>
     <arg name="subscribed_ros_topic_name" default=""/>
+    <arg name="time_before_writing_to_canbus" default="10." doc="Time in seconds before received ROS messages are published on the Canbus. 
+                                                                 Should be large enough to receive messages with all IDs at least once. 
+                                                                 The adapter driver dies if messages with the same ID are received and 
+                                                                 published at similar times."/>
 
     <!-- Launch tf publisher node -->
     <node name="tcan_bridge_$(arg can_interface_name)" pkg="tcan_bridge" type="bidirectional_bridge" output="screen">
         <param name="can_interface_name" value="$(arg can_interface_name)"/>
         <param name="published_ros_topic_name" value="$(arg published_ros_topic_name)"/>
         <param name="subscribed_ros_topic_name" value="$(arg subscribed_ros_topic_name)"/>
+        <param name="time_before_writing_to_canbus" value="$(arg time_before_writing_to_canbus)"/>
     </node>
 </launch>
