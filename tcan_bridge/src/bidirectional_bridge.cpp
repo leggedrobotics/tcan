@@ -2,11 +2,7 @@
 #include <ros/ros.h>
 
 #include <tcan_bridge_msgs/CanFrame.h>
-
-
-
 #include <message_logger/message_logger.hpp>
-
 #include <tcan_can/CanBusManager.hpp>
 #include <tcan_can/SocketBus.hpp>
 #include <tcan_can/SocketBusOptions.hpp>
