@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(tcan_bridge_ros1)
+project(tcan_bridge)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -16,7 +16,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 set(CATKIN_PACKAGE_DEPENDENCIES
-  tcan_bridge_msgs_ros1
+  tcan_bridge_msgs
   tcan_can
 )
 

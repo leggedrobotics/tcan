@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.3)
-project(tcan_bridge_msgs_ros1)
+project(tcan_bridge_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
   message_generation

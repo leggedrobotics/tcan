@@ -1,7 +1,7 @@
 
 #include <ros/ros.h>
 
-#include <tcan_bridge_msgs_ros1/CanFrame.h>
+#include <tcan_bridge_msgs/CanFrame.h>
 
 
 
@@ -44,7 +44,7 @@ class BidirectionalBridge {
 
     if (!publishedRosTopicName.empty()) {
       MELO_INFO_STREAM("Publishing CAN messages of " << canInterfaceName << " on topic " << publishedRosTopicName);
-      publisher_ = new ros::Publisher(nh.advertise<tcan_bridge_msgs_ros1::CanFrame>(publishedRosTopicName, 1000));
+      publisher_ = new ros::Publisher(nh.advertise<tcan_bridge_msgs::CanFrame>(publishedRosTopicName, 1000));
     } else {
       MELO_INFO_STREAM("Not publishing CAN messages via ROS");
     }
@@ -71,7 +71,7 @@ class BidirectionalBridge {
       return true;
     }
 
-    tcan_bridge_msgs_ros1::CanFrame rosMsg;
+    tcan_bridge_msgs::CanFrame rosMsg;
     rosMsg.id = cmsg.getCobId();
     rosMsg.length = cmsg.getLength();
     rosMsg.data.insert(rosMsg.data.end(), &cmsg.getData()[0], &cmsg.getData()[cmsg.getLength()]);
@@ -80,7 +80,7 @@ class BidirectionalBridge {
     return true;
   }
 
-  void rosMsgCallback(const tcan_bridge_msgs_ros1::CanFrame::ConstPtr msg) {
+  void rosMsgCallback(const tcan_bridge_msgs::CanFrame::ConstPtr msg) {
     std::lock_guard<std::mutex> guard(mutex_);
 
     if (Clock::now() - startTime_ < durationWithoutWritingToCanbus_) {

@@ -6,7 +6,7 @@
     <arg name="subscribed_ros_topic_name" default=""/>
 
     <!-- Launch tf publisher node -->
-    <node name="tcan_bridge_$(arg can_interface_name)" pkg="tcan_bridge_ros1" type="bidirectional_bridge" output="screen">
+    <node name="tcan_bridge_$(arg can_interface_name)" pkg="tcan_bridge" type="bidirectional_bridge" output="screen">
         <param name="can_interface_name" value="$(arg can_interface_name)"/>
         <param name="published_ros_topic_name" value="$(arg published_ros_topic_name)"/>
         <param name="subscribed_ros_topic_name" value="$(arg subscribed_ros_topic_name)"/>
