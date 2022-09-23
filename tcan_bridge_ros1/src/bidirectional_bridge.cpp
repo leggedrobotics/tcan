@@ -13,15 +13,6 @@
 
 namespace tcan_bridge {
 
-/*
-  setupCan()
-  setupRos()
-
-  typedef for RosMsg
-
-  different type for publisher and subscriber
-*/
-
 class BidirectionalBridge {
  public:
   BidirectionalBridge(int) {
@@ -34,6 +25,11 @@ class BidirectionalBridge {
     ros::param::get(ros::this_node::getName() + "/can_interface_name", canInterfaceName);
     ros::param::get(ros::this_node::getName() + "/published_ros_topic_name", publishedRosTopicName);
     ros::param::get(ros::this_node::getName() + "/subscribed_ros_topic_name", subscribedRosTopicName);
+    {
+      double tmp = 10.;
+      ros::param::get(ros::this_node::getName() + "/seconds_without_writing_to_canbus", tmp);
+      durationWithoutWritingToCanbus_ = Seconds(tmp);
+    }
 
     if (canInterfaceName.empty()) {
       MELO_ERROR_STREAM("No CAN interface defined. Exiting");
@@ -58,13 +54,23 @@ class BidirectionalBridge {
     } else {
       MELO_INFO_STREAM("Not forwarding any ROS messages to CAN");
     }
+
+    startTime_ = Clock::now();
   }
 
   bool canMsgCallback(const tcan_can::CanMsg& cmsg) {
-    std::lock_guard<std::mutex> guard(mutexCan_);
+    std::lock_guard<std::mutex> guard(mutex_);
+
+    if (messageIdsReceivedOnBus_.count(cmsg.getCobId()) == 0) {
+      MELO_INFO_STREAM("Received CAN message 0x" << std::hex << cmsg.getCobId()
+                                               << " on bus, ROS messages with this ID will not be published on the Canbus");
+      messageIdsReceivedOnBus_.insert(cmsg.getCobId());
+    }
+
     if (publisher_ == nullptr || publisher_->getNumSubscribers() == 0) {
       return true;
     }
+
     tcan_bridge_msgs_ros1::CanFrame rosMsg;
     rosMsg.id = cmsg.getCobId();
     rosMsg.length = cmsg.getLength();
@@ -75,42 +81,42 @@ class BidirectionalBridge {
   }
 
   void rosMsgCallback(const tcan_bridge_msgs_ros1::CanFrame::ConstPtr msg) {
-    std::lock_guard<std::mutex> guard(mutexRos_);
+    std::lock_guard<std::mutex> guard(mutex_);
+
+    if (Clock::now() - startTime_ < durationWithoutWritingToCanbus_) {
+      // Still creating list of CAN messages received on Canbus, do not forward message
+      return;
+    }
+
+    if (messageIdsReceivedOnBus_.count(msg->id) == 1) {
+      // Message is produced by device physically connected on bus, do not forward message
+      return;
+    }
+
     tcan_can::CanMsg canMsg(msg->id, msg->length, msg->data.data());
     canManager_.getCanBus(0)->sendMessage(canMsg);
   }
 
  private:
+  using Clock = std::chrono::steady_clock;
+  using Seconds = std::chrono::duration<double>;
+
   ros::Publisher* publisher_{nullptr};
   ros::Subscriber* subscribers_{nullptr};
 
-  std::mutex mutexCan_;
-  std::mutex mutexRos_;
+  std::chrono::time_point<Clock> startTime_;
+  Seconds durationWithoutWritingToCanbus_;
 
   tcan_can::CanBusManager canManager_;
-};
 
-/*
-class BidirectionalBridgeRos2 : rclcpp::Node {
-  public:
-   BidirectionalBridgeRos2() = delete;
-   BidirectionalBridgeRos2(std::string & canInterfaceName, std::string & publishedRosTopicName, std::string & subscribedRosTopicName)
-       : rclcpp::Node("can_interface_name") {
-     declare_parameter("can_interface_name");
-     get_parameter("can_interface_name", canInterfaceName);
-     declare_parameter("published_ros_topic_name");
-     get_parameter("published_ros_topic_name", publishedRosTopicName);
-     declare_parameter("subscribed_ros_topic_name");
-     get_parameter("subscribed_ros_topic_name", subscribedRosTopicName);
-  }
+  std::mutex mutex_;
+  std::set<uint32_t> messageIdsReceivedOnBus_;
 };
-*/
 
 }  // namespace tcan_bridge
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "tcan_bridge");
-  std::cout << "a\n";
   tcan_bridge::BidirectionalBridge bridge(0);
   ros::spin();
 }
