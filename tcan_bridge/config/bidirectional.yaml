@@ -1,5 +1,0 @@
-/tcan_bridge:
-  ros__parameters:
-    can_interface_name: 'can0'
-    published_ros_topic_name: 'can_to_ros'
-    subscribed_ros_topic_name: 'ros_to_can'
