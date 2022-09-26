@@ -37,7 +37,7 @@ add_executable(bidirectional_bridge src/bidirectional_bridge.cpp)
 target_link_libraries(bidirectional_bridge ${catkin_LIBRARIES})
 
 install(
-  DIRECTORY config launch
+  DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
