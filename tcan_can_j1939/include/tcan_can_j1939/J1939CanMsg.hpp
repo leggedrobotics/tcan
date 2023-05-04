@@ -40,16 +40,16 @@ class J1939CanMsg : public tcan_can::CanMsg {
 
     friend std::ostream& operator<<(std::ostream& os, const J1939CanMsg& msg) {
         os << "Priority: " << +msg.getPriority() << std::endl
-           << "ExtendedDataPage: " << +msg.getExtendedDataPage() << std::endl
-           << "DataPage: " << +msg.getDataPage() << std::endl
+           << "ExtendedDataPage: " << msg.getExtendedDataPage() << std::endl
+           << "DataPage: " << msg.getDataPage() << std::endl
            << "PduFormat: " << +msg.getPduFormat() << std::endl
            << "PduSpecific: " << +msg.getPduSpecific() << std::endl
            << "SourceAddress: " << +msg.getSourceAddress() << std::endl
-           << "ParameterGroupNumber: " << +msg.getParameterGroupNumber() << std::endl
-           << "ParameterGroupCanId: " << +msg.getParameterGroupCanId() << std::endl
+           << "ParameterGroupNumber: " << msg.getParameterGroupNumber() << std::endl
+           << "ParameterGroupCanId: " << msg.getParameterGroupCanId() << std::endl
            << "Data: ";
 
-        for (int idx = 0; idx < msg.getLength() ; ++idx) {
+        for (int idx = 0; idx < msg.getLength(); ++idx) {
             os << +msg.readuint8(idx) << " ";
         }
         os << std::endl;
