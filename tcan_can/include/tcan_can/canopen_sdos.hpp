@@ -276,7 +276,7 @@ class SDOTxPDO1SetTimer : public SdoMsg
 {
 public:
   SDOTxPDO1SetTimer(const uint32_t nodeId, const uint32_t ms):
-    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1800, 0x02, ms)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1800, 0x05, ms)
   {}
   ~SDOTxPDO1SetTimer() override = default;
 };
@@ -347,7 +347,7 @@ class SDOTxPDO2SetTimer : public SdoMsg
 {
 public:
   SDOTxPDO2SetTimer(const uint32_t nodeId, const uint32_t ms):
-    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1801, 0x02, ms)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1801, 0x05, ms)
   {}
   ~SDOTxPDO2SetTimer() override = default;
 };
@@ -416,7 +416,7 @@ class SDOTxPDO3SetTimer : public SdoMsg
 {
 public:
   SDOTxPDO3SetTimer(const uint32_t nodeId, const uint32_t ms):
-    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1802, 0x02, ms)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1802, 0x05, ms)
   {}
   ~SDOTxPDO3SetTimer() override = default;
 };
@@ -485,7 +485,7 @@ class SDOTxPDO4SetTimer : public SdoMsg
 {
 public:
   SDOTxPDO4SetTimer(const uint32_t nodeId, const uint32_t ms):
-    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1803, 0x02, ms)
+    SdoMsg(nodeId, SdoMsg::Command::WRITE_2_BYTE, 0x1803, 0x05, ms)
   {}
   ~SDOTxPDO4SetTimer() override = default;
 };
