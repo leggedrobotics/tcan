@@ -246,7 +246,9 @@ class BusManager {
     // thread loop functions
     void receiveWorker() {
         unsigned int numFds = 0;
-        pollfd fds[buses_.size()];
+        // pollfd fds[buses_.size()];
+        pollfd* fds = new pollfd[buses_.size()];
+
         std::vector<unsigned int> busIndices;
 
         for(unsigned int i=0; i<buses_.size(); ++i) {
